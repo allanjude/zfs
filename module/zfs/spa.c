@@ -3101,6 +3101,10 @@ spa_load_impl(spa_t *spa, uint64_t pool_guid, nvlist_t *config,
 		spa_prop_find(spa, ZPOOL_PROP_FAILUREMODE, &spa->spa_failmode);
 		spa_prop_find(spa, ZPOOL_PROP_AUTOEXPAND, &spa->spa_autoexpand);
 		spa_prop_find(spa, ZPOOL_PROP_MULTIHOST, &spa->spa_multihost);
+		spa_prop_find(spa, ZPOOL_PROP_DIRTY_SYNC,
+		    &spa->spa_dirty_data_sync);
+		spa_prop_find(spa, ZPOOL_PROP_DIRTY_MAX,
+		    &spa->spa_dirty_data_max);
 		spa_prop_find(spa, ZPOOL_PROP_DEDUPDITTO,
 		    &spa->spa_dedup_ditto);
 
@@ -4246,6 +4250,10 @@ spa_create(const char *pool, nvlist_t *nvroot, nvlist_t *props,
 	spa->spa_failmode = zpool_prop_default_numeric(ZPOOL_PROP_FAILUREMODE);
 	spa->spa_autoexpand = zpool_prop_default_numeric(ZPOOL_PROP_AUTOEXPAND);
 	spa->spa_multihost = zpool_prop_default_numeric(ZPOOL_PROP_MULTIHOST);
+	spa->spa_dirty_data_sync =
+	    zpool_prop_default_numeric(ZPOOL_PROP_DIRTY_SYNC);
+	spa->spa_dirty_data_max =
+	    zpool_prop_default_numeric(ZPOOL_PROP_DIRTY_MAX);
 
 	if (props != NULL) {
 		spa_configfile_set(spa, props, B_FALSE);
@@ -6668,6 +6676,12 @@ spa_sync_props(void *arg, dmu_tx_t *tx)
 				break;
 			case ZPOOL_PROP_MULTIHOST:
 				spa->spa_multihost = intval;
+				break;
+			case ZPOOL_PROP_DIRTY_SYNC:
+				spa->spa_dirty_data_sync = intval;
+				break;
+			case ZPOOL_PROP_DIRTY_MAX:
+				spa->spa_dirty_data_max = intval;
 				break;
 			case ZPOOL_PROP_DEDUPDITTO:
 				spa->spa_dedup_ditto = intval;
