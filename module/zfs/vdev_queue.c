@@ -259,10 +259,11 @@ vdev_queue_max_async_writes(spa_t *spa)
 {
 	int writes;
 	uint64_t dirty = 0;
+	uint64_t spa_dirty_max = spa_dirty(spa, ZPOOL_PROP_DIRTY_MAX);
 	dsl_pool_t *dp = spa_get_dsl(spa);
-	uint64_t min_bytes = zfs_dirty_data_max *
+	uint64_t min_bytes = spa_dirty_max *
 	    zfs_vdev_async_write_active_min_dirty_percent / 100;
-	uint64_t max_bytes = zfs_dirty_data_max *
+	uint64_t max_bytes = spa_dirty_max *
 	    zfs_vdev_async_write_active_max_dirty_percent / 100;
 
 	/*
