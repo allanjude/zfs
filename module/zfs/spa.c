@@ -501,6 +501,17 @@ spa_prop_validate(spa_t *spa, nvlist_t *props)
 				error = SET_ERROR(ENOTSUP);
 
 			break;
+		case ZPOOL_PROP_DIRTY_SYNC:
+			error = nvpair_value_uint64(elem, &intval);
+			if (!error && intval == UINT64_MAX)
+				error = SET_ERROR(EINVAL);
+			break;
+
+		case ZPOOL_PROP_DIRTY_MAX:
+			error = nvpair_value_uint64(elem, &intval);
+			if (!error && intval == UINT64_MAX)
+				error = SET_ERROR(EINVAL);
+			break;
 
 		case ZPOOL_PROP_BOOTFS:
 			/*
