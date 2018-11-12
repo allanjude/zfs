@@ -541,6 +541,8 @@ dsl_scan_check_suspend(dsl_scan_t *scn, const zbookmark_phys_t *zb)
 	uint64_t elapsed_nanosecs;
 	int mintime;
 	int dirty_pct;
+	uint64_t spa_dirty_max = scn->scn_dp->dp_spa->spa_dirty_data_max > 0 ?
+	    scn->scn_dp->dp_spa->spa_dirty_data_max : zfs_dirty_data_max;
 
 	/* we never skip user/group accounting objects */
 	if (zb && (int64_t)zb->zb_object < 0)
@@ -573,7 +575,7 @@ dsl_scan_check_suspend(dsl_scan_t *scn, const zbookmark_phys_t *zb)
 	mintime = (scn->scn_phys.scn_func == POOL_SCAN_RESILVER) ?
 	    zfs_resilver_min_time_ms : zfs_scan_min_time_ms;
 	elapsed_nanosecs = gethrtime() - scn->scn_sync_start_time;
-	dirty_pct = scn->scn_dp->dp_dirty_total * 100 / zfs_dirty_data_max;
+	dirty_pct = scn->scn_dp->dp_dirty_total * 100 / spa_dirty_max;
 	if (elapsed_nanosecs / NANOSEC >= zfs_txg_timeout ||
 	    (NSEC2MSEC(elapsed_nanosecs) > mintime &&
 	    (txg_sync_waiting(scn->scn_dp) ||
