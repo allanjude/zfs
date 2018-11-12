@@ -566,6 +566,28 @@ zpool_valid_proplist(libzfs_handle_t *hdl, const char *poolname,
 			}
 			break;
 
+		case ZPOOL_PROP_DIRTY_SYNC:
+			if (intval < 0 || intval == UINT64_MAX) {
+				zfs_error_aux(hdl, dgettext(TEXT_DOMAIN,
+				    "invalid '%s=%d' property: only positive "
+				    "values are allowed.\n"),
+				    propname, intval);
+				(void) zfs_error(hdl, EZFS_BADPROP, errbuf);
+				goto error;
+			}
+			break;
+
+		case ZPOOL_PROP_DIRTY_MAX:
+			if (intval < 0 || intval == UINT64_MAX) {
+				zfs_error_aux(hdl, dgettext(TEXT_DOMAIN,
+				    "invalid '%s=%d' property: only positive "
+				    "values are allowed.\n"),
+				    propname, intval);
+				(void) zfs_error(hdl, EZFS_BADPROP, errbuf);
+				goto error;
+			}
+			break;
+
 		case ZPOOL_PROP_BOOTFS:
 			if (flags.create || flags.import) {
 				zfs_error_aux(hdl, dgettext(TEXT_DOMAIN,
