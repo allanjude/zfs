@@ -691,6 +691,27 @@ spa_configfile_set(spa_t *spa, nvlist_t *nvp, boolean_t need_sync)
 		spa_async_request(spa, SPA_ASYNC_CONFIG_UPDATE);
 }
 
+uint64_t
+spa_dirty(spa_t *spa, zpool_prop_t prop)
+{
+	switch (prop) {
+	case ZPOOL_PROP_DIRTY_SYNC:
+		return (spa->spa_dirty_data_sync > 0 ?
+		    spa->spa_dirty_data_sync : zfs_dirty_data_sync);
+		break;
+
+	case ZPOOL_PROP_DIRTY_MAX:
+		return (spa->spa_dirty_data_max > 0 ?
+		    spa->spa_dirty_data_max : zfs_dirty_data_sync);
+		break;
+
+	default:
+		zfs_panic_recover("Invalid spa_dirty(%p, %d)", spa, prop);
+		return (0);
+		break;
+	}
+}
+
 int
 spa_prop_set(spa_t *spa, nvlist_t *nvp)
 {

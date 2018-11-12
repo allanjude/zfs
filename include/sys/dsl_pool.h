@@ -175,6 +175,7 @@ void dsl_pool_clean_tmp_userrefs(dsl_pool_t *dp);
 int dsl_pool_open_special_dir(dsl_pool_t *dp, const char *name, dsl_dir_t **);
 int dsl_pool_hold(const char *name, void *tag, dsl_pool_t **dp);
 void dsl_pool_rele(dsl_pool_t *dp, void *tag);
+uint64_t dsl_pool_dirty(dsl_pool_t *dp, zpool_prop_t prop);
 
 #ifdef	__cplusplus
 }

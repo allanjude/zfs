@@ -1108,6 +1108,27 @@ dsl_pool_config_held_writer(dsl_pool_t *dp)
 	return (RRW_WRITE_HELD(&dp->dp_config_rwlock));
 }
 
+uint64_t
+dsl_pool_dirty(dsl_pool_t *dp, zpool_prop_t prop)
+{
+	switch (prop) {
+	case ZPOOL_PROP_DIRTY_SYNC:
+		return (dp->dp_spa->spa_dirty_data_sync > 0 ?
+		    dp->dp_spa->spa_dirty_data_sync : zfs_dirty_data_sync);
+		break;
+
+	case ZPOOL_PROP_DIRTY_MAX:
+		return (dp->dp_spa->spa_dirty_data_max > 0 ?
+		    dp->dp_spa->spa_dirty_data_max : zfs_dirty_data_sync);
+		break;
+
+	default:
+		zfs_panic_recover("Invalid dsl_pool_dirty(%p, %d)", dp, prop);
+		return (0);
+		break;
+	}
+}
+
 #if defined(_KERNEL) && defined(HAVE_SPL)
 EXPORT_SYMBOL(dsl_pool_config_enter);
 EXPORT_SYMBOL(dsl_pool_config_exit);
