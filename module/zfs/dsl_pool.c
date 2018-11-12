@@ -666,12 +666,14 @@ dsl_pool_adjustedsize(dsl_pool_t *dp, boolean_t netfree)
 boolean_t
 dsl_pool_need_dirty_delay(dsl_pool_t *dp)
 {
+	uint64_t spa_dirty_max = dsl_pool_dirty(dp, ZPOOL_PROP_DIRTY_MAX);
+	uint64_t spa_dirty_sync = dsl_pool_dirty(dp, ZPOOL_PROP_DIRTY_SYNC);
 	uint64_t delay_min_bytes =
-	    zfs_dirty_data_max * zfs_delay_min_dirty_percent / 100;
+	    spa_dirty_max * zfs_delay_min_dirty_percent / 100;
 	boolean_t rv;
 
 	mutex_enter(&dp->dp_lock);
-	if (dp->dp_dirty_total > zfs_dirty_data_sync)
+	if (dp->dp_dirty_total > spa_dirty_sync)
 		txg_kick(dp);
 	rv = (dp->dp_dirty_total > delay_min_bytes);
 	mutex_exit(&dp->dp_lock);
