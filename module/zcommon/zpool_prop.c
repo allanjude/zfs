@@ -106,6 +106,14 @@ zpool_prop_init(void)
 	    PROP_DEFAULT, ZFS_TYPE_POOL, "<threshold (min 100)>", "DEDUPDITTO");
 	zprop_register_number(ZPOOL_PROP_ASHIFT, "ashift", 0, PROP_DEFAULT,
 	    ZFS_TYPE_POOL, "<ashift, 9-16, or 0=default>", "ASHIFT");
+	zprop_register_number(ZPOOL_PROP_DIRTY_SYNC, "dirtysync", 0,
+	    PROP_DEFAULT, ZFS_TYPE_POOL,
+	    "<dirty data before triggering a sync, or 0=system wide tunable>",
+	    "DIRTYSYNC");
+	zprop_register_number(ZPOOL_PROP_DIRTY_MAX, "dirtymax", 0, PROP_DEFAULT,
+	    ZFS_TYPE_POOL,
+	    "<max outstanding dirty data, or 0=system wide tunable>",
+	    "DIRTYMAX");
 
 	/* default index (boolean) properties */
 	zprop_register_index(ZPOOL_PROP_DELEGATION, "delegation", 1,
