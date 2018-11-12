@@ -1030,6 +1030,7 @@ dmu_tx_wait(dmu_tx_t *tx)
 {
 	spa_t *spa = tx->tx_pool->dp_spa;
 	dsl_pool_t *dp = tx->tx_pool;
+	uint64_t spa_dirty_max = dsl_pool_dirty(dp, ZPOOL_PROP_DIRTY_MAX);
 	hrtime_t before;
 
 	ASSERT(tx->tx_txg == 0);
@@ -1046,9 +1047,9 @@ dmu_tx_wait(dmu_tx_t *tx)
 		 * space.
 		 */
 		mutex_enter(&dp->dp_lock);
-		if (dp->dp_dirty_total >= zfs_dirty_data_max)
+		if (dp->dp_dirty_total >= spa_dirty_max)
 			DMU_TX_STAT_BUMP(dmu_tx_dirty_over_max);
-		while (dp->dp_dirty_total >= zfs_dirty_data_max)
+		while (dp->dp_dirty_total >= spa_dirty_max)
 			cv_wait(&dp->dp_spaceavail_cv, &dp->dp_lock);
 		dirty = dp->dp_dirty_total;
 		mutex_exit(&dp->dp_lock);
