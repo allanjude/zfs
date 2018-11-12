@@ -780,8 +780,9 @@ static void
 dmu_tx_delay(dmu_tx_t *tx, uint64_t dirty)
 {
 	dsl_pool_t *dp = tx->tx_pool;
+	uint64_t spa_dirty_max = dsl_pool_dirty(dp, ZPOOL_PROP_DIRTY_MAX);
 	uint64_t delay_min_bytes =
-	    zfs_dirty_data_max * zfs_delay_min_dirty_percent / 100;
+	    spa_dirty_max * zfs_delay_min_dirty_percent / 100;
 	hrtime_t wakeup, min_tx_time, now;
 
 	if (dirty <= delay_min_bytes)
@@ -793,11 +794,11 @@ dmu_tx_delay(dmu_tx_t *tx, uint64_t dirty)
 	 * have to handle the case of it being >= the max, which could
 	 * cause a divide-by-zero if it's == the max.
 	 */
-	ASSERT3U(dirty, <, zfs_dirty_data_max);
+	ASSERT3U(dirty, <, spa_dirty_max);
 
 	now = gethrtime();
 	min_tx_time = zfs_delay_scale *
-	    (dirty - delay_min_bytes) / (zfs_dirty_data_max - dirty);
+	    (dirty - delay_min_bytes) / (spa_dirty_max - dirty);
 	min_tx_time = MIN(min_tx_time, zfs_delay_max_ns);
 	if (now > tx->tx_start + min_tx_time)
 		return;
