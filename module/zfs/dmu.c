@@ -744,6 +744,8 @@ dmu_free_long_range_impl(objset_t *os, dnode_t *dn, uint64_t offset,
 	int err;
 	uint64_t dirty_frees_threshold;
 	dsl_pool_t *dp = dmu_objset_pool(os);
+	uint64_t spa_dirty_max = dsl_pool_dirty(dp, ZPOOL_PROP_DIRTY_MAX);
+
 	int t;
 
 	if (dn == NULL)
@@ -755,9 +757,9 @@ dmu_free_long_range_impl(objset_t *os, dnode_t *dn, uint64_t offset,
 
 	if (zfs_per_txg_dirty_frees_percent <= 100)
 		dirty_frees_threshold =
-		    zfs_per_txg_dirty_frees_percent * zfs_dirty_data_max / 100;
+		    zfs_per_txg_dirty_frees_percent * spa_dirty_max / 100;
 	else
-		dirty_frees_threshold = zfs_dirty_data_max / 4;
+		dirty_frees_threshold = spa_dirty_max / 4;
 
 	if (length == DMU_OBJECT_END || offset + length > object_size)
 		length = object_size - offset;
