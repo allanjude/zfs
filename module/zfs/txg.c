@@ -481,6 +481,7 @@ txg_sync_thread(dsl_pool_t *dp)
 {
 	spa_t *spa = dp->dp_spa;
 	tx_state_t *tx = &dp->dp_tx;
+	uint64_t spa_dirty_sync = dsl_pool_dirty(dp, ZPOOL_PROP_DIRTY_MAX);
 	callb_cpr_t cpr;
 	clock_t start, delta;
 
@@ -504,7 +505,7 @@ txg_sync_thread(dsl_pool_t *dp)
 		    !tx->tx_exiting && timer > 0 &&
 		    tx->tx_synced_txg >= tx->tx_sync_txg_waiting &&
 		    tx->tx_quiesced_txg == 0 &&
-		    dp->dp_dirty_total < zfs_dirty_data_sync) {
+		    dp->dp_dirty_total < spa_dirty_sync) {
 			dprintf("waiting; tx_synced=%llu waiting=%llu dp=%p\n",
 			    tx->tx_synced_txg, tx->tx_sync_txg_waiting, dp);
 			txg_thread_wait(tx, &cpr, &tx->tx_sync_more_cv, timer);
