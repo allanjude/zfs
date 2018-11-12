@@ -460,6 +460,7 @@ static void
 dsl_pool_dirty_delta(dsl_pool_t *dp, int64_t delta)
 {
 	ASSERT(MUTEX_HELD(&dp->dp_lock));
+	uint64_t spa_dirty_max = dsl_pool_dirty(dp, ZPOOL_PROP_DIRTY_MAX);
 
 	if (delta < 0)
 		ASSERT3U(-delta, <=, dp->dp_dirty_total);
@@ -470,7 +471,7 @@ dsl_pool_dirty_delta(dsl_pool_t *dp, int64_t delta)
 	 * Note: we signal even when increasing dp_dirty_total.
 	 * This ensures forward progress -- each thread wakes the next waiter.
 	 */
-	if (dp->dp_dirty_total < zfs_dirty_data_max)
+	if (dp->dp_dirty_total < spa_dirty_max)
 		cv_signal(&dp->dp_spaceavail_cv);
 }
 
