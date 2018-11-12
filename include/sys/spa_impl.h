@@ -278,6 +278,8 @@ struct spa {
 	taskq_t		*spa_prefetch_taskq;	/* Taskq for prefetch threads */
 	uint64_t	spa_multihost;		/* multihost aware (mmp) */
 	mmp_thread_t	spa_mmp;		/* multihost mmp thread */
+	uint64_t	spa_dirty_data_sync;	/* Start syncing after */
+	uint64_t	spa_dirty_data_max;	/* Max dirty data per pool */
 
 	/*
 	 * spa_refcount & spa_config_lock must be the last elements
