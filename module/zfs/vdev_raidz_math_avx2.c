@@ -60,7 +60,7 @@
 #define	_R_23(_0, _1, REG2, REG3, ...) REG2, REG3
 #define	R_23(REG...) _R_23(REG, 1, 2, 3)
 
-#define	ASM_BUG()	ASSERT(0)
+#define	ZFS_ASM_BUG()	ASSERT(0)
 
 extern const uint8_t gf_clmul_mod_lt[4*256][16];
 
@@ -90,7 +90,7 @@ typedef struct v {
 		    : : [SRC] "r" (src));				\
 		break;							\
 	default:							\
-		ASM_BUG();						\
+		ZFS_ASM_BUG();						\
 	}								\
 }
 
@@ -110,7 +110,7 @@ typedef struct v {
 		    "vpxor %" VR1(r) ", %" VR3(r)", %" VR3(r));		\
 		break;							\
 	default:							\
-		ASM_BUG();						\
+		ZFS_ASM_BUG();						\
 	}								\
 }
 
@@ -132,7 +132,7 @@ typedef struct v {
 		    "vmovdqa %" VR1(r) ", %" VR3(r));			\
 		break;							\
 	default:							\
-		ASM_BUG();						\
+		ZFS_ASM_BUG();						\
 	}								\
 }
 
@@ -154,7 +154,7 @@ typedef struct v {
 		    : : [SRC] "r" (src));				\
 		break;							\
 	default:							\
-		ASM_BUG();						\
+		ZFS_ASM_BUG();						\
 	}								\
 }
 
@@ -176,7 +176,7 @@ typedef struct v {
 		    : : [DST] "r" (dst));				\
 		break;							\
 	default:							\
-		ASM_BUG();						\
+		ZFS_ASM_BUG();						\
 	}								\
 }
 
@@ -207,7 +207,7 @@ typedef struct v {
 		    "vpxor    %ymm13,     %" VR1(r)", %" VR1(r));	\
 		break;							\
 	default:							\
-		ASM_BUG();						\
+		ZFS_ASM_BUG();						\
 	}								\
 }
 
@@ -222,7 +222,7 @@ typedef struct v {
 	    _MUL2(r);							\
 	    break;							\
 	default:							\
-		ASM_BUG();						\
+		ZFS_ASM_BUG();						\
 	}								\
 }
 
@@ -283,7 +283,7 @@ static const uint8_t __attribute__((aligned(32))) _mul_mask = 0x0F;
 		    [lt] "r" (gf_clmul_mod_lt[4*(c)]));			\
 		break;							\
 	default:							\
-		ASM_BUG();						\
+		ZFS_ASM_BUG();						\
 	}								\
 }
 
@@ -298,7 +298,7 @@ static const uint8_t __attribute__((aligned(32))) _mul_mask = 0x0F;
 		_MULx2(c, R_01(r));					\
 		break;							\
 	default:							\
-		ASM_BUG();						\
+		ZFS_ASM_BUG();						\
 	}								\
 }
 
