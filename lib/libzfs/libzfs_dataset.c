@@ -4486,8 +4486,6 @@ zfs_rename(zfs_handle_t *zhp, const char *target, renameflags_t flags)
 	zfs_cmd_t zc = {"\0"};
 	char *delim;
 	prop_changelist_t *cl = NULL;
-	zfs_handle_t *zhrp = NULL;
-	char *parentname = NULL;
 	char parent[ZFS_MAX_DATASET_NAME_LEN];
 	char property[ZFS_MAXPROPLEN];
 	libzfs_handle_t *hdl = zhp->zfs_hdl;
@@ -4582,7 +4580,7 @@ zfs_rename(zfs_handle_t *zhp, const char *target, renameflags_t flags)
 		return (zfs_error(hdl, EZFS_ZONED, errbuf));
 	}
 
-		/*
+	/*
 	 * Avoid unmounting file systems with mountpoint property set to
 	 * 'legacy' or 'none' even if -u option is not given.
 	 */
@@ -4595,7 +4593,8 @@ zfs_rename(zfs_handle_t *zhp, const char *target, renameflags_t flags)
 		flags.nounmount = B_TRUE;
 	}
 	if (flags.recursive) {
-		parentname = zfs_strdup(zhp->zfs_hdl, zhp->zfs_name);
+		zfs_handle_t *zhrp;
+		char *parentname = zfs_strdup(zhp->zfs_hdl, zhp->zfs_name);
 		if (parentname == NULL) {
 			ret = -1;
 			goto error;
@@ -4603,10 +4602,12 @@ zfs_rename(zfs_handle_t *zhp, const char *target, renameflags_t flags)
 		delim = strchr(parentname, '@');
 		*delim = '\0';
 		zhrp = zfs_open(zhp->zfs_hdl, parentname, ZFS_TYPE_DATASET);
+		free(parentname);
 		if (zhrp == NULL) {
 			ret = -1;
 			goto error;
 		}
+		zfs_close(zhrp);
 	} else if (zhp->zfs_type != ZFS_TYPE_SNAPSHOT) {
 		if ((cl = changelist_gather(zhp, ZFS_PROP_NAME,
 			flags.nounmount ? CL_GATHER_DONT_UNMOUNT : CL_GATHER_ITER_MOUNTED,
@@ -4680,12 +4681,6 @@ zfs_rename(zfs_handle_t *zhp, const char *target, renameflags_t flags)
 	}
 
 error:
-	if (parentname != NULL) {
-		free(parentname);
-	}
-	if (zhrp != NULL) {
-		zfs_close(zhrp);
-	}
 	if (cl != NULL) {
 		changelist_free(cl);
 	}
