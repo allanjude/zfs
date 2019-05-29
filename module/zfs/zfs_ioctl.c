@@ -7650,13 +7650,6 @@ _init(void)
 {
 	int error;
 
-	error = -vn_set_pwd("/");
-	if (error) {
-		printk(KERN_NOTICE
-		    "ZFS: Warning unable to set pwd to '/': %d\n", error);
-		return (error);
-	}
-
 	if ((error = -zvol_init()) != 0)
 		return (error);
 
