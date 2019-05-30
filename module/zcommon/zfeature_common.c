@@ -489,14 +489,16 @@ zpool_feature_init(void)
 	    "Support for defering new resilvers when one is already running.",
 	    ZFEATURE_FLAG_READONLY_COMPAT, ZFEATURE_TYPE_BOOLEAN, NULL);
 
-	/*
-	 * FreeBSD never actually plumbed the platform specific pieces
-	 * required for this, but the feature was marked enabled.
-	 * We skimp and just mark it enabled.
-	 */
-	zfeature_register(SPA_FEATURE_MULTI_VDEV_CRASH_DUMP,
-        "com.joyent:multi_vdev_crash_dump", "multi_vdev_crash_dump",
-        "Crash dumps to multiple vdev pools.", B_FALSE, B_FALSE, NULL);
+	{
+	static const spa_feature_t zstd_deps[] = {
+		SPA_FEATURE_EXTENSIBLE_DATASET,
+		SPA_FEATURE_NONE
+	};
+	zfeature_register(SPA_FEATURE_ZSTD_COMPRESS,
+	    "org.freebsd:zstd_compress", "zstd_compress",
+	    "zstd compression algorithm support.",
+	    ZFEATURE_FLAG_PER_DATASET, ZFEATURE_TYPE_BOOLEAN, zstd_deps);
+	}
 }
 
 #if defined(_KERNEL)
