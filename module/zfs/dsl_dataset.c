@@ -167,7 +167,7 @@ dsl_dataset_block_born(dsl_dataset_t *ds, const blkptr_t *bp, dmu_tx_t *tx)
 	if (f != SPA_FEATURE_NONE) {
 		ASSERT3S(spa_feature_table[f].fi_type, ==,
 		    ZFEATURE_TYPE_BOOLEAN);
-		ds->ds_feature_activation[f] = B_TRUE;
+		ds->ds_feature_activation[f] = (void *)B_TRUE;
 	}
 
 	mutex_exit(&ds->ds_lock);
