@@ -198,12 +198,17 @@ compression_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-zstd_level_changed_cb(void *arg, uint64_t newval)
+compress_level_changed_cb(void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 
+	/*
+	 * Inheritance and range checking should have been done by now.
+	 */
+	ASSERT(newval != ZIO_COMPLVL_INHERIT);
+
 	os->os_complevel = zio_complevel_select(os->os_spa, newval,
-	    ZIO_ZSTDLVL_DEFAULT);
+	    ZIO_COMPLVL_DEFAULT);
 }
 
 static void
@@ -547,8 +552,8 @@ dmu_objset_open_impl(spa_t *spa, dsl_dataset_t *ds, blkptr_t *bp,
 			}
 			if (err == 0) {
 				err = dsl_prop_register(ds,
-				    zfs_prop_to_name(ZFS_PROP_ZSTD_LEVEL),
-				    zstd_level_changed_cb, os);
+				    zfs_prop_to_name(ZFS_PROP_COMP_LEVEL),
+				    compress_level_changed_cb, os);
 			}
 			if (err == 0) {
 				err = dsl_prop_register(ds,
@@ -604,7 +609,7 @@ dmu_objset_open_impl(spa_t *spa, dsl_dataset_t *ds, blkptr_t *bp,
 		/* It's the meta-objset. */
 		os->os_checksum = ZIO_CHECKSUM_FLETCHER_4;
 		os->os_compress = ZIO_COMPRESS_ON;
-		os->os_complevel = ZIO_ZSTDLVL_DEFAULT;
+		os->os_complevel = ZIO_COMPLVL_DEFAULT;
 		os->os_encrypted = B_FALSE;
 		os->os_copies = spa_max_replication(spa);
 		os->os_dedup_checksum = ZIO_CHECKSUM_OFF;

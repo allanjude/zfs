@@ -2158,9 +2158,9 @@ zfs_ioc_objset_stats_impl(zfs_cmd_t *zc, objset_t *os)
 			error = EINVAL;
 
 		if (error == 0 && compval == ZIO_COMPRESS_ZSTD &&
-		    get_prop_uint64(nv, "zstd_compress_level", NULL,
+		    get_prop_uint64(nv, "compress_level", NULL,
 		    &levelval) == 0) {
-			if (levelval == ZIO_ZSTDLVL_DEFAULT)
+			if (levelval == ZIO_COMPLVL_DEFAULT)
 				levelval = 0;
 			fnvlist_remove(cnv, ZPROP_VALUE);
 			fnvlist_add_uint64(cnv, ZPROP_VALUE,
@@ -2627,7 +2627,7 @@ zfs_prop_set_special(const char *dsname, zprop_source_t source,
 			levelval = (intval & ~SPA_COMPRESSMASK)
 			    >> SPA_COMPRESSBITS;
 		}
-		err = dsl_prop_set_int(dsname, "zstd_compress_level", source,
+		err = dsl_prop_set_int(dsname, "compress_level", source,
 		    levelval);
 		if (err == 0) {
 			/* Store the compression algorithm normally */
