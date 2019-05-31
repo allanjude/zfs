@@ -55,8 +55,8 @@ enum zio_compress {
 	ZIO_COMPRESS_FUNCTIONS
 };
 
-#define ZIO_COMPLVL_INHERIT	0
-#define ZIO_COMPLVL_DEFAULT	255
+#define ZIO_COMPLEVEL_INHERIT	0
+#define ZIO_COMPLEVEL_DEFAULT	255
 
 enum zio_zstd_levels {
 	ZIO_ZSTDLVL_INHERIT = 0,

@@ -503,7 +503,7 @@ get_special_prop(lua_State *state, dsl_dataset_t *ds, const char *dsname,
 		error = dsl_prop_get_ds(ds, complevel_name, sizeof (levelval),
 		    1, &levelval, setpoint);
 		if (error == 0) {
-			if (levelval == ZIO_COMPLVL_DEFAULT)
+			if (levelval == ZIO_COMPLEVEL_DEFAULT)
 				break;
 			numval |= levelval << SPA_COMPRESSBITS;
 		}
