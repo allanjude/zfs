@@ -3019,10 +3019,11 @@ arc_buf_t *
 arc_loan_raw_buf(spa_t *spa, uint64_t dsobj, boolean_t byteorder,
     const uint8_t *salt, const uint8_t *iv, const uint8_t *mac,
     dmu_object_type_t ot, uint64_t psize, uint64_t lsize,
-    enum zio_compress compression_type)
+    enum zio_compress compression_type, int8_t complevel)
 {
 	arc_buf_t *buf = arc_alloc_raw_buf(spa, arc_onloan_tag, dsobj,
-	    byteorder, salt, iv, mac, ot, psize, lsize, compression_type);
+	    byteorder, salt, iv, mac, ot, psize, lsize, compression_type,
+	    complevel);
 
 	atomic_add_64(&arc_loaned_bytes, psize);
 	return (buf);

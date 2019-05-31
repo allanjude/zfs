@@ -1581,7 +1581,8 @@ dmu_copy_from_buf(objset_t *os, uint64_t object, uint64_t offset,
 		abuf = arc_loan_raw_buf(os->os_spa, dmu_objset_id(os),
 		    byteorder, salt, iv, mac, type,
 		    datalen, arc_buf_lsize(srcdb->db_buf),
-		    arc_get_compression(srcdb->db_buf));
+		    arc_get_compression(srcdb->db_buf),
+		    arc_get_complevel(srcdb->db_buf));
 	} else {
 		/* we won't get a compressed db back from dmu_buf_hold() */
 		ASSERT3U(arc_get_compression(srcdb->db_buf),
