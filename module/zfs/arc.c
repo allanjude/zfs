@@ -1274,7 +1274,7 @@ arc_hdr_get_compress(arc_buf_hdr_t *hdr)
 	    HDR_GET_COMPRESS(hdr) : ZIO_COMPRESS_OFF);
 }
 
-int32_t
+int8_t
 arc_get_complevel(arc_buf_t *buf)
 {
 	return (buf->b_hdr->b_complevel);
@@ -2728,7 +2728,7 @@ arc_loan_buf(spa_t *spa, boolean_t is_metadata, int size)
 
 arc_buf_t *
 arc_loan_compressed_buf(spa_t *spa, uint64_t psize, uint64_t lsize,
-    enum zio_compress compression_type, int32_t complevel)
+    enum zio_compress compression_type, int8_t complevel)
 {
 	arc_buf_t *buf = arc_alloc_compressed_buf(spa, arc_onloan_tag,
 	    psize, lsize, compression_type, complevel);
@@ -3108,7 +3108,7 @@ arc_hdr_free_abd(arc_buf_hdr_t *hdr, boolean_t free_rdata)
 
 static arc_buf_hdr_t *
 arc_hdr_alloc(uint64_t spa, int32_t psize, int32_t lsize,
-    boolean_t protected, enum zio_compress compression_type, int32_t complevel,
+    boolean_t protected, enum zio_compress compression_type, int8_t complevel,
     arc_buf_contents_t type, boolean_t alloc_rdata)
 {
 	arc_buf_hdr_t *hdr;
@@ -3448,7 +3448,7 @@ arc_alloc_buf(spa_t *spa, void *tag, arc_buf_contents_t type, int32_t size)
  */
 arc_buf_t *
 arc_alloc_compressed_buf(spa_t *spa, void *tag, uint64_t psize, uint64_t lsize,
-    enum zio_compress compression_type, int32_t complevel)
+    enum zio_compress compression_type, int8_t complevel)
 {
 	ASSERT3U(lsize, >, 0);
 	ASSERT3U(lsize, >=, psize);

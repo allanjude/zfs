@@ -543,6 +543,7 @@ error:
 	}
 }
 
+static void
 zio_getcomplevel(zio_t *zio, abd_t *data, uint64_t size)
 {
 	if (zio->io_error == 0) {

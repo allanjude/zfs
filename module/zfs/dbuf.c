@@ -1457,7 +1457,7 @@ dbuf_fix_old_data(dmu_buf_impl_t *db, uint64_t txg)
 		spa_t *spa = db->db_objset->os_spa;
 		enum zio_compress compress_type =
 		    arc_get_compression(db->db_buf);
-		int complevel = arc_get_complevel(db->db_buf);
+		int8_t complevel = arc_get_complevel(db->db_buf);
 
 		if (arc_is_encrypted(db->db_buf)) {
 			boolean_t byteorder;
@@ -3105,7 +3105,7 @@ dbuf_hold_copy(struct dbuf_hold_arg *dh)
 	arc_buf_t *data = dr->dt.dl.dr_data;
 
 	enum zio_compress compress_type = arc_get_compression(data);
-	int32_t complevel = arc_get_complevel(data);
+	int8_t complevel = arc_get_complevel(data);
 
 	if (arc_is_encrypted(data)) {
 		boolean_t byteorder;
@@ -3936,7 +3936,7 @@ dbuf_sync_leaf(dbuf_dirty_record_t *dr, dmu_tx_t *tx)
 		int lsize = arc_buf_lsize(*datap);
 		arc_buf_contents_t type = DBUF_GET_BUFC_TYPE(db);
 		enum zio_compress compress_type = arc_get_compression(*datap);
-		int32_t complevel = arc_get_complevel(*datap);
+		int8_t complevel = arc_get_complevel(*datap);
 
 		if (arc_is_encrypted(*datap)) {
 			boolean_t byteorder;
