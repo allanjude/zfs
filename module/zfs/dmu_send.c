@@ -1971,6 +1971,21 @@ setup_featureflags(struct dmu_send_params *dspp, objset_t *os,
 	if (dsl_dataset_feature_is_active(to_ds, SPA_FEATURE_LARGE_DNODE)) {
 		*featureflags |= DMU_BACKUP_FEATURE_LARGE_DNODE;
 	}
+
+	DMU_SET_FEATUREFLAGS(drr->drr_u.drr_begin.drr_versioninfo,
+	    featureflags);
+
+	drr->drr_u.drr_begin.drr_creation_time =
+	    dsl_dataset_phys(to_ds)->ds_creation_time;
+	drr->drr_u.drr_begin.drr_type = dmu_objset_type(os);
+	if (is_clone)
+		drr->drr_u.drr_begin.drr_flags |= DRR_FLAG_CLONE;
+	drr->drr_u.drr_begin.drr_toguid = dsl_dataset_phys(to_ds)->ds_guid;
+	if (dsl_dataset_phys(to_ds)->ds_flags & DS_FLAG_CI_DATASET)
+		drr->drr_u.drr_begin.drr_flags |= DRR_FLAG_CI_DATA;
+	if (zfs_send_set_freerecords_bit)
+		drr->drr_u.drr_begin.drr_flags |= DRR_FLAG_FREERECORDS;
+
 	return (0);
 }
 
