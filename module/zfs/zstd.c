@@ -444,7 +444,7 @@ zstd_init(void)
 	/* There is no estimate function for the CCtx itself */
 	zstd_cache_size[1].kmem_magic = ZSTD_KMEM_MAGIC;
 	zstd_cache_size[1].kmem_type = 1;
-	zstd_cache_size[1].kmem_size = roundup2(zstd_cache_config[1].block_size
+	zstd_cache_size[1].kmem_size = P2ROUNDUP(zstd_cache_config[1].block_size
 	    + sizeof(struct zstd_kmem), PAGE_SIZE);
 	zstd_kmem_cache[1] = kmem_cache_create(
 	    zstd_cache_config[1].cache_name, zstd_cache_size[1].kmem_size,
@@ -458,7 +458,7 @@ zstd_init(void)
 		ASSERT3P(zstd_cache_config[i].cache_name, !=, NULL);
 		zstd_cache_size[i].kmem_magic = ZSTD_KMEM_MAGIC;
 		zstd_cache_size[i].kmem_type = i;
-		zstd_cache_size[i].kmem_size = roundup2(
+		zstd_cache_size[i].kmem_size = P2ROUNDUP(
 		    ZSTD_estimateCCtxSize_usingCParams(
 		        ZSTD_getCParams(zstd_cache_config[i].compress_level,
 			zstd_cache_config[i].block_size, 0)) +
@@ -471,7 +471,7 @@ zstd_init(void)
 	/* Estimate the size of the decompression context */
 	zstd_cache_size[i].kmem_magic = ZSTD_KMEM_MAGIC;
 	zstd_cache_size[i].kmem_type = i;
-	zstd_cache_size[i].kmem_size = roundup2(ZSTD_estimateDCtxSize() +
+	zstd_cache_size[i].kmem_size = P2ROUNDUP(ZSTD_estimateDCtxSize() +
 	    sizeof(struct zstd_kmem), PAGE_SIZE);
 	zstd_kmem_cache[i] = kmem_cache_create(zstd_cache_config[i].cache_name,
 	    zstd_cache_size[i].kmem_size, 0, NULL, NULL, NULL, NULL, NULL, 0);
