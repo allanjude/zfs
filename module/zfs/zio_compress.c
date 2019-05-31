@@ -73,9 +73,9 @@ zio_complevel_select(spa_t *spa, int32_t child,
 {
 	int32_t result;
 
-	ASSERT(child < ZIO_ZSTDLVL_LEVELS);
-	ASSERT(parent < ZIO_ZSTDLVL_LEVELS);
-	ASSERT(parent != ZIO_ZSTDLVL_INHERIT);
+	ASSERT3U(child, <, ZIO_ZSTDLVL_LEVELS);
+	ASSERT3U(parent, <, ZIO_ZSTDLVL_LEVELS);
+	ASSERT3U(parent, !=, ZIO_ZSTDLVL_INHERIT);
 
 	result = child;
 	if (result == ZIO_ZSTDLVL_INHERIT)
@@ -156,7 +156,7 @@ zio_compress_data(enum zio_compress c, abd_t *src, void *dst, size_t s_len,
 		else
 			complevel = level;
 
-		ASSERT(complevel != ZIO_ZSTDLVL_INHERIT);
+		ASSERT3U(complevel, !=, ZIO_COMPLEVEL_INHERIT);
 	}
 
 	/* No compression algorithms can read from ABDs directly */
