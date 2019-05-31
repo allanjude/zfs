@@ -250,7 +250,7 @@ arc_buf_t *arc_alloc_compressed_buf(spa_t *spa, void *tag,
 arc_buf_t *arc_alloc_raw_buf(spa_t *spa, void *tag, uint64_t dsobj,
     boolean_t byteorder, const uint8_t *salt, const uint8_t *iv,
     const uint8_t *mac, dmu_object_type_t ot, uint64_t psize, uint64_t lsize,
-    enum zio_compress compression_type);
+    enum zio_compress compression_type, int8_t complevel);
 int8_t arc_get_complevel(arc_buf_t *buf);
 arc_buf_t *arc_loan_buf(spa_t *spa, boolean_t is_metadata, int size);
 arc_buf_t *arc_loan_compressed_buf(spa_t *spa, uint64_t psize, uint64_t lsize,
