@@ -112,8 +112,8 @@ zstd_compare(const void *a, const void *b)
 	x = (struct zstd_kmem*)a;
 	y = (struct zstd_kmem*)b;
 
-	ASSERT(x->kmem_magic == ZSTD_KMEM_MAGIC);
-	ASSERT(y->kmem_magic == ZSTD_KMEM_MAGIC);
+	ASSERT3U(x->kmem_magic, ==, ZSTD_KMEM_MAGIC);
+	ASSERT3U(y->kmem_magic, ==, ZSTD_KMEM_MAGIC);
 
 	if (x->kmem_size > y->kmem_size) {
 		return (1);
@@ -258,8 +258,8 @@ zstd_compress(void *s_start, void *d_start, size_t s_len, size_t d_len, int n)
 	int32_t zstdlevel;
 	char *dest = d_start;
 
-	ASSERT(d_len >= sizeof (bufsiz));
-	ASSERT(d_len <= s_len);
+	ASSERT3U(d_len, >=, sizeof (bufsiz));
+	ASSERT3U(d_len, <=, s_len);
 
 	zstdlevel = zstd_enum_to_level(n);
 
@@ -299,7 +299,7 @@ zstd_get_level(void *s_start, size_t s_len, int32_t *level)
 	uint32_t cookie = BE_IN32(&src[sizeof (cookie)]);
 	int32_t zstdlevel = zstd_level_to_enum(cookie);
 
-	ASSERT(zstdlevel != ZIO_ZSTDLVL_INHERIT);
+	ASSERT3U(zstdlevel, !=, ZIO_ZSTDLVL_INHERIT);
 
 	if (level != NULL)
 		*level = zstdlevel;
@@ -316,8 +316,8 @@ zstd_decompress_level(void *s_start, void *d_start, size_t s_len, size_t d_len,
 	uint32_t cookie = BE_IN32(&src[sizeof (bufsiz)]);
 	int32_t zstdlevel = zstd_level_to_enum(cookie);
 
-	ASSERT(d_len >= s_len);
-	ASSERT(zstdlevel != ZIO_ZSTDLVL_INHERIT);
+	ASSERT3U(d_len, >=, s_len);
+	ASSERT3U(zstdlevel, !=, ZIO_ZSTDLVL_INHERIT);
 
 	/* invalid compressed buffer size encoded at start */
 	if (bufsiz + sizeof (bufsiz) > s_len)
@@ -351,7 +351,7 @@ real_zstd_compress(const char *source, char *dest, int isize, int osize,
 	size_t result;
 	ZSTD_CCtx *cctx;
 
-	ASSERT(level != 0);
+	ASSERT3U(level, !=, 0);
 	if (level == ZIO_COMPLEVEL_DEFAULT)
 		level = ZIO_ZSTD_LEVEL_DEFAULT;
 	if (level == ZIO_ZSTDLVL_DEFAULT)
@@ -425,9 +425,9 @@ zstd_free(void *opaque __unused, void *ptr)
 {
 	struct zstd_kmem *z = ptr - sizeof(struct zstd_kmem);
 
-	ASSERT(z->kmem_magic == ZSTD_KMEM_MAGIC);
-	ASSERT(z->kmem_type < ZSTD_KMEM_COUNT);
-	ASSERT(z->kmem_type >= ZSTD_KMEM_UNKNOWN);
+	ASSERT3U(z->kmem_magic, ==, ZSTD_KMEM_MAGIC);
+	ASSERT3U(z->kmem_type, <, ZSTD_KMEM_COUNT);
+	ASSERT3U(z->kmem_type, >=, ZSTD_KMEM_UNKNOWN);
 
 	if (z->kmem_type == ZSTD_KMEM_UNKNOWN) {
 		kmem_free(z, z->kmem_size);
@@ -455,7 +455,7 @@ zstd_init(void)
 	 * size at each compression level.
 	 */
 	for (i = 2; i < ZSTD_KMEM_DCTX; i++) {
-		ASSERT(zstd_cache_config[i].cache_name != NULL);
+		ASSERT3P(zstd_cache_config[i].cache_name, !=, NULL);
 		zstd_cache_size[i].kmem_magic = ZSTD_KMEM_MAGIC;
 		zstd_cache_size[i].kmem_type = i;
 		zstd_cache_size[i].kmem_size = roundup2(
