@@ -581,12 +581,13 @@ get_special_prop(lua_State *state, dsl_dataset_t *ds, const char *dsname,
 			break;
 
 		uint64_t levelval;
-		const char *zstd_name = zfs_prop_to_name(ZFS_PROP_ZSTD_LEVEL);
+		const char *complevel_name = 
+		    zfs_prop_to_name(ZFS_PROP_COMPRESS_LEVEL);
 
-		error = dsl_prop_get_ds(ds, zstd_name, sizeof (levelval),
+		error = dsl_prop_get_ds(ds, complevel_name, sizeof (levelval),
 		    1, &levelval, setpoint);
 		if (error == 0) {
-			if (levelval == ZIO_ZSTDLVL_DEFAULT)
+			if (levelval == ZIO_COMPLVL_DEFAULT)
 				break;
 			numval |= levelval << SPA_COMPRESSBITS;
 		}
