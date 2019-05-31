@@ -233,7 +233,7 @@ zio_compress_to_feature(enum zio_compress comp)
 	case ZIO_COMPRESS_ZSTD:
 		return (SPA_FEATURE_ZSTD_COMPRESS);
 	default:
-		/* fallthru */
+		; /* fallthru */
 	}
 	return (SPA_FEATURE_NONE);
 }
