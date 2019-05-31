@@ -1538,7 +1538,7 @@ dbuf_fix_old_data(dmu_buf_impl_t *db, uint64_t txg)
 			dr->dt.dl.dr_data = arc_alloc_raw_buf(spa, db,
 			    dmu_objset_id(dn->dn_objset), byteorder, salt, iv,
 			    mac, dn->dn_type, size, arc_buf_lsize(db->db_buf),
-			    compress_type);
+			    compress_type, complevel);
 		} else if (compress_type != ZIO_COMPRESS_OFF) {
 			ASSERT3U(type, ==, ARC_BUFC_DATA);
 			dr->dt.dl.dr_data = arc_alloc_compressed_buf(spa, db,
@@ -3258,7 +3258,7 @@ dbuf_hold_copy(struct dbuf_hold_arg *dh)
 		dbuf_set_data(db, arc_alloc_raw_buf(dn->dn_objset->os_spa, db,
 		    dmu_objset_id(dn->dn_objset), byteorder, salt, iv, mac,
 		    dn->dn_type, arc_buf_size(data), arc_buf_lsize(data),
-		    compress_type));
+		    compress_type, complevel));
 	} else if (compress_type != ZIO_COMPRESS_OFF) {
 		dbuf_set_data(db, arc_alloc_compressed_buf(
 		    dn->dn_objset->os_spa, db, arc_buf_size(data),
@@ -4084,7 +4084,8 @@ dbuf_sync_leaf(dbuf_dirty_record_t *dr, dmu_tx_t *tx)
 			arc_get_raw_params(*datap, &byteorder, salt, iv, mac);
 			*datap = arc_alloc_raw_buf(os->os_spa, db,
 			    dmu_objset_id(os), byteorder, salt, iv, mac,
-			    dn->dn_type, psize, lsize, compress_type);
+			    dn->dn_type, psize, lsize, compress_type,
+			    complevel);
 		} else if (compress_type != ZIO_COMPRESS_OFF) {
 			ASSERT3U(type, ==, ARC_BUFC_DATA);
 			*datap = arc_alloc_compressed_buf(os->os_spa, db,
