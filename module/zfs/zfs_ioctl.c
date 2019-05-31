@@ -2611,7 +2611,7 @@ zfs_prop_set_special(const char *dsname, zprop_source_t source,
 	}
 	case ZFS_PROP_COMPRESSION:
 		/* Special handling is only required for ZSTD */
-		if (intval & SPA_COMPRESSMASK != ZIO_COMPRESS_ZSTD) {
+		if ((intval & SPA_COMPRESSMASK) != ZIO_COMPRESS_ZSTD) {
 			err = -1;
 			break;
 		}
