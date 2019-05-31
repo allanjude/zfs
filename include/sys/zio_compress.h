@@ -191,7 +191,7 @@ extern int zstd_get_level(void *src, size_t s_len, int32_t *level);
  * Compress and decompress data if necessary.
  */
 extern size_t zio_compress_data(enum zio_compress c, abd_t *src, void *dst,
-    size_t s_len, struct zio_prop *zp);
+    size_t s_len, int32_t level);
 extern int zio_decompress_data(enum zio_compress c, abd_t *src, void *dst,
     size_t s_len, size_t d_len, int32_t *level);
 extern int zio_decompress_data_buf(enum zio_compress c, void *src, void *dst,

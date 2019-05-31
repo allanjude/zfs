@@ -1662,7 +1662,7 @@ arc_hdr_authenticate(arc_buf_hdr_t *hdr, spa_t *spa, uint64_t dsobj)
 		abd_take_ownership_of_buf(abd, B_TRUE);
 
 		csize = zio_compress_data(HDR_GET_COMPRESS(hdr),
-		    hdr->b_l1hdr.b_pabd, tmpbuf, lsize);
+		    hdr->b_l1hdr.b_pabd, tmpbuf, lsize, hdr->b_complevel);
 		ASSERT3U(csize, <=, psize);
 		abd_zero_off(abd, csize, psize - csize);
 	}
@@ -1748,7 +1748,7 @@ arc_hdr_decrypt(arc_buf_hdr_t *hdr, spa_t *spa, const zbookmark_phys_t *zb)
 
 		ret = zio_decompress_data(HDR_GET_COMPRESS(hdr),
 		    hdr->b_l1hdr.b_pabd, tmp, HDR_GET_PSIZE(hdr),
-		    HDR_GET_LSIZE(hdr));
+		    HDR_GET_LSIZE(hdr), &hdr->b_complevel);
 		if (ret != 0) {
 			abd_return_buf(cabd, tmp, arc_hdr_size(hdr));
 			goto error;
@@ -8366,7 +8366,7 @@ l2arc_untransform(zio_t *zio, l2arc_read_callback_t *cb)
 
 		ret = zio_decompress_data(HDR_GET_COMPRESS(hdr),
 		    hdr->b_l1hdr.b_pabd, tmp, HDR_GET_PSIZE(hdr),
-		    HDR_GET_LSIZE(hdr));
+		    HDR_GET_LSIZE(hdr), &hdr->b_complevel);
 		if (ret != 0) {
 			abd_return_buf_copy(cabd, tmp, arc_hdr_size(hdr));
 			arc_free_data_abd(hdr, cabd, arc_hdr_size(hdr), hdr);
@@ -8727,7 +8727,8 @@ l2arc_apply_transforms(spa_t *spa, arc_buf_hdr_t *hdr, uint64_t asize,
 		cabd = abd_alloc_for_io(asize, ismd);
 		tmp = abd_borrow_buf(cabd, asize);
 
-		psize = zio_compress_data(compress, to_write, tmp, size);
+		psize = zio_compress_data(compress, to_write, tmp, size,
+		    hdr->b_complevel);
 		ASSERT3U(psize, <=, HDR_GET_PSIZE(hdr));
 		if (psize < asize)
 			bzero((char *)tmp + psize, asize - psize);

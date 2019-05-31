@@ -352,6 +352,8 @@ real_zstd_compress(const char *source, char *dest, int isize, int osize,
 	ZSTD_CCtx *cctx;
 
 	ASSERT(level != 0);
+	if (level == ZIO_COMPLEVEL_DEFAULT)
+		level = ZIO_ZSTD_LEVEL_DEFAULT;
 	if (level == ZIO_ZSTDLVL_DEFAULT)
 		level = ZIO_ZSTD_LEVEL_DEFAULT;
 

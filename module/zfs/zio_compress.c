@@ -122,7 +122,7 @@ zio_compress_zeroed_cb(void *data, size_t len, void *private)
 
 size_t
 zio_compress_data(enum zio_compress c, abd_t *src, void *dst, size_t s_len,
-    zio_prop_t *zp)
+    int32_t level)
 {
 	size_t c_len, d_len;
 	int32_t complevel;
@@ -147,15 +147,14 @@ zio_compress_data(enum zio_compress c, abd_t *src, void *dst, size_t s_len,
 	complevel = ci->ci_level;
 
 	if (c == ZIO_COMPRESS_ZSTD) {
-		ASSERT(zp != NULL);
 		/* If we don't know the level, we can't compress it */
-		if (zp->zp_complevel == ZIO_ZSTDLVL_INHERIT)
+		if (level == ZIO_ZSTDLVL_INHERIT)
 			return (s_len);
 
-		if (zp->zp_complevel == ZIO_ZSTDLVL_DEFAULT)
+		if (level == ZIO_COMPLEVEL_DEFAULT)
 			complevel = ZIO_ZSTD_LEVEL_DEFAULT;
 		else
-			complevel = zp->zp_complevel;
+			complevel = level;
 
 		ASSERT(complevel != ZIO_ZSTDLVL_INHERIT);
 	}
