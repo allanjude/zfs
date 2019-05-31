@@ -3759,7 +3759,7 @@ arc_buf_t *
 arc_alloc_raw_buf(spa_t *spa, void *tag, uint64_t dsobj, boolean_t byteorder,
     const uint8_t *salt, const uint8_t *iv, const uint8_t *mac,
     dmu_object_type_t ot, uint64_t psize, uint64_t lsize,
-    enum zio_compress compression_type)
+    enum zio_compress compression_type, int8_t complevel)
 {
 	arc_buf_hdr_t *hdr;
 	arc_buf_t *buf;
@@ -3772,7 +3772,7 @@ arc_alloc_raw_buf(spa_t *spa, void *tag, uint64_t dsobj, boolean_t byteorder,
 	ASSERT3U(compression_type, <, ZIO_COMPRESS_FUNCTIONS);
 
 	hdr = arc_hdr_alloc(spa_load_guid(spa), psize, lsize, B_TRUE,
-	    compression_type, type, B_TRUE);
+	    compression_type, complevel, type, B_TRUE);
 
 	hdr->b_crypt_hdr.b_dsobj = dsobj;
 	hdr->b_crypt_hdr.b_ot = ot;
