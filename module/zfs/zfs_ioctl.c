@@ -2622,7 +2622,7 @@ zfs_prop_set_special(const char *dsname, zprop_source_t source,
 		uint64_t levelval;
 
 		if (intval == ZIO_COMPRESS_ZSTD) {
-			levelval = ZIO_ZSTDLVL_DEFAULT;
+			levelval = ZIO_COMPLEVEL_DEFAULT;
 		} else {
 			levelval = (intval & ~SPA_COMPRESSMASK)
 			    >> SPA_COMPRESSBITS;

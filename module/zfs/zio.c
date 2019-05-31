@@ -451,7 +451,8 @@ zio_decrypt(zio_t *zio, abd_t *data, uint64_t size)
 			 */
 			tmp = zio_buf_alloc(lsize);
 			ret = zio_decompress_data(BP_GET_COMPRESS(bp),
-			    zio->io_abd, tmp, zio->io_size, lsize);
+			    zio->io_abd, tmp, zio->io_size, lsize,
+			    &zio->io_prop.zp_complevel);
 			if (ret != 0) {
 				ret = SET_ERROR(EIO);
 				goto error;
@@ -1629,7 +1630,7 @@ zio_write_compress(zio_t *zio)
 	    !(zio->io_flags & ZIO_FLAG_RAW_COMPRESS)) {
 		void *cbuf = zio_buf_alloc(lsize);
 		psize = zio_compress_data(compress, zio->io_abd, cbuf, lsize,
-		    zp);
+		    zp->zp_complevel);
 		if (psize == 0 || psize == lsize) {
 			compress = ZIO_COMPRESS_OFF;
 			zio_buf_free(cbuf, lsize);
@@ -1692,7 +1693,7 @@ zio_write_compress(zio_t *zio)
 		 * to a hole.
 		 */
 		psize = zio_compress_data(ZIO_COMPRESS_EMPTY,
-		    zio->io_abd, NULL, lsize);
+		    zio->io_abd, NULL, lsize, zp->zp_complevel);
 		if (psize == 0)
 			compress = ZIO_COMPRESS_OFF;
 	} else {
