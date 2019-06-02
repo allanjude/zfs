@@ -35,11 +35,16 @@ extern "C" {
 
 #ifdef _KERNEL
 #include <sys/param.h>	/* size_t */
+#if defined(__FreeBSD__)
 #include <sys/systm.h>	/* memcpy, memset */
-#ifndef BUILDING_ZFS
-#include <sys/stddef.h>	/* ptrdiff_t */
-#endif
-#endif
+#elif defined(__linux__)
+#include <linux/string.h> /* memcpy, memset */
+#endif /* __FreeBSD__ */
+#else /* !_KERNEL */
+#include <stddef.h>     /* size_t, ptrdiff_t */
+#include <stdlib.h>
+#include <string.h>
+#endif /* _KERNEL */
 
 #ifdef __cplusplus
 }

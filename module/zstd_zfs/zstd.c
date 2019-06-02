@@ -25,15 +25,14 @@
  */
 
 #include <sys/param.h>
-#ifdef __linux__
+#if defined(__FreeBSD__)
+#include <sys/malloc.h>
+#elif defined(__linux__)
 #include <sys/sysmacros.h>
 #endif
 #include <sys/zfs_context.h>
 #include <sys/zio_compress.h>
 #include <sys/spa.h>
-#ifdef __FreeBSD__
-#include <sys/malloc.h>
-#endif
 
 #define	ZSTD_STATIC_LINKING_ONLY
 #include <zstd.h>
