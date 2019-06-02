@@ -26,7 +26,7 @@
 
 #include <netinet/in.h>
 
-#define ZSTD_STATIC_LINKING_ONLY
+#define	ZSTD_STATIC_LINKING_ONLY
 #include <zstd.h>
 
 /* Allocate just one decompression context and reuse it */
