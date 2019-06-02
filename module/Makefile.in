@@ -18,6 +18,9 @@ ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/include/spl
 @BUILD_LINUX_TRUE@ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/include/os/linux/zfs
 ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/include
 ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/contrib/zstd/zstd-1.4.0/lib
+ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/contrib/zstd/zstd-1.4.0/lib/common
+ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/contrib/zstd/zstd-1.4.0/lib/compress
+ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/contrib/zstd/zstd-1.4.0/lib/decompress
 ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/modules/zstd_zfs/include
 
 ZFS_MODULE_CPPFLAGS += -D_KERNEL
