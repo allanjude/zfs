@@ -174,6 +174,10 @@ zstd_level_to_enum(int level)
 				return (ZIO_ZSTDLVL_FAST_500);
 			case -1000:
 				return (ZIO_ZSTDLVL_FAST_1000);
+			default:
+				/* This shouldn't happen. Cause a panic. */
+				panic("Invalid ZSTD level encountered: %d",
+				    level);
 		}
 	}
 
@@ -236,6 +240,10 @@ zstd_enum_to_level(enum zio_zstd_levels elevel)
 				return (-500);
 			case ZIO_ZSTDLVL_FAST_1000:
 				return (-1000);
+			default:
+				/* This shouldn't happen. Cause a panic. */
+				panic("Invalid ZSTD enum level encountered: %d",
+				    elevel);
 		}
 	}
 
