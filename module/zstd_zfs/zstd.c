@@ -25,10 +25,15 @@
  */
 
 #include <sys/param.h>
+#ifdef __linux__
+#include <sys/sysmacros.h>
+#endif
 #include <sys/zfs_context.h>
 #include <sys/zio_compress.h>
 #include <sys/spa.h>
+#ifdef __FreeBSD__
 #include <sys/malloc.h>
+#endif
 
 #define	ZSTD_STATIC_LINKING_ONLY
 #include <zstd.h>
@@ -437,7 +442,7 @@ zstd_free(void *opaque __unused, void *ptr)
 	}
 }
 
-extern void
+extern int __init
 zstd_init(void)
 {
 	int i;
@@ -481,9 +486,10 @@ zstd_init(void)
 	qsort(zstd_cache_size, ZSTD_KMEM_COUNT, sizeof (struct zstd_kmem),
 	    zstd_compare);
 
+	return (0);
 }
 
-extern void
+extern void __exit
 zstd_fini(void)
 {
 	int i, type;
@@ -495,3 +501,16 @@ zstd_fini(void)
 		}
 	}
 }
+
+#if  defined(__linux__) && defined(_KERNEL)
+module_init(zstd_init);
+module_exit(zstd_fini);
+EXPORT_SYMBOL(zstd_compress);
+EXPORT_SYMBOL(zstd_decompress_level);
+EXPORT_SYMBOL(zstd_decompress);
+EXPORT_SYMBOL(zstd_get_level);
+
+MODULE_DESCRIPTION("ZSTD Compression for ZFS");
+MODULE_LICENSE("BSD 3-Clause");
+MODULE_VERSION("1.4.0");
+#endif
