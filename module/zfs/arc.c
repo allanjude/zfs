@@ -8557,7 +8557,7 @@ l2arc_read_done(zio_t *zio)
 	zio->io_prop.zp_complevel = hdr->b_complevel;
 /* XXX: Allan */
 DTRACE_PROBE2(allan__l2arc__read__done__after, zio_t *, zio,
-    arc_buf_hdr_t *, hdr);
+	arc_buf_hdr_t *, hdr);
 
 	valid_cksum = arc_cksum_is_equal(hdr, zio);
 
