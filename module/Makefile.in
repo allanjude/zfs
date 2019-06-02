@@ -6,6 +6,7 @@ subdir-m += os/linux/spl
 subdir-m += unicode
 subdir-m += zcommon
 subdir-m += zfs
+subdir-m += zstd_zfs
 
 INSTALL_MOD_DIR ?= extra
 
@@ -16,6 +17,8 @@ ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/include/spl
 @BUILD_LINUX_TRUE@ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/include/os/linux/spl
 @BUILD_LINUX_TRUE@ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/include/os/linux/zfs
 ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/include
+ZFS_MODULE_CFLAGS += -I@abs_top_srcdir@/contrib/zstd/zstd-1.4.0
+
 ZFS_MODULE_CPPFLAGS += -D_KERNEL
 ZFS_MODULE_CPPFLAGS += @KERNEL_DEBUG_CPPFLAGS@
 
@@ -24,7 +27,7 @@ ZFS_MODULE_CPPFLAGS += @KERNEL_DEBUG_CPPFLAGS@
 
 export ZFS_MODULE_CFLAGS ZFS_MODULE_CPPFLAGS
 
-SUBDIR_TARGETS = icp lua
+SUBDIR_TARGETS = icp lua zstd_zfs
 
 all: modules
 distclean maintainer-clean: clean

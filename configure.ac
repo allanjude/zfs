@@ -162,6 +162,7 @@ AC_CONFIG_FILES([
 	module/zcommon/Makefile
 	module/zfs/Makefile
 	module/lua/Makefile
+	module/zstd_zfs/Makefile
 	include/Makefile
 	include/sys/Makefile
 	include/sys/fs/Makefile
