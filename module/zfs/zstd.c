@@ -30,7 +30,7 @@
 #include <sys/spa.h>
 #include <sys/malloc.h>
 
-#define ZSTD_STATIC_LINKING_ONLY
+#define	ZSTD_STATIC_LINKING_ONLY
 #include <zstd.h>
 #include <zstd_errors.h>
 
@@ -84,7 +84,7 @@ struct zstd_kmem_config {
 
 static kmem_cache_t *zstd_kmem_cache[ZSTD_KMEM_COUNT] = { NULL };
 static struct zstd_kmem zstd_cache_size[ZSTD_KMEM_COUNT] = {
-    { ZSTD_KMEM_MAGIC, 0, 0 } };
+	{ ZSTD_KMEM_MAGIC, 0, 0 } };
 static struct zstd_kmem_config zstd_cache_config[ZSTD_KMEM_COUNT] = {
 	{ 0, 0, "zstd_unknown" },
 	{ 0, 0, "zstd_cctx" },
@@ -102,7 +102,7 @@ static struct zstd_kmem_config zstd_cache_config[ZSTD_KMEM_COUNT] = {
 	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_DEFAULT, "zstd_wrkspc_mbs_def" },
 	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_MAX, "zstd_wrkspc_mbs_max" },
 	{ 0, 0, "zstd_dctx" },
-    };
+	};
 
 static int
 zstd_compare(const void *a, const void *b)
@@ -187,7 +187,8 @@ zstd_enum_to_level(enum zio_zstd_levels elevel)
 	if (elevel > ZIO_ZSTDLVL_INHERIT && elevel <= ZIO_ZSTDLVL_MAX) {
 		level = elevel;
 		return (level);
-	} else if (elevel > ZIO_ZSTDLVL_FAST && elevel <= ZIO_ZSTDLVL_FAST_MAX) {
+	} else if (elevel > ZIO_ZSTDLVL_FAST &&
+	    elevel <= ZIO_ZSTDLVL_FAST_MAX) {
 		switch (elevel) {
 			case ZIO_ZSTDLVL_FAST_1:
 				return (-1);
@@ -461,7 +462,7 @@ zstd_init(void)
 		zstd_cache_size[i].kmem_size = P2ROUNDUP(
 		    ZSTD_estimateCCtxSize_usingCParams(
 		        ZSTD_getCParams(zstd_cache_config[i].compress_level,
-			zstd_cache_config[i].block_size, 0)) +
+		        zstd_cache_config[i].block_size, 0)) +
 		    sizeof (struct zstd_kmem), PAGE_SIZE);
 		zstd_kmem_cache[i] = kmem_cache_create(
 		    zstd_cache_config[i].cache_name,

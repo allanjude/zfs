@@ -62,8 +62,9 @@ zio_compress_info_t zio_compress_table[ZIO_COMPRESS_FUNCTIONS] = {
 	{"gzip-8",	8,	gzip_compress,	gzip_decompress, NULL,	NULL},
 	{"gzip-9",	9,	gzip_compress,	gzip_decompress, NULL,	NULL},
 	{"zle",		64,	zle_compress,	zle_decompress,	NULL,	NULL},
-	{"lz4",		0,	lz4_compress_zfs, lz4_decompress_zfs, NULL, NULL},
-	{"zstd",	ZIO_ZSTD_LEVEL_DEFAULT,	zstd_compress, zstd_decompress,
+	{"lz4",		0,	lz4_compress_zfs,	lz4_decompress_zfs,
+	    NULL, NULL},
+	{"zstd",	ZIO_ZSTD_LEVEL_DEFAULT,	zstd_compress,	zstd_decompress,
 	    zstd_decompress_level, zstd_get_level},
 };
 
@@ -233,7 +234,7 @@ zio_compress_to_feature(enum zio_compress comp)
 	case ZIO_COMPRESS_ZSTD:
 		return (SPA_FEATURE_ZSTD_COMPRESS);
 	default:
-		; /* fallthru */
+		/* fallthru */;
 	}
 	return (SPA_FEATURE_NONE);
 }
