@@ -63,9 +63,9 @@ enum zstd_kmem_type {
 	ZSTD_KMEM_WRKSPC_128K_DEF,
 	ZSTD_KMEM_WRKSPC_128K_MAX,
 	/* SPA_MAXBLOCKSIZE */
-	ZSTD_KMEM_WRKSPC_MBS_MIN,
-	ZSTD_KMEM_WRKSPC_MBS_DEF,
-	ZSTD_KMEM_WRKSPC_MBS_MAX,
+	ZSTD_KMEM_WRKSPC_16M_MIN,
+	ZSTD_KMEM_WRKSPC_16M_DEF,
+	ZSTD_KMEM_WRKSPC_16M_MAX,
 	ZSTD_KMEM_DCTX,
 	ZSTD_KMEM_COUNT,
 };
@@ -79,7 +79,7 @@ struct zstd_kmem {
 struct zstd_kmem_config {
 	size_t			block_size;
 	int			compress_level;
-	char*			cache_name;
+	char			*cache_name;
 };
 
 static kmem_cache_t *zstd_kmem_cache[ZSTD_KMEM_COUNT] = { NULL };
@@ -109,19 +109,13 @@ zstd_compare(const void *a, const void *b)
 {
 	struct zstd_kmem *x, *y;
 
-	x = (struct zstd_kmem*)a;
-	y = (struct zstd_kmem*)b;
+	x = (struct zstd_kmem *)a;
+	y = (struct zstd_kmem *)b;
 
 	ASSERT3U(x->kmem_magic, ==, ZSTD_KMEM_MAGIC);
 	ASSERT3U(y->kmem_magic, ==, ZSTD_KMEM_MAGIC);
 
-	if (x->kmem_size > y->kmem_size) {
-		return (1);
-	} else if (x->kmem_size == y->kmem_size) {
-		return (0);
-	} else {
-		return (-1);
-	}
+	return (AVL_CMP(x->kmem_size, y->kmem_size));
 }
 
 static enum zio_zstd_levels
@@ -135,7 +129,6 @@ zstd_level_to_enum(int level)
 	} else if (level < 0) {
 		switch (level) {
 			case -1:
-				//return (ZIO_ZSTDLVL_FAST_5);
 				return (ZIO_ZSTDLVL_FAST_1);
 			case -2:
 				return (ZIO_ZSTDLVL_FAST_2);
@@ -144,7 +137,6 @@ zstd_level_to_enum(int level)
 			case -4:
 				return (ZIO_ZSTDLVL_FAST_4);
 			case -5:
-				//return (ZIO_ZSTDLVL_FAST_1);
 				return (ZIO_ZSTDLVL_FAST_5);
 			case -6:
 				return (ZIO_ZSTDLVL_FAST_6);
@@ -198,8 +190,7 @@ zstd_enum_to_level(enum zio_zstd_levels elevel)
 	} else if (elevel > ZIO_ZSTDLVL_FAST && elevel <= ZIO_ZSTDLVL_FAST_MAX) {
 		switch (elevel) {
 			case ZIO_ZSTDLVL_FAST_1:
-				return (-5);
-				//return (-1);
+				return (-1);
 			case ZIO_ZSTDLVL_FAST_2:
 				return (-2);
 			case ZIO_ZSTDLVL_FAST_3:
@@ -207,8 +198,7 @@ zstd_enum_to_level(enum zio_zstd_levels elevel)
 			case ZIO_ZSTDLVL_FAST_4:
 				return (-4);
 			case ZIO_ZSTDLVL_FAST_5:
-				return (-1);
-				//return (-5);
+				return (-5);
 			case ZIO_ZSTDLVL_FAST_6:
 				return (-6);
 			case ZIO_ZSTDLVL_FAST_7:
@@ -269,8 +259,9 @@ zstd_compress(void *s_start, void *d_start, size_t s_len, size_t d_len, int n)
 	    d_len - sizeof (bufsiz) - sizeof (zstdlevel), zstdlevel);
 
 	/* Signal an error if the compression routine returned an error. */
-	if (ZSTD_isError(c_len))
+	if (ZSTD_isError(c_len)) {
 		return (s_len);
+	}
 
 	/*
 	 * Encode the compresed buffer size at the start. We'll need this in
@@ -301,8 +292,9 @@ zstd_get_level(void *s_start, size_t s_len, int8_t *level)
 
 	ASSERT3U(zstdlevel, !=, ZIO_ZSTDLVL_INHERIT);
 
-	if (level != NULL)
+	if (level != NULL) {
 		*level = zstdlevel;
+	}
 
 	return (0);
 }
@@ -320,19 +312,23 @@ zstd_decompress_level(void *s_start, void *d_start, size_t s_len, size_t d_len,
 	ASSERT3U(zstdlevel, !=, ZIO_ZSTDLVL_INHERIT);
 
 	/* invalid compressed buffer size encoded at start */
-	if (bufsiz + sizeof (bufsiz) > s_len)
+	if (bufsiz + sizeof (bufsiz) > s_len) {
 		return (1);
+	}
 
 	/*
 	 * Returns 0 on success (decompression function returned non-negative)
 	 * and non-zero on failure (decompression function returned negative.
 	 */
 	if (ZSTD_isError(real_zstd_decompress(
-	    &src[sizeof (bufsiz) + sizeof (zstdlevel)], d_start, bufsiz, d_len)))
+	    &src[sizeof (bufsiz) + sizeof (zstdlevel)], d_start, bufsiz,
+	    d_len))) {
 		return (1);
+	}
 
-	if (level != NULL)
+	if (level != NULL) {
 		*level = zstdlevel;
+	}
 
 	return (0);
 }
@@ -352,18 +348,21 @@ real_zstd_compress(const char *source, char *dest, int isize, int osize,
 	ZSTD_CCtx *cctx;
 
 	ASSERT3U(level, !=, 0);
-	if (level == ZIO_COMPLEVEL_DEFAULT)
+	if (level == ZIO_COMPLEVEL_DEFAULT) {
 		level = ZIO_ZSTD_LEVEL_DEFAULT;
-	if (level == ZIO_ZSTDLVL_DEFAULT)
+	}
+	if (level == ZIO_ZSTDLVL_DEFAULT) {
 		level = ZIO_ZSTD_LEVEL_DEFAULT;
+	}
 
 	cctx = ZSTD_createCCtx_advanced(zstd_malloc);
 	/*
 	 * out of kernel memory, gently fall through - this will disable
 	 * compression in zio_compress_data
 	 */
-	if (cctx == NULL)
+	if (cctx == NULL) {
 		return (0);
+	}
 
 	result = ZSTD_compressCCtx(cctx, dest, osize, source, isize, level);
 
@@ -379,8 +378,9 @@ real_zstd_decompress(const char *source, char *dest, int isize, int maxosize)
 	ZSTD_DCtx *dctx;
 
 	dctx = ZSTD_createDCtx_advanced(zstd_malloc);
-	if (dctx == NULL)
+	if (dctx == NULL) {
 		return (ZSTD_error_memory_allocation);
+	}
 
 	result = ZSTD_decompressDCtx(dctx, dest, maxosize, source, isize);
 
@@ -391,8 +391,8 @@ real_zstd_decompress(const char *source, char *dest, int isize, int maxosize)
 extern void *
 zstd_alloc(void *opaque __unused, size_t size)
 {
-	size_t nbytes = sizeof(struct zstd_kmem) + size;
-	struct zstd_kmem *z;
+	size_t nbytes = sizeof (struct zstd_kmem) + size;
+	struct zstd_kmem *z = NULL;
 	enum zstd_kmem_type type;
 	int i;
 
@@ -402,7 +402,7 @@ zstd_alloc(void *opaque __unused, size_t size)
 			type = zstd_cache_size[i].kmem_type;
 			z = kmem_cache_alloc(zstd_kmem_cache[type],
 			    KM_NOSLEEP | M_ZERO);
-				break;
+			break;
 		}
 	}
 	/* No matching cache */
@@ -417,13 +417,13 @@ zstd_alloc(void *opaque __unused, size_t size)
 	z->kmem_type = type;
 	z->kmem_size = nbytes;
 
-	return ((void*)z + (sizeof(struct zstd_kmem)));
+	return ((void*)z + (sizeof (struct zstd_kmem)));
 }
 
 extern void
 zstd_free(void *opaque __unused, void *ptr)
 {
-	struct zstd_kmem *z = ptr - sizeof(struct zstd_kmem);
+	struct zstd_kmem *z = ptr - sizeof (struct zstd_kmem);
 
 	ASSERT3U(z->kmem_magic, ==, ZSTD_KMEM_MAGIC);
 	ASSERT3U(z->kmem_type, <, ZSTD_KMEM_COUNT);
@@ -445,7 +445,7 @@ zstd_init(void)
 	zstd_cache_size[1].kmem_magic = ZSTD_KMEM_MAGIC;
 	zstd_cache_size[1].kmem_type = 1;
 	zstd_cache_size[1].kmem_size = P2ROUNDUP(zstd_cache_config[1].block_size
-	    + sizeof(struct zstd_kmem), PAGE_SIZE);
+	    + sizeof (struct zstd_kmem), PAGE_SIZE);
 	zstd_kmem_cache[1] = kmem_cache_create(
 	    zstd_cache_config[1].cache_name, zstd_cache_size[1].kmem_size,
 	    0, NULL, NULL, NULL, NULL, NULL, 0);
@@ -462,7 +462,7 @@ zstd_init(void)
 		    ZSTD_estimateCCtxSize_usingCParams(
 		        ZSTD_getCParams(zstd_cache_config[i].compress_level,
 			zstd_cache_config[i].block_size, 0)) +
-			sizeof(struct zstd_kmem), PAGE_SIZE);
+		    sizeof (struct zstd_kmem), PAGE_SIZE);
 		zstd_kmem_cache[i] = kmem_cache_create(
 		    zstd_cache_config[i].cache_name,
 		    zstd_cache_size[i].kmem_size,
@@ -472,12 +472,12 @@ zstd_init(void)
 	zstd_cache_size[i].kmem_magic = ZSTD_KMEM_MAGIC;
 	zstd_cache_size[i].kmem_type = i;
 	zstd_cache_size[i].kmem_size = P2ROUNDUP(ZSTD_estimateDCtxSize() +
-	    sizeof(struct zstd_kmem), PAGE_SIZE);
+	    sizeof (struct zstd_kmem), PAGE_SIZE);
 	zstd_kmem_cache[i] = kmem_cache_create(zstd_cache_config[i].cache_name,
 	    zstd_cache_size[i].kmem_size, 0, NULL, NULL, NULL, NULL, NULL, 0);
 
 	/* Sort the kmem caches for later searching */
-	qsort(zstd_cache_size, ZSTD_KMEM_COUNT, sizeof(struct zstd_kmem),
+	qsort(zstd_cache_size, ZSTD_KMEM_COUNT, sizeof (struct zstd_kmem),
 	    zstd_compare);
 
 }
