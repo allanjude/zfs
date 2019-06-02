@@ -461,8 +461,8 @@ zstd_init(void)
 		zstd_cache_size[i].kmem_type = i;
 		zstd_cache_size[i].kmem_size = P2ROUNDUP(
 		    ZSTD_estimateCCtxSize_usingCParams(
-		        ZSTD_getCParams(zstd_cache_config[i].compress_level,
-		        zstd_cache_config[i].block_size, 0)) +
+			ZSTD_getCParams(zstd_cache_config[i].compress_level,
+			zstd_cache_config[i].block_size, 0)) +
 		    sizeof (struct zstd_kmem), PAGE_SIZE);
 		zstd_kmem_cache[i] = kmem_cache_create(
 		    zstd_cache_config[i].cache_name,
