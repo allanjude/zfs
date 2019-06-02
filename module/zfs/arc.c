@@ -5861,7 +5861,8 @@ arc_read_done(zio_t *zio)
 			hdr->b_complevel = zio->io_prop.zp_complevel;
 		}
 		/* XXX: Allan */
-		DTRACE_PROBE2(allan__arc__read__done__after, zio_t *, zio, arc_buf_hdr_t *, hdr);
+		DTRACE_PROBE2(allan__arc__read__done__after, zio_t *, zio,
+		    arc_buf_hdr_t *, hdr);
 	}
 
 	arc_hdr_clear_flags(hdr, ARC_FLAG_L2_EVICTED);
@@ -8468,7 +8469,8 @@ l2arc_read_done(zio_t *zio)
 	zio->io_bp = &zio->io_bp_copy;	/* XXX fix in L2ARC 2.0	*/
 	zio->io_prop.zp_complevel = hdr->b_complevel;
 /* XXX: Allan */
-DTRACE_PROBE2(allan__l2arc__read__done__after, zio_t *, zio, arc_buf_hdr_t *, hdr);
+DTRACE_PROBE2(allan__l2arc__read__done__after, zio_t *, zio,
+    arc_buf_hdr_t *, hdr);
 
 	valid_cksum = arc_cksum_is_equal(hdr, zio);
 
