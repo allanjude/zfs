@@ -4,8 +4,9 @@ VPATH = \
 	$(top_srcdir)/module/zfs \
 	$(top_srcdir)/module/zcommon \
 	$(top_srcdir)/module/lua \
-	$(top_srcdir)/module/zfs_zstd/include \
-	$(top_srcdir)/module/contrib/zstd/zstd-1.4.0/lib \
+	$(top_srcdir)/control/zstd/zstd-1.4.0/lib/common \
+	$(top_srcdir)/control/zstd/zstd-1.4.0/lib/compress \
+	$(top_srcdir)/control/zstd/zstd-1.4.0/lib/decompress \
 	$(top_srcdir)/lib/libzpool
 
 # Suppress unused but set variable warnings often due to ASSERTs
@@ -14,16 +15,15 @@ AM_CFLAGS += $(NO_UNUSED_BUT_SET_VARIABLE)
 # Includes kernel code generate warnings for large stack frames
 AM_CFLAGS += $(FRAME_LARGER_THAN)
 
-AM_CFLAGS += -DLIB_ZPOOL_BUILD
+AM_CFLAGS += -DLIB_ZPOOL_BUILD -Wframe-larger-than=32768
 
 DEFAULT_INCLUDES += \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/module/zfs_zstd/include \
-	-I$(top_srcdir)/module/contrib/zstd/zstd-1.4.0/lib \
-	-I$(top_srcdir)/module/contrib/zstd/zstd-1.4.0/lib/common \
-	-I$(top_srcdir)/module/contrib/zstd/zstd-1.4.0/lib/compress \
-	-I$(top_srcdir)/module/contrib/zstd/zstd-1.4.0/lib/decompress \
-	-I$(top_srcdir)/lib/libspl/include
+	-I$(top_srcdir)/lib/libspl/include \
+	-I$(top_srcdir)/control/zstd/zstd-1.4.0/lib \
+	-I$(top_srcdir)/control/zstd/zstd-1.4.0/lib/common \
+	-I$(top_srcdir)/control/zstd/zstd-1.4.0/lib/compress \
+	-I$(top_srcdir)/control/zstd/zstd-1.4.0/lib/decompress
 
 lib_LTLIBRARIES = libzpool.la
 
@@ -167,6 +167,27 @@ KERNEL_C = \
 	zrlock.c \
 	zthr.c
 
+ZSTD_C = \
+	zstd_common.c \
+	fse_decompress.c \
+	entropy_common.c \
+	xxhash.c \
+	error_private.c \
+	zstd_compress.c \
+	fse_compress.c \
+	hist.c \
+	huf_compress.c \
+	zstd_double_fast.c \
+	zstd_fast.c \
+	zstd_lazy.c \
+	zstd_ldm.c \
+	zstd_opt.c \
+	zstd_ddict.c \
+	zstd_decompress.c \
+	zstd_decompress_block.c \
+	huf_decompress.c \
+	zstd.c
+
 LUA_C = \
 	lapi.c \
 	lauxlib.c \
@@ -193,31 +214,11 @@ LUA_C = \
 	lvm.c \
 	lzio.c
 
-ZSTD_C = \
-	common/zstd_common.c \
-	common/fse_decompress.c \
-	common/entropy_common.c \
-	common/error_private.c \
-	common/xxhash.c \
-	compress/zstd_compress.c \
-	compress/fse_compress.c \
-	compress/hist.c \
-	compress/huf_compress.c \
-	compress/zstd_double_fast.c \
-	compress/zstd_fast.c \
-	compress/zstd_lazy.c \
-	compress/zstd_ldm.c \
-	compress/zstd_opt.c \
-	decompress/zstd_ddict.c \
-	decompress/zstd_decompress.c \
-	decompress/zstd_decompress_block.c \
-	decompress/huf_decompress.c
-
 nodist_libzpool_la_SOURCES = \
 	$(USER_C) \
 	$(KERNEL_C) \
-	$(ZSTD_C) \
-	$(LUA_C)
+	$(LUA_C) \
+	$(ZSTD_C)
 
 libzpool_la_LIBADD = \
 	$(top_builddir)/lib/libicp/libicp.la \
