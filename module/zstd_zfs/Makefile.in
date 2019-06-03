@@ -15,10 +15,11 @@ ccflags-y := $(ZFS_MODULE_CFLAGS) $(ZFS_MODULE_CPPFLAGS)
 $(MODULE)-objs += common/zstd_common.o
 $(MODULE)-objs += common/fse_decompress.o
 $(MODULE)-objs += common/entropy_common.o
+$(MODULE)-objs += common/error_private.o
 $(MODULE)-objs += common/xxhash.o
-$(MODULE)-objs += compress/hist.o
 $(MODULE)-objs += compress/zstd_compress.o
 $(MODULE)-objs += compress/fse_compress.o
+$(MODULE)-objs += compress/hist.o
 $(MODULE)-objs += compress/huf_compress.o
 $(MODULE)-objs += compress/zstd_double_fast.o
 $(MODULE)-objs += compress/zstd_fast.o
@@ -35,6 +36,9 @@ ZSTD_DIRS = \
 	common \
 	compress \
 	decompress
+
+zstd.o:
+	$(CC) $(ZFS_MODULE_CFLAGS) $(ZFS_MODULE_CPPFLAGS) -c -o $@ $(@:.o=.c)
 
 all:
 	mkdir -p $(ZSTD_DIRS)
