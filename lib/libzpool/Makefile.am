@@ -7,9 +7,6 @@ VPATH = \
 	$(top_srcdir)/module/os/linux/zfs \
 	$(top_srcdir)/module/zfs_zstd/include \
 	$(top_srcdir)/module/contrib/zstd/zstd-1.4.0/lib \
-	$(top_srcdir)/module/contrib/zstd/zstd-1.4.0/lib/common \
-	$(top_srcdir)/module/contrib/zstd/zstd-1.4.0/lib/compress \
-	$(top_srcdir)/module/contrib/zstd/zstd-1.4.0/lib/decompress \
 	$(top_srcdir)/lib/libzpool
 
 # Suppress unused but set variable warnings often due to ASSERTs
@@ -200,9 +197,30 @@ LUA_C = \
 	lvm.c \
 	lzio.c
 
+ZSTD_C = \
+	common/zstd_common.c \
+	common/fse_decompress.c \
+	common/entropy_common.c \
+	common/error_private.c \
+	common/xxhash.c \
+	compress/zstd_compress.c \
+	compress/fse_compress.c \
+	compress/hist.c \
+	compress/huf_compress.c \
+	compress/zstd_double_fast.c \
+	compress/zstd_fast.c \
+	compress/zstd_lazy.c \
+	compress/zstd_ldm.c \
+	compress/zstd_opt.c \
+	decompress/zstd_ddict.c \
+	decompress/zstd_decompress.c \
+	decompress/zstd_decompress_block.c \
+	decompress/huf_decompress.c
+
 nodist_libzpool_la_SOURCES = \
 	$(USER_C) \
 	$(KERNEL_C) \
+	$(ZSTD_C) \
 	$(LUA_C)
 
 libzpool_la_LIBADD = \
