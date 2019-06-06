@@ -37,9 +37,6 @@ ZSTD_DIRS = \
 	compress \
 	decompress
 
-zstd.o:
-	$(CC) $(ZFS_MODULE_CFLAGS) $(ZFS_MODULE_CPPFLAGS) -c -o $@ $(@:.o=.c)
-
 all:
 	mkdir -p $(ZSTD_DIRS)
 	ln -sf @abs_top_srcdir@/contrib/zstd/zstd-1.4.0/lib @abs_top_srcdir@/zstd
