@@ -4,9 +4,9 @@ VPATH = \
 	$(top_srcdir)/module/zfs \
 	$(top_srcdir)/module/zcommon \
 	$(top_srcdir)/module/lua \
-	$(top_srcdir)/control/zstd/zstd-1.4.0/lib/common \
-	$(top_srcdir)/control/zstd/zstd-1.4.0/lib/compress \
-	$(top_srcdir)/control/zstd/zstd-1.4.0/lib/decompress \
+	$(top_srcdir)/contrib/zstd/zstd-1.4.0/lib/common \
+	$(top_srcdir)/contrib/zstd/zstd-1.4.0/lib/compress \
+	$(top_srcdir)/contrib/zstd/zstd-1.4.0/lib/decompress \
 	$(top_srcdir)/lib/libzpool
 
 # Suppress unused but set variable warnings often due to ASSERTs
@@ -20,10 +20,10 @@ AM_CFLAGS += -DLIB_ZPOOL_BUILD -Wframe-larger-than=32768
 DEFAULT_INCLUDES += \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/lib/libspl/include \
-	-I$(top_srcdir)/control/zstd/zstd-1.4.0/lib \
-	-I$(top_srcdir)/control/zstd/zstd-1.4.0/lib/common \
-	-I$(top_srcdir)/control/zstd/zstd-1.4.0/lib/compress \
-	-I$(top_srcdir)/control/zstd/zstd-1.4.0/lib/decompress
+	-I$(top_srcdir)/contrib/zstd/zstd-1.4.0/lib \
+	-I$(top_srcdir)/contrib/zstd/zstd-1.4.0/lib/common \
+	-I$(top_srcdir)/contrib/zstd/zstd-1.4.0/lib/compress \
+	-I$(top_srcdir)/contrib/zstd/zstd-1.4.0/lib/decompress
 
 lib_LTLIBRARIES = libzpool.la
 
