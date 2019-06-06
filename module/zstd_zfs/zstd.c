@@ -25,20 +25,11 @@
  */
 
 #include <sys/param.h>
+
 #if defined(__FreeBSD__)
 #include <sys/malloc.h>
 #elif defined(__linux__)
-#if defined(_KERNEL)
-#include <linux/sort.h>
-#define	qsort(base, num, size, cmp)	sort(base, num, size, cmp, NULL)
-#endif /* _KERNEL */
 #include <sys/sysmacros.h>
-#define __unused
-#endif /* __linux__ */
-
-#if !defined(_KERNEL) || !defined(__linux__)
-#define	__init
-#define	__exit
 #endif
 
 #include <sys/zfs_context.h>
@@ -50,6 +41,18 @@
 #include <zstd_errors.h>
 
 #define	ZSTD_KMEM_MAGIC		0x20160831
+
+#if defined(__linux__) && defined(_KERNEL)
+#include <linux/sort.h>
+#define	qsort(base, num, size, cmp)	sort(base, num, size, cmp, NULL)
+#endif /* _KERNEL */
+
+#define	__unused			__attribute__((unused))
+
+#if !defined(_KERNEL) || !defined(__linux__)
+#define	__init
+#define	__exit
+#endif
 
 static size_t real_zstd_compress(const char *source, char *dest, int isize,
     int osize, int level);
