@@ -10,6 +10,7 @@ VPATH = \
 	$(top_srcdir)/contrib/zstd/zstd-1.4.0/lib/common \
 	$(top_srcdir)/contrib/zstd/zstd-1.4.0/lib/compress \
 	$(top_srcdir)/contrib/zstd/zstd-1.4.0/lib/decompress \
+	$(top_srcdir)/module/zstd_zfs \
 	$(top_srcdir)/lib/libzpool
 
 # Suppress unused but set variable warnings often due to ASSERTs
