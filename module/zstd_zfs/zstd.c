@@ -20,16 +20,26 @@
  */
 
 /*
- * Copyright (c) 2016-2018 by Klara Systems Inc.
- * Copyright (c) 2016-2018 Allan Jude <allanjude@freebsd.org>.
+ * Copyright (c) 2016-2019 by Klara Systems Inc.
+ * Copyright (c) 2016-2019 Allan Jude <allanjude@freebsd.org>.
  */
 
 #include <sys/param.h>
 #if defined(__FreeBSD__)
 #include <sys/malloc.h>
+#define	zstd_qsort			qsort
 #elif defined(__linux__)
 #include <sys/sysmacros.h>
+#define __unused
+#include <linux/sort.h>
+#define	zstd_qsort(a, n, es, cmp)	sort(a, n, es, cmp, NULL)
 #endif
+
+#if !defined(_KERNEL) || !defined(__linux__)
+#define	__init
+#define	__exit
+#endif
+
 #include <sys/zfs_context.h>
 #include <sys/zio_compress.h>
 #include <sys/spa.h>
@@ -490,7 +500,7 @@ zstd_init(void)
 	    zstd_cache_size[i].kmem_size, 0, NULL, NULL, NULL, NULL, NULL, 0);
 
 	/* Sort the kmem caches for later searching */
-	qsort(zstd_cache_size, ZSTD_KMEM_COUNT, sizeof (struct zstd_kmem),
+	zstd_qsort(zstd_cache_size, ZSTD_KMEM_COUNT, sizeof (struct zstd_kmem),
 	    zstd_compare);
 
 	return (0);
