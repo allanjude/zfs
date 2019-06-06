@@ -69,7 +69,7 @@ zio_compress_info_t zio_compress_table[ZIO_COMPRESS_FUNCTIONS] = {
 };
 
 int8_t
-zio_complevel_select(spa_t *spa, int8_t child,
+zio_complevel_select(spa_t *spa, enum zio_compress compress, int8_t child,
     int8_t parent)
 {
 	int8_t result;

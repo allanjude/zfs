@@ -203,13 +203,8 @@ compress_level_changed_cb(void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 
-	/*
-	 * Inheritance and range checking should have been done by now.
-	 */
-	ASSERT(newval != ZIO_COMPLEVEL_INHERIT);
-
-	os->os_complevel = zio_complevel_select(os->os_spa, newval,
-	    ZIO_COMPLEVEL_DEFAULT);
+	os->os_complevel = zio_complevel_select(os->os_spa, os->os_compress,
+	    newval, ZIO_COMPLEVEL_DEFAULT);
 }
 
 static void
