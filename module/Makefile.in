@@ -31,7 +31,7 @@ ZFS_MODULE_CPPFLAGS += @KERNEL_DEBUG_CPPFLAGS@
 
 export ZFS_MODULE_CFLAGS ZFS_MODULE_CPPFLAGS
 
-SUBDIR_TARGETS = icp lua zstd_zfs
+SUBDIR_TARGETS = icp lua zfs zstd_zfs
 
 all: modules
 distclean maintainer-clean: clean
