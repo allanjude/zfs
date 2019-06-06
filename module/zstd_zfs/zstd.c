@@ -27,13 +27,14 @@
 #include <sys/param.h>
 #if defined(__FreeBSD__)
 #include <sys/malloc.h>
-#define	zstd_qsort			qsort
 #elif defined(__linux__)
+#if defined(_KERNEL)
+#include <linux/sort.h>
+#define	qsort(base, num, size, cmp)	sort(base, num, size, cmp, NULL)
+#endif /* _KERNEL */
 #include <sys/sysmacros.h>
 #define __unused
-#include <linux/sort.h>
-#define	zstd_qsort(a, n, es, cmp)	sort(a, n, es, cmp, NULL)
-#endif
+#endif /* __linux__ */
 
 #if !defined(_KERNEL) || !defined(__linux__)
 #define	__init
@@ -500,7 +501,7 @@ zstd_init(void)
 	    zstd_cache_size[i].kmem_size, 0, NULL, NULL, NULL, NULL, NULL, 0);
 
 	/* Sort the kmem caches for later searching */
-	zstd_qsort(zstd_cache_size, ZSTD_KMEM_COUNT, sizeof (struct zstd_kmem),
+	qsort(zstd_cache_size, ZSTD_KMEM_COUNT, sizeof (struct zstd_kmem),
 	    zstd_compare);
 
 	return (0);
