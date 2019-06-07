@@ -19,7 +19,7 @@ AM_CFLAGS += $(NO_UNUSED_BUT_SET_VARIABLE)
 # Includes kernel code generate warnings for large stack frames
 AM_CFLAGS += $(FRAME_LARGER_THAN)
 
-AM_CFLAGS += -DLIB_ZPOOL_BUILD -Wframe-larger-than=32768
+AM_CFLAGS += -DLIB_ZPOOL_BUILD -Wframe-larger-than=20480
 
 if BUILD_LINUX
 # To pick up files like qat.h
