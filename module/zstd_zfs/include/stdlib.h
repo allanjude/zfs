@@ -44,6 +44,7 @@ MALLOC_DECLARE(M_ZSTD);
 
 #elif defined(__linux__) && defined(_KERNEL)
 
+#undef	GCC_VERSION
 extern void *spl_kmem_alloc(size_t sz, int fl, const char *func, int line);
 extern void *spl_kmem_zalloc(size_t sz, int fl, const char *func, int line);
 extern void spl_kmem_free(const void *ptr, size_t sz);
