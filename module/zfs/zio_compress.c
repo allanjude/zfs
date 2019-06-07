@@ -74,9 +74,13 @@ zio_complevel_select(spa_t *spa, enum zio_compress compress, int8_t child,
 {
 	int8_t result;
 
+	printf("zio_complevel_select(spa, comp, %d, %d)\n", child, parent);
+
+#if 0
 	ASSERT3U(child, <, ZIO_ZSTDLVL_LEVELS);
 	ASSERT3U(parent, <, ZIO_ZSTDLVL_LEVELS);
 	ASSERT3U(parent, !=, ZIO_ZSTDLVL_INHERIT);
+#endif
 
 	result = child;
 	if (result == ZIO_ZSTDLVL_INHERIT)
