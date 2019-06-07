@@ -68,11 +68,11 @@ zio_compress_info_t zio_compress_table[ZIO_COMPRESS_FUNCTIONS] = {
 	    zstd_decompress_level, zstd_get_level},
 };
 
-int8_t
-zio_complevel_select(spa_t *spa, enum zio_compress compress, int8_t child,
-    int8_t parent)
+uint8_t
+zio_complevel_select(spa_t *spa, enum zio_compress compress, uint8_t child,
+    uint8_t parent)
 {
-	int8_t result;
+	uint8_t result;
 
 	dprintf("zio_complevel_select(spa, comp, %d, %d)\n", child, parent);
 
@@ -127,10 +127,10 @@ zio_compress_zeroed_cb(void *data, size_t len, void *private)
 
 size_t
 zio_compress_data(enum zio_compress c, abd_t *src, void *dst, size_t s_len,
-    int8_t level)
+    uint8_t level)
 {
 	size_t c_len, d_len;
-	int8_t complevel;
+	uint8_t complevel;
 	zio_compress_info_t *ci = &zio_compress_table[c];
 
 	ASSERT((uint_t)c < ZIO_COMPRESS_FUNCTIONS);
@@ -178,7 +178,7 @@ zio_compress_data(enum zio_compress c, abd_t *src, void *dst, size_t s_len,
 
 int
 zio_decompress_data_buf(enum zio_compress c, void *src, void *dst,
-    size_t s_len, size_t d_len, int8_t *level)
+    size_t s_len, size_t d_len, uint8_t *level)
 {
 	zio_compress_info_t *ci = &zio_compress_table[c];
 	if ((uint_t)c >= ZIO_COMPRESS_FUNCTIONS || ci->ci_decompress == NULL)
@@ -192,7 +192,7 @@ zio_decompress_data_buf(enum zio_compress c, void *src, void *dst,
 
 int
 zio_decompress_data(enum zio_compress c, abd_t *src, void *dst,
-    size_t s_len, size_t d_len, int8_t *level)
+    size_t s_len, size_t d_len, uint8_t *level)
 {
 	void *tmp = abd_borrow_buf_copy(src, s_len);
 	int ret = zio_decompress_data_buf(c, tmp, dst, s_len, d_len, level);
@@ -213,7 +213,7 @@ zio_decompress_data(enum zio_compress c, abd_t *src, void *dst,
 
 int
 zio_decompress_getcomplevel(enum zio_compress c, void *src, size_t s_len,
-    int8_t *level)
+    uint8_t *level)
 {
 	int ret;
 	zio_compress_info_t *ci = &zio_compress_table[c];

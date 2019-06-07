@@ -238,9 +238,9 @@ struct arc_buf_hdr {
 	uint64_t		b_birth;
 
 	arc_buf_contents_t	b_type;
-	int8_t			b_complevel;
-	int8_t			b_reserved1; /* reserved for future use */
-	int16_t			b_reserved2; /* reserved for future use */
+	uint8_t			b_complevel;
+	uint8_t			b_reserved1; /* reserved for future use */
+	uint16_t		b_reserved2; /* reserved for future use */
 	arc_buf_hdr_t		*b_hash_next;
 	arc_flags_t		b_flags;
 
