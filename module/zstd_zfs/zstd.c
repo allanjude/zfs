@@ -264,7 +264,7 @@ zstd_compress(void *s_start, void *d_start, size_t s_len, size_t d_len, int n)
 {
 	size_t c_len;
 	uint32_t bufsiz;
-	int8_t zstdlevel;
+	uint8_t zstdlevel;
 	char *dest = d_start;
 
 	ASSERT3U(d_len, >=, sizeof (bufsiz));
@@ -303,11 +303,11 @@ zstd_compress(void *s_start, void *d_start, size_t s_len, size_t d_len, int n)
 }
 
 int
-zstd_get_level(void *s_start, size_t s_len, int8_t *level)
+zstd_get_level(void *s_start, size_t s_len, uint8_t *level)
 {
 	const char *src = s_start;
 	uint32_t cookie = BE_IN32(&src[sizeof (cookie)]);
-	int8_t zstdlevel = zstd_level_to_enum(cookie);
+	uint8_t zstdlevel = zstd_level_to_enum(cookie);
 
 	ASSERT3U(zstdlevel, !=, ZIO_ZSTDLVL_INHERIT);
 
@@ -320,12 +320,12 @@ zstd_get_level(void *s_start, size_t s_len, int8_t *level)
 
 int
 zstd_decompress_level(void *s_start, void *d_start, size_t s_len, size_t d_len,
-    int8_t *level)
+    uint8_t *level)
 {
 	const char *src = s_start;
 	uint32_t bufsiz = BE_IN32(src);
 	uint32_t cookie = BE_IN32(&src[sizeof (bufsiz)]);
-	int8_t zstdlevel = zstd_level_to_enum(cookie);
+	uint8_t zstdlevel = zstd_level_to_enum(cookie);
 
 	ASSERT3U(d_len, >=, s_len);
 	ASSERT3U(zstdlevel, !=, ZIO_ZSTDLVL_INHERIT);
