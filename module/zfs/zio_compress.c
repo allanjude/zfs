@@ -74,7 +74,7 @@ zio_complevel_select(spa_t *spa, enum zio_compress compress, int8_t child,
 {
 	int8_t result;
 
-	printf("zio_complevel_select(spa, comp, %d, %d)\n", child, parent);
+	dprintf("zio_complevel_select(spa, comp, %d, %d)\n", child, parent);
 
 #if 0
 	ASSERT3U(child, <, ZIO_ZSTDLVL_LEVELS);
