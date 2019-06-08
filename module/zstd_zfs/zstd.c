@@ -436,13 +436,13 @@ zstd_alloc(void *opaque __unused, size_t size)
 	z->kmem_type = type;
 	z->kmem_size = nbytes;
 
-	return ((void*)z + (sizeof (struct zstd_kmem)));
+	return (z + 1);
 }
 
 extern void
 zstd_free(void *opaque __unused, void *ptr)
 {
-	struct zstd_kmem *z = ptr - sizeof (struct zstd_kmem);
+	struct zstd_kmem *z = (struct zstd_kmem *)ptr - 1;
 
 	ASSERT3U(z->kmem_magic, ==, ZSTD_KMEM_MAGIC);
 	ASSERT3U(z->kmem_type, <, ZSTD_KMEM_COUNT);
