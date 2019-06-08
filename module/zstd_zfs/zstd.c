@@ -277,8 +277,8 @@ zstd_compress(void *s_start, void *d_start, size_t s_len, size_t d_len, int n)
 
 	/* XXX: this could overflow, but we never have blocks that big */
 	c_len = real_zstd_compress(s_start,
-	    &dest[sizeof (bufsiz) + sizeof (zstdlevel)], s_len,
-	    d_len - sizeof (bufsiz) - sizeof (zstdlevel), levelcookie);
+	    &dest[sizeof (bufsiz) + sizeof (levelcookie)], s_len,
+	    d_len - sizeof (bufsiz) - sizeof (levelcookie), levelcookie);
 
 	/* Signal an error if the compression routine returned an error. */
 	if (ZSTD_isError(c_len)) {
