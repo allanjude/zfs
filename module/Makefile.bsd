@@ -24,10 +24,10 @@ CFLAGS+= -I${INCDIR}/spl
 CFLAGS+= -I${INCDIR}/os/freebsd
 CFLAGS+= -I${INCDIR}/os/freebsd/spl
 CFLAGS+= -I${INCDIR}/os/freebsd/zfs
-CFLAGS+= -I${CONTRIBDIR}/contrib/zstd/zstd-1.4.0/lib
-CFLAGS+= -I${CONTRIBDIR}/contrib/zstd/zstd-1.4.0/lib/common
-CFLAGS+= -I${CONTRIBDIR}/contrib/zstd/zstd-1.4.0/lib/compress
-CFLAGS+= -I${CONTRIBDIR}/contrib/zstd/zstd-1.4.0/lib/decompress
+CFLAGS+= -I${CONTRIBDIR}/zstd/zstd-1.4.0/lib
+CFLAGS+= -I${CONTRIBDIR}/zstd/zstd-1.4.0/lib/common
+CFLAGS+= -I${CONTRIBDIR}/zstd/zstd-1.4.0/lib/compress
+CFLAGS+= -I${CONTRIBDIR}/zstd/zstd-1.4.0/lib/decompress
 CFLAGS+= -I${INCDIR}/modules/zstd_zfs/include
 CFLAGS+= -include ${INCDIR}/os/freebsd/spl/sys/ccompile.h
 
