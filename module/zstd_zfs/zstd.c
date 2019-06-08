@@ -423,13 +423,13 @@ zstd_alloc(void *opaque __unused, size_t size)
 		if (nbytes <= zstd_cache_size[i].kmem_size) {
 			type = zstd_cache_size[i].kmem_type;
 			z = kmem_cache_alloc(zstd_kmem_cache[type],
-			    KM_NOSLEEP | KM_ZERO);
+			    KM_NOSLEEP);
 			break;
 		}
 	}
 	/* No matching cache */
 	if (type == ZSTD_KMEM_UNKNOWN) {
-		z = kmem_alloc(nbytes, KM_NOSLEEP | KM_ZERO);
+		z = kmem_alloc(nbytes, KM_NOSLEEP);
 	}
 	if (z == NULL) {
 		return (NULL);
