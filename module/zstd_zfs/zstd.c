@@ -95,9 +95,15 @@ struct zstd_kmem_config {
 	char			*cache_name;
 };
 
+struct zstd_emerg_alloc {
+	void			*ptr;
+	kmutex_t 		barrier;
+}
+
 static kmem_cache_t *zstd_kmem_cache[ZSTD_KMEM_COUNT] = { NULL };
 static struct zstd_kmem zstd_cache_size[ZSTD_KMEM_COUNT] = {
-	{ ZSTD_KMEM_MAGIC, 0, 0 } };
+	{ ZSTD_KMEM_MAGIC, 0, 0 }
+};
 static struct zstd_kmem_config zstd_cache_config[ZSTD_KMEM_COUNT] = {
 	{ 0, 0, "zstd_unknown" },
 	{ 0, 0, "zstd_cctx" },
@@ -115,7 +121,10 @@ static struct zstd_kmem_config zstd_cache_config[ZSTD_KMEM_COUNT] = {
 	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_DEFAULT, "zstd_wrkspc_mbs_def" },
 	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_MAX, "zstd_wrkspc_mbs_max" },
 	{ 0, 0, "zstd_dctx" },
-	};
+};
+static struct zstd_emerg_alloc zstd_dctx_emerg = {
+	{ NULL },
+};
 
 static int
 zstd_compare(const void *a, const void *b)
@@ -397,16 +406,29 @@ static size_t
 real_zstd_decompress(const char *source, char *dest, int isize, int maxosize)
 {
 	size_t result;
+	boolean_t emerg = B_FALSE;
 	ZSTD_DCtx *dctx;
 
 	dctx = ZSTD_createDCtx_advanced(zstd_malloc);
 	if (dctx == NULL) {
-		return (ZSTD_error_memory_allocation);
+		if (zstd_dctx_emerg.ptr == NULL) {
+			return (ZSTD_error_memory_allocation);
+		}
+		emerg = B_TRUE;
+		mutex_enter(&zstd_dctx_emerg.barrier);
+		dctx = &zstd_dctx_emerg.ptr;
 	}
 
 	result = ZSTD_decompressDCtx(dctx, dest, maxosize, source, isize);
 
-	ZSTD_freeDCtx(dctx);
+	if (emerg == B_TRUE) {
+		ZSTD_DCtx_reset(zstd_dctx_emerg.ptr,
+		    ZSTD_reset_session_and_parameters);
+		mutex_exit(&zstd_dctx_emerg.barrier);
+	} else {
+		ZSTD_freeDCtx(dctx);
+	}
+
 	return (result);
 }
 
@@ -502,6 +524,13 @@ zstd_init(void)
 	qsort(zstd_cache_size, ZSTD_KMEM_COUNT, sizeof (struct zstd_kmem),
 	    zstd_compare);
 
+	/* Allocate a last-ditch DCTX to use on allocation failure */
+	zstd_dctx_emerg.ptr = kmem_alloc(
+	    zstd_cache_size[ZSTD_KMEM_DCTX].kmem_size, KM_NOSLEEP);
+	if (zstd_dctx_emerg.ptr == NULL) {
+		return (1);
+	}
+
 	return (0);
 }
 
@@ -509,6 +538,11 @@ extern void __exit
 zstd_fini(void)
 {
 	int i, type;
+
+	mutex_enter(&zstd_dctx_emerg.barrier);
+	kmem_free(zstd_dctx_emerg.ptr,
+	    zstd_cache_size[ZSTD_KMEM_DCTX].kmem_size);
+	mutex_exit(&zstd_dctx_emerg.barrier);
 
 	for (i = 0; i < ZSTD_KMEM_COUNT; i++) {
 		type = zstd_cache_size[i].kmem_type;
