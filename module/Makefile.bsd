@@ -15,7 +15,7 @@ KMOD=	openzfs
 	${SRCDIR}/unicode \
 	${SRCDIR}/zcommon \
 	${SRCDIR}/zstd_zfs \
-	${CONTRIBDIR}/zstd/zstd-1.4.0/lib
+	${CONTRIBDIR}/zstd/zstd-1.4.0/lib \
 	${SRCDIR}/zfs
 
 
