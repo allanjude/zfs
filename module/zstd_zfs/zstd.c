@@ -119,9 +119,7 @@ static struct zstd_kmem_config zstd_cache_config[ZSTD_KMEM_COUNT] = {
 	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_MAX, "zstd_wrkspc_mbs_max" },
 	{ 0, 0, "zstd_dctx" },
 };
-static struct zstd_emerg_alloc zstd_dctx_emerg = {
-	{ NULL },
-};
+static struct zstd_emerg_alloc zstd_dctx_emerg = { NULL };
 
 static int
 zstd_compare(const void *a, const void *b)
@@ -413,7 +411,7 @@ real_zstd_decompress(const char *source, char *dest, int isize, int maxosize)
 		}
 		emerg = B_TRUE;
 		mutex_enter(&zstd_dctx_emerg.barrier);
-		dctx = &zstd_dctx_emerg.ptr;
+		dctx = (ZSTD_DCtx *)&zstd_dctx_emerg.ptr;
 	}
 
 	result = ZSTD_decompressDCtx(dctx, dest, maxosize, source, isize);
