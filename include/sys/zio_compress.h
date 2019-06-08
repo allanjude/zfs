@@ -83,7 +83,7 @@ enum zio_zstd_levels {
 	ZIO_ZSTDLVL_19,
 #define	ZIO_ZSTD_LEVEL_MAX	ZIO_ZSTDLVL_19
 #define	ZIO_ZSTDLVL_MAX		ZIO_ZSTDLVL_19
-	ZIO_ZSTDLVL_RESERVE = 31, /* Leave room for new positive levels */
+	ZIO_ZSTDLVL_RESERVE = 101, /* Leave room for new positive levels */
 	ZIO_ZSTDLVL_FAST, /* Fast levels are negative */
 	ZIO_ZSTDLVL_FAST_1,
 	ZIO_ZSTDLVL_FAST_2,
@@ -107,8 +107,8 @@ enum zio_zstd_levels {
 	ZIO_ZSTDLVL_FAST_500,
 	ZIO_ZSTDLVL_FAST_1000,
 #define	ZIO_ZSTDLVL_FAST_MAX	ZIO_ZSTDLVL_FAST_1000
-	ZIO_ZSTDLVL_DEFAULT = 62, /* Allow the default level to change */
-	ZIO_ZSTDLVL_AUTO = 63, /* Reserved for future use */
+	ZIO_ZSTDLVL_DEFAULT = 250, /* Allow the default level to change */
+	ZIO_ZSTDLVL_AUTO = 251, /* Reserved for future use */
 	ZIO_ZSTDLVL_LEVELS
 };
 
