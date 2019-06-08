@@ -3,6 +3,7 @@
 
 SRCDIR= ${.CURDIR}
 INCDIR=${.CURDIR:H}/include
+CONTRIBDIR=${.CURDIR:H}/contrib
 
 KMOD=	openzfs
 
@@ -13,6 +14,8 @@ KMOD=	openzfs
 	${SRCDIR}/os/freebsd/zfs \
 	${SRCDIR}/unicode \
 	${SRCDIR}/zcommon \
+	${SRCDIR}/zstd_zfs \
+	${CONTRIBDIR}/zstd/zstd-1.4.0/lib
 	${SRCDIR}/zfs
 
 
@@ -21,6 +24,11 @@ CFLAGS+= -I${INCDIR}/spl
 CFLAGS+= -I${INCDIR}/os/freebsd
 CFLAGS+= -I${INCDIR}/os/freebsd/spl
 CFLAGS+= -I${INCDIR}/os/freebsd/zfs
+CFLAGS+= -I${CONTRIBDIR}/contrib/zstd/zstd-1.4.0/lib
+CFLAGS+= -I${CONTRIBDIR}/contrib/zstd/zstd-1.4.0/lib/common
+CFLAGS+= -I${CONTRIBDIR}/contrib/zstd/zstd-1.4.0/lib/compress
+CFLAGS+= -I${CONTRIBDIR}/contrib/zstd/zstd-1.4.0/lib/decompress
+CFLAGS+= -I${INCDIR}/modules/zstd_zfs/include
 CFLAGS+= -include ${INCDIR}/os/freebsd/spl/sys/ccompile.h
 
 CFLAGS+= -D__KERNEL__ -DFREEBSD_NAMECACHE -DBUILDING_ZFS  -D__BSD_VISIBLE=1
@@ -270,6 +278,28 @@ SRCS+=	aggsum.c \
 	zle.c \
 	zrlock.c \
 	zthr.c
+
+# zstd
+SRCS+=	zstd.c \
+	common/zstd_common.c \
+	common/fse_decompress.c \
+	common/entropy_common.c \
+	common/error_private.c \
+	common/xxhash.c \
+	compress/zstd_compress.c \
+	compress/fse_compress.c \
+	compress/hist.c \
+	compress/huf_compress.c \
+	compress/zstd_double_fast.c \
+	compress/zstd_fast.c \
+	compress/zstd_lazy.c \
+	compress/zstd_ldm.c \
+	compress/zstd_opt.c \
+	decompress/zstd_ddict.c \
+	decompress/zstd_decompress.c \
+	decompress/zstd_decompress_block.c \
+	decompress/huf_decompress.c
+
 
 .include <bsd.kmod.mk>
 
