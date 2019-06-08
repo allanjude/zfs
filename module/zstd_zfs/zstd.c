@@ -98,7 +98,7 @@ struct zstd_kmem_config {
 struct zstd_emerg_alloc {
 	void			*ptr;
 	kmutex_t 		barrier;
-}
+};
 
 static kmem_cache_t *zstd_kmem_cache[ZSTD_KMEM_COUNT] = { NULL };
 static struct zstd_kmem zstd_cache_size[ZSTD_KMEM_COUNT] = {
