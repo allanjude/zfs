@@ -2030,6 +2030,7 @@ spa_dirty_data(spa_t *spa)
  * SPA Import Progress Routines
  * ==========================================================================
  */
+#ifdef __linux__
 
 typedef struct spa_import_progress {
 	uint64_t		pool_guid;	/* unique id for updates */
@@ -2232,6 +2233,7 @@ spa_import_progress_remove(uint64_t pool_guid)
 	}
 	mutex_exit(&shl->procfs_list.pl_lock);
 }
+#endif
 
 /*
  * ==========================================================================
@@ -2320,8 +2322,8 @@ spa_init(int mode)
 	scan_init();
 #ifdef __linux__
 	qat_init();
-#endif
 	spa_import_progress_init();
+#endif
 }
 
 void
@@ -2347,8 +2349,8 @@ spa_fini(void)
 	scan_fini();
 #ifdef __linux__
 	qat_fini();
-#endif
 	spa_import_progress_destroy();
+#endif
 
 	avl_destroy(&spa_namespace_avl);
 	avl_destroy(&spa_spare_avl);
