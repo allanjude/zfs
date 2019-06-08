@@ -40,11 +40,14 @@
 #define	qsort(base, num, size, cmp)	sort(base, num, size, cmp, NULL)
 #endif
 
+#ifndef __FreeBSD__
+#define	__unused			__attribute__((unused))
+#endif
+
 #if !defined(_KERNEL) || !defined(__linux__)
 #define	__init
 #define	__exit
 #endif
-#define	__unused			__attribute__((unused))
 
 static size_t real_zstd_compress(const char *source, char *dest, int isize,
     int osize, int level);
