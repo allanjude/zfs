@@ -16,6 +16,9 @@ KMOD=	openzfs
 	${SRCDIR}/zcommon \
 	${SRCDIR}/zstd_zfs \
 	${CONTRIBDIR}/zstd/zstd-1.4.0/lib \
+	${CONTRIBDIR}/zstd/zstd-1.4.0/lib/common \
+	${CONTRIBDIR}/zstd/zstd-1.4.0/lib/compress \
+	${CONTRIBDIR}/zstd/zstd-1.4.0/lib/decompress \
 	${SRCDIR}/zfs
 
 
@@ -281,24 +284,24 @@ SRCS+=	aggsum.c \
 
 # zstd
 SRCS+=	zstd.c \
-	common/zstd_common.c \
-	common/fse_decompress.c \
-	common/entropy_common.c \
-	common/error_private.c \
-	common/xxhash.c \
-	compress/zstd_compress.c \
-	compress/fse_compress.c \
-	compress/hist.c \
-	compress/huf_compress.c \
-	compress/zstd_double_fast.c \
-	compress/zstd_fast.c \
-	compress/zstd_lazy.c \
-	compress/zstd_ldm.c \
-	compress/zstd_opt.c \
-	decompress/zstd_ddict.c \
-	decompress/zstd_decompress.c \
-	decompress/zstd_decompress_block.c \
-	decompress/huf_decompress.c
+	zstd_common.c \
+	fse_decompress.c \
+	entropy_common.c \
+	error_private.c \
+	xxhash.c \
+	zstd_compress.c \
+	fse_compress.c \
+	hist.c \
+	huf_compress.c \
+	zstd_double_fast.c \
+	zstd_fast.c \
+	zstd_lazy.c \
+	zstd_ldm.c \
+	zstd_opt.c \
+	zstd_ddict.c \
+	zstd_decompress.c \
+	zstd_decompress_block.c \
+	huf_decompress.c
 
 
 .include <bsd.kmod.mk>
