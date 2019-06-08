@@ -97,7 +97,7 @@ struct zstd_kmem_config {
 
 struct zstd_emerg_alloc {
 	void			*ptr;
-	kmutex_t 		barrier;
+	kmutex_t 		mtx;
 };
 
 static kmem_cache_t *zstd_kmem_cache[ZSTD_KMEM_COUNT] = { NULL };
@@ -413,7 +413,7 @@ real_zstd_decompress(const char *source, char *dest, int isize, int maxosize)
 			return (ZSTD_error_memory_allocation);
 		}
 		emerg = B_TRUE;
-		mutex_enter(&zstd_dctx_emerg.barrier);
+		mutex_enter(&zstd_dctx_emerg.mtx);
 		dctx = (ZSTD_DCtx *)&zstd_dctx_emerg.ptr;
 	}
 
@@ -422,7 +422,7 @@ real_zstd_decompress(const char *source, char *dest, int isize, int maxosize)
 	if (emerg == B_TRUE) {
 		ZSTD_DCtx_reset(zstd_dctx_emerg.ptr,
 		    ZSTD_reset_session_and_parameters);
-		mutex_exit(&zstd_dctx_emerg.barrier);
+		mutex_exit(&zstd_dctx_emerg.mtx);
 	} else {
 		ZSTD_freeDCtx(dctx);
 	}
@@ -528,6 +528,8 @@ zstd_init(void)
 	if (zstd_dctx_emerg.ptr == NULL) {
 		return (1);
 	}
+	mutex_init(&zstd_dctx_emerg.mtx, NULL, MUTEX_DEFAULT, NULL);
+
 
 	return (0);
 }
@@ -537,10 +539,9 @@ zstd_fini(void)
 {
 	int i, type;
 
-	mutex_enter(&zstd_dctx_emerg.barrier);
 	kmem_free(zstd_dctx_emerg.ptr,
 	    zstd_cache_size[ZSTD_KMEM_DCTX].kmem_size);
-	mutex_exit(&zstd_dctx_emerg.barrier);
+	mutex_destroy(&zstd_dctx_emerg.mtx);
 
 	for (i = 0; i < ZSTD_KMEM_COUNT; i++) {
 		type = zstd_cache_size[i].kmem_type;
