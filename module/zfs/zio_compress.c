@@ -233,6 +233,7 @@ zio_decompress_getcomplevel(enum zio_compress c, void *src, size_t s_len,
 int
 zio_compress_to_feature(enum zio_compress comp)
 {
+	//VERIFY((comp & ~SPA_COMPRESSMASK) == 0);
 
 	switch (comp) {
 	case ZIO_COMPRESS_ZSTD:
