@@ -212,6 +212,9 @@ zio_init(void)
 	zio_inject_init();
 
 	lz4_init();
+#ifdef __FreeBSD__
+	zstd_init();
+#endif
 }
 
 void
@@ -256,6 +259,9 @@ zio_fini(void)
 	zio_inject_fini();
 
 	lz4_fini();
+#ifdef __FreeBSD__
+	zstd_fini();
+#endif
 }
 
 /*
