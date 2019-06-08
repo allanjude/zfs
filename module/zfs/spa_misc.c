@@ -2320,8 +2320,8 @@ spa_init(int mode)
 	scan_init();
 #ifdef __linux__
 	qat_init();
-	spa_import_progress_init();
 #endif
+	spa_import_progress_init();
 }
 
 void
@@ -2347,8 +2347,9 @@ spa_fini(void)
 	scan_fini();
 #ifdef __linux__
 	qat_fini();
-	spa_import_progress_destroy();
 #endif
+	spa_import_progress_destroy();
+
 	avl_destroy(&spa_namespace_avl);
 	avl_destroy(&spa_spare_avl);
 	avl_destroy(&spa_l2cache_avl);
