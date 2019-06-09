@@ -2155,7 +2155,7 @@ zfs_ioc_objset_stats_impl(zfs_cmd_t *zc, objset_t *os)
 		uint64_t compval, levelval;
 
 		if (get_prop_uint64(nv, "compression", &cnv, &compval) != 0)
-			error = EINVAL;
+			compval = ZIO_COMPRESS_INHERIT;
 
 		if (error == 0 && compval == ZIO_COMPRESS_ZSTD &&
 		    get_prop_uint64(nv, "compress_level", NULL,
