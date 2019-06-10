@@ -388,3 +388,23 @@ CFLAGS.zio_checksum.c= -Wno-missing-prototypes
 CFLAGS.zle.c= -Wno-missing-prototypes
 CFLAGS.zrlock.c= -Wno-missing-prototypes -Wno-cast-qual
 CFLAGS.zstd.c= -Wno-cast-qual
+
+# Zstd needs -O3 to avoid stack overflows
+CFLAGS.zstd_common.c= -O3
+CFLAGS.fse_decompress.c= -O3
+CFLAGS.entropy_common.c= -O3
+CFLAGS.error_private.c= -O3
+CFLAGS.xxhash.c= -O3
+CFLAGS.zstd_compress.c= -O3
+CFLAGS.fse_compress.c= -O3
+CFLAGS.hist.c= -O3
+CFLAGS.huf_compress.c= -O3
+CFLAGS.zstd_double_fast.c= -O3
+CFLAGS.zstd_fast.c= -O3
+CFLAGS.zstd_lazy.c= -O3
+CFLAGS.zstd_ldm.c= -O3
+CFLAGS.zstd_opt.c= -O3
+CFLAGS.zstd_ddict.c= -O3
+CFLAGS.zstd_decompress.c= -O3
+CFLAGS.zstd_decompress_block.c= -O3
+CFLAGS.huf_decompress.c= -O3
