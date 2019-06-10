@@ -414,14 +414,14 @@ real_zstd_decompress(const char *source, char *dest, int isize, int maxosize)
 		}
 		emerg = B_TRUE;
 		mutex_enter(&zstd_dctx_emerg.mtx);
+		ZSTD_DCtx_reset(zstd_dctx_emerg.ptr,
+		    ZSTD_reset_session_and_parameters);
 		dctx = (ZSTD_DCtx *)&zstd_dctx_emerg.ptr;
 	}
 
 	result = ZSTD_decompressDCtx(dctx, dest, maxosize, source, isize);
 
 	if (emerg == B_TRUE) {
-		ZSTD_DCtx_reset(zstd_dctx_emerg.ptr,
-		    ZSTD_reset_session_and_parameters);
 		mutex_exit(&zstd_dctx_emerg.mtx);
 	} else {
 		ZSTD_freeDCtx(dctx);
