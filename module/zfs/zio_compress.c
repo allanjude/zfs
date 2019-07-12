@@ -74,8 +74,7 @@ zio_complevel_select(spa_t *spa, enum zio_compress compress, uint8_t child,
 {
 	uint8_t result;
 
-	dprintf("zio_complevel_select(spa, comp, %d, %d)\n", child, parent);
-
+/* XXX: Allan: These need more investigation before we can assert them */
 #if 0
 	ASSERT3U(child, <, ZIO_ZSTDLVL_LEVELS);
 	ASSERT3U(parent, <, ZIO_ZSTDLVL_LEVELS);
@@ -233,7 +232,10 @@ zio_decompress_getcomplevel(enum zio_compress c, void *src, size_t s_len,
 int
 zio_compress_to_feature(enum zio_compress comp)
 {
-	//VERIFY((comp & ~SPA_COMPRESSMASK) == 0);
+	/* XXX: Allan */
+#if 0
+	VERIFY((comp & ~SPA_COMPRESSMASK) == 0);
+#endif
 
 	switch (comp) {
 	case ZIO_COMPRESS_ZSTD:

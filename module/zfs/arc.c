@@ -24,7 +24,7 @@
  * Copyright (c) 2011, 2018 by Delphix. All rights reserved.
  * Copyright (c) 2014 by Saso Kiselkov. All rights reserved.
  * Copyright 2017 Nexenta Systems, Inc.  All rights reserved.
- * Copyright (c) 2018 by Klara Systems. All rights reserved.
+ * Copyright (c) 2019 by Klara Inc.
  */
 
 /*
@@ -5987,9 +5987,6 @@ arc_read_done(zio_t *zio)
 		if (!HDR_L2_READING(hdr)) {
 			hdr->b_complevel = zio->io_prop.zp_complevel;
 		}
-		/* XXX: Allan */
-		DTRACE_PROBE2(allan__arc__read__done__after, zio_t *, zio,
-		    arc_buf_hdr_t *, hdr);
 	}
 
 	arc_hdr_clear_flags(hdr, ARC_FLAG_L2_EVICTED);
@@ -6918,7 +6915,6 @@ arc_release(arc_buf_t *buf, void *tag)
 		 * Allocate a new hdr. The new hdr will contain a b_pabd
 		 * buffer which will be freed in arc_write().
 		 */
-		/* XXX: Allan */
 		nhdr = arc_hdr_alloc(spa, psize, lsize, protected,
 		    compress, hdr->b_complevel, type, HDR_HAS_RABD(hdr));
 		ASSERT3P(nhdr->b_l1hdr.b_buf, ==, NULL);
@@ -8555,9 +8551,6 @@ l2arc_read_done(zio_t *zio)
 	zio->io_bp_copy = cb->l2rcb_bp;	/* XXX fix in L2ARC 2.0	*/
 	zio->io_bp = &zio->io_bp_copy;	/* XXX fix in L2ARC 2.0	*/
 	zio->io_prop.zp_complevel = hdr->b_complevel;
-	/* XXX: Allan */
-	DTRACE_PROBE2(allan__l2arc__read__done__after, zio_t *, zio,
-	    arc_buf_hdr_t *, hdr);
 
 	valid_cksum = arc_cksum_is_equal(hdr, zio);
 
