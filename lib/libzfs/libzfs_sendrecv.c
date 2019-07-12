@@ -2578,8 +2578,6 @@ recv_read(libzfs_handle_t *hdl, int fd, void *buf, int ilen,
 	int rv;
 	int len = ilen;
 
-	assert(ilen <= SPA_MAXBLOCKSIZE);
-
 	do {
 		rv = read(fd, cp, len);
 		cp += rv;
@@ -3783,6 +3781,7 @@ recv_skip(libzfs_handle_t *hdl, int fd, boolean_t byteswap)
 			}
 			payload_size =
 			    DRR_WRITE_PAYLOAD_SIZE(&drr->drr_u.drr_write);
+			assert(payload_size <= SPA_MAXBLOCKSIZE);
 			(void) recv_read(hdl, fd, buf,
 			    payload_size, B_FALSE, NULL);
 			break;
