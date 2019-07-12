@@ -20,7 +20,7 @@
  */
 
 /*
- * Copyright (c) 2016-2019 by Klara Systems Inc.
+ * Copyright (c) 2016-2019 by Klara Inc.
  * Copyright (c) 2016-2019 Allan Jude <allanjude@freebsd.org>.
  */
 
