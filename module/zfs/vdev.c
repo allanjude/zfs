@@ -4818,7 +4818,6 @@ vdev_prop_add_list(nvlist_t *nvl, vdev_prop_t prop, char *strval,
 static void
 vdev_sync_props(void *arg, dmu_tx_t *tx)
 {
-	int error;
 	vdev_t *vd;
 	nvlist_t *nvp = arg;
 	spa_t *spa = dmu_tx_pool(tx)->dp_spa;
@@ -4827,23 +4826,23 @@ vdev_sync_props(void *arg, dmu_tx_t *tx)
 	uint64_t vdev_guid;
 	nvlist_t *nvprops;
 
-	if (nvlist_lookup_uint64(nvp, "vdev", &vdev_guid) != 0)
+	if (nvlist_lookup_uint64(nvp, ZPOOL_VDEV_SET_PROPS_VDEV,
+	    &vdev_guid) != 0)
 		return;
 
 	if ((vd = spa_lookup_by_guid(spa, vdev_guid, B_TRUE)) == NULL)
 		return;
 
-	(void) nvlist_lookup_nvlist(nvp, "props", &nvprops);
+	(void) nvlist_lookup_nvlist(nvp, ZPOOL_VDEV_SET_PROPS_PROPS, &nvprops);
 
 	mutex_enter(&spa->spa_props_lock);
 
 	while ((elem = nvlist_next_nvpair(nvprops, elem)) != NULL) {
-		uint64_t intval, objid;
-		char *strval, *fname;
+		uint64_t intval, objid = 0;
+		char *strval;
 		vdev_prop_t prop;
 		const char *propname;
 		zprop_type_t proptype;
-		spa_feature_t fid;
 
 		switch (prop = vdev_name_to_prop(nvpair_name(elem))) {
 		case VDEV_PROP_INVAL:
@@ -4873,8 +4872,9 @@ vdev_sync_props(void *arg, dmu_tx_t *tx)
 				VERIFY0(zap_update(mos, objid, propname,
 				    1, strlen(strval) + 1, strval, tx));
 				spa_history_log_internal(spa, "vdev set", tx,
-				    "vdev_guid=%llu: %s=%s", vdev_guid,
-				    nvpair_name(elem), strval);
+				    "vdev_guid=%llu: %s=%s",
+				    (u_longlong_t)vdev_guid, nvpair_name(elem),
+				    strval);
 			} else if (nvpair_type(elem) == DATA_TYPE_UINT64) {
 				intval = fnvpair_value_uint64(elem);
 
@@ -4886,8 +4886,9 @@ vdev_sync_props(void *arg, dmu_tx_t *tx)
 				VERIFY0(zap_update(mos, objid, propname,
 				    8, 1, &intval, tx));
 				spa_history_log_internal(spa, "vdev set", tx,
-				    "vdev_guid=%llu: %s=%lld", vdev_guid,
-				    nvpair_name(elem), intval);
+				    "vdev_guid=%llu: %s=%lld",
+				    (u_longlong_t)vdev_guid,
+				    nvpair_name(elem), (longlong_t)intval);
 			} else {
 				ASSERT(0); /* not allowed */
 			}
@@ -4908,10 +4909,11 @@ vdev_prop_set(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 
 	ASSERT(vd != NULL);
 
-	if (nvlist_lookup_uint64(innvl, "vdev", &vdev_guid) != 0)
+	if (nvlist_lookup_uint64(innvl, ZPOOL_VDEV_SET_PROPS_PROPS,
+	    &vdev_guid) != 0)
 		return (SET_ERROR(EINVAL));
 
-	(void) nvlist_lookup_nvlist(innvl, "props", &nvprops);
+	(void) nvlist_lookup_nvlist(innvl, ZPOOL_VDEV_SET_PROPS_PROPS, &nvprops);
 
 #if 0
 	if ((error = vdev_prop_validate(spa, nvprops)) != 0)
@@ -4955,10 +4957,12 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 
 	ASSERT(vd != NULL);
 
-	if (nvlist_lookup_uint64(innvl, "vdev", &vdev_guid) != 0)
+	if (nvlist_lookup_uint64(innvl, ZPOOL_VDEV_GET_PROPS_VDEV,
+	    &vdev_guid) != 0)
 		return (SET_ERROR(EINVAL));
 
-	(void) nvlist_lookup_nvlist(innvl, "props", &nvprops);
+	(void) nvlist_lookup_nvlist(innvl, ZPOOL_VDEV_GET_PROPS_PROPS,
+	    &nvprops);
 
 	//XXX todo: check zap_lookup(mos, DMU_POOL_DIRECTORY_OBJECT, DMU_POOL_VDEV_ZAP_MAP);
 
@@ -5158,7 +5162,9 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	}
 
 	mutex_exit(&spa->spa_props_lock);
+#if 0
 out:
+#endif
 	if (err && err != ENOENT) {
 		return (err);
 	}

@@ -2949,12 +2949,17 @@ zfs_ioc_pool_get_props(zfs_cmd_t *zc)
 
 /*
  * innvl: {
- *     "vdev" -> guid
- *     (optional) "props" -> { prop -> value }
+ *     "vdevprops_set_vdev" -> guid
+ *     "vdevprops_set_props" -> { prop -> value }
  * }
  *
  * outnvl: propname -> error code (int32)
  */
+static const zfs_ioc_key_t zfs_keys_vdev_set_props[] = {
+	{ZPOOL_VDEV_SET_PROPS_VDEV,	DATA_TYPE_UINT64,	0},
+	{ZPOOL_VDEV_SET_PROPS_PROPS,	DATA_TYPE_NVLIST,	0}
+};
+
 static int
 zfs_ioc_vdev_set_props(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 {
@@ -2964,7 +2969,8 @@ zfs_ioc_vdev_set_props(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 	uint64_t vdev_guid;
 
 	/* Early validation */
-	if (nvlist_lookup_uint64(innvl, "vdev", &vdev_guid) != 0)
+	if (nvlist_lookup_uint64(innvl, ZPOOL_VDEV_SET_PROPS_VDEV,
+	    &vdev_guid) != 0)
 		return (SET_ERROR(EINVAL));
 
 	if ((error = spa_open(poolname, &spa, FTAG)) != 0)
@@ -2986,12 +2992,17 @@ zfs_ioc_vdev_set_props(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 
 /*
  * innvl: {
- *     "vdev" -> guid
- *     (optional) "props" -> { propname -> propid }
+ *     "vdevprops_get_vdev" -> guid
+ *     (optional) "vdevprops_get_props" -> { propname -> propid }
  * }
  *
  * outnvl: propname -> value
  */
+static const zfs_ioc_key_t zfs_keys_vdev_get_props[] = {
+	{ZPOOL_VDEV_GET_PROPS_VDEV,	DATA_TYPE_UINT64,	0},
+	{ZPOOL_VDEV_GET_PROPS_PROPS,	DATA_TYPE_NVLIST,	ZK_OPTIONAL}
+};
+
 static int
 zfs_ioc_vdev_get_props(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 {
@@ -3001,7 +3012,8 @@ zfs_ioc_vdev_get_props(const char *poolname, nvlist_t *innvl, nvlist_t *outnvl)
 	uint64_t vdev_guid;
 
 	/* Early validation */
-	if (nvlist_lookup_uint64(innvl, "vdev", &vdev_guid) != 0)
+	if (nvlist_lookup_uint64(innvl, ZPOOL_VDEV_GET_PROPS_VDEV,
+	    &vdev_guid) != 0)
 		return (SET_ERROR(EINVAL));
 
 	if ((error = spa_open(poolname, &spa, FTAG)) != 0)
@@ -6983,14 +6995,6 @@ zfs_ioctl_init(void)
 	    zfs_keys_pool_discard_checkpoint,
 	    ARRAY_SIZE(zfs_keys_pool_discard_checkpoint));
 
-	zfs_ioctl_register("zpool_vdev_get_props", ZFS_IOC_VDEV_GET_PROPS,
-	    zfs_ioc_vdev_get_props, zfs_secpolicy_read, POOL_NAME,
-	    POOL_CHECK_NONE, B_FALSE, B_FALSE);
-
-	zfs_ioctl_register("zpool_vdev_set_props", ZFS_IOC_VDEV_SET_PROPS,
-	    zfs_ioc_vdev_set_props, zfs_secpolicy_config, POOL_NAME,
-	    POOL_CHECK_SUSPENDED | POOL_CHECK_READONLY, B_FALSE, B_FALSE);
-
 	zfs_ioctl_register("initialize", ZFS_IOC_POOL_INITIALIZE,
 	    zfs_ioc_pool_initialize, zfs_secpolicy_config, POOL_NAME,
 	    POOL_CHECK_SUSPENDED | POOL_CHECK_READONLY, B_TRUE, B_TRUE,
@@ -7005,6 +7009,16 @@ zfs_ioctl_init(void)
 	    zfs_ioc_wait, zfs_secpolicy_none, POOL_NAME,
 	    POOL_CHECK_SUSPENDED | POOL_CHECK_READONLY, B_FALSE, B_FALSE,
 	    zfs_keys_pool_wait, ARRAY_SIZE(zfs_keys_pool_wait));
+
+	zfs_ioctl_register("zpool_vdev_get_props", ZFS_IOC_VDEV_GET_PROPS,
+	    zfs_ioc_vdev_get_props, zfs_secpolicy_read, POOL_NAME,
+	    POOL_CHECK_NONE, B_FALSE, B_FALSE, zfs_keys_vdev_get_props,
+	    ARRAY_SIZE(zfs_keys_vdev_get_props));
+
+	zfs_ioctl_register("zpool_vdev_set_props", ZFS_IOC_VDEV_SET_PROPS,
+	    zfs_ioc_vdev_set_props, zfs_secpolicy_config, POOL_NAME,
+	    POOL_CHECK_SUSPENDED | POOL_CHECK_READONLY, B_FALSE, B_FALSE,
+	    zfs_keys_vdev_set_props, ARRAY_SIZE(zfs_keys_vdev_set_props));
 
 	/* IOCTLS that use the legacy function signature */
 
