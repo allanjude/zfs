@@ -4828,7 +4828,7 @@ vdev_sync_props(void *arg, dmu_tx_t *tx)
 	mutex_enter(&spa->spa_props_lock);
 
 	while ((elem = nvlist_next_nvpair(nvprops, elem)) != NULL) {
-		uint64_t intval, objid;
+		uint64_t intval, objid = 0;
 		char *strval, *fname;
 		vdev_prop_t prop;
 		const char *propname;
@@ -5151,7 +5151,9 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	}
 
 	mutex_exit(&spa->spa_props_lock);
+#if 0
 out:
+#endif
 	if (err && err != ENOENT) {
 		return (err);
 	}
