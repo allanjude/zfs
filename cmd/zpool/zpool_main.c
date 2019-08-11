@@ -701,7 +701,8 @@ add_prop_list(const char *propname, char *propval, nvlist_t **props,
 		const char *vname = zpool_prop_to_name(ZPOOL_PROP_VERSION);
 
 		if ((prop = zpool_name_to_prop(propname)) == ZPOOL_PROP_INVAL &&
-		    !zpool_prop_feature(propname)) {
+		    (!zpool_prop_feature(propname)
+		    || zpool_prop_vdev(propname))) {
 			(void) fprintf(stderr, gettext("property '%s' is "
 			    "not a valid pool property\n"), propname);
 			return (2);
@@ -722,7 +723,7 @@ add_prop_list(const char *propname, char *propval, nvlist_t **props,
 		}
 
 
-		if (zpool_prop_feature(propname))
+		if (zpool_prop_feature(propname) || zpool_prop_vdev(propname))
 			normnm = propname;
 		else
 			normnm = zpool_prop_to_name(prop);
@@ -9006,6 +9007,19 @@ get_callback(zpool_handle_t *zhp, void *data)
 				    cbp, pl->pl_user_prop, value, srctype,
 				    NULL, NULL);
 			}
+		} else if (pl->pl_prop == ZPROP_INVAL &&
+		    zpool_prop_vdev(pl->pl_user_prop)) {
+			vdev_prop_t vprop = vdev_name_to_prop(pl->pl_user_prop);
+			char *vdevname = strchr(pl->pl_user_prop, '@') + 1;
+
+			if (zpool_get_vdev_prop(zhp, vdevname, vprop,
+			    value, sizeof (value), &srctype,
+			    cbp->cb_literal) != 0)
+				continue;
+
+			zprop_print_one_property(zpool_get_name(zhp), cbp,
+			    pl->pl_user_prop, value, srctype,
+			    NULL, NULL);
 		} else {
 			if (zpool_get_prop(zhp, pl->pl_prop, value,
 			    sizeof (value), &srctype, cbp->cb_literal) != 0)
@@ -9142,6 +9156,45 @@ zpool_do_get(int argc, char **argv)
 		cb.cb_proplist = &fake_name;
 	}
 
+	if (argc == 0) {
+		/* No args, so just print the defaults. */
+	} else if (are_all_pools(argc, argv)) {
+		/* All the args are pool names */
+	} else if (are_vdevs_in_pool(argc, argv, NULL, &cb)) {
+		/* All the args are vdevs */
+		cb.cb_vdev_names = argv;
+		cb.cb_vdev_names_count = argc;
+		cb.cb_type = ZFS_TYPE_VDEV;
+		argc = 0; /* No pools to process */
+	} else if (are_all_pools(1, argv)) {
+		/* The first arg is a pool name */
+		if (are_vdevs_in_pool(argc - 1, argv + 1, argv[0], &cb)) {
+			/* ...and the rest are vdev names */
+			cb.cb_vdev_names = argv + 1;
+			cb.cb_vdev_names_count = argc - 1;
+			cb.cb_type = ZFS_TYPE_VDEV;
+			argc = 1; /* One pool to process */
+		} else {
+			fprintf(stderr, gettext("Expected either a list of "));
+			fprintf(stderr, gettext("pools, or list of vdevs in"));
+			fprintf(stderr, " \"%s\", ", argv[0]);
+			fprintf(stderr, gettext("but got:\n"));
+			error_list_unresolved_vdevs(argc - 1, argv + 1,
+			    argv[0], &cb);
+			fprintf(stderr, "\n");
+			usage(B_FALSE);
+			return (1);
+		}
+	} else {
+		/*
+		 * The args don't make sense. The first arg isn't a pool name,
+		 * nor are all the args vdevs.
+		 */
+		fprintf(stderr, gettext("Unable to parse pools/vdevs list.\n"));
+		fprintf(stderr, "\n");
+		return (1);
+	}
+
 	ret = for_each_pool(argc, argv, B_TRUE, &cb.cb_proplist,
 	    get_callback, &cb);
 
@@ -9165,7 +9218,10 @@ set_callback(zpool_handle_t *zhp, void *data)
 	int error;
 	set_cbdata_t *cb = (set_cbdata_t *)data;
 
-	error = zpool_set_prop(zhp, cb->cb_propname, cb->cb_value);
+	if (zpool_prop_vdev(cb->cb_propname))
+		error = zpool_set_vdev_prop(zhp, cb->cb_propname, cb->cb_value);
+	else
+		error = zpool_set_prop(zhp, cb->cb_propname, cb->cb_value);
 
 	if (!error)
 		cb->cb_any_successful = B_TRUE;
