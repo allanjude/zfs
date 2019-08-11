@@ -300,8 +300,6 @@ vdev_prop_init(void)
 	    ZFS_TYPE_VDEV, "<psize>", "PSIZE");
 	zprop_register_number(VDEV_PROP_ASHIFT, "ashift", 0, PROP_READONLY,
 	    ZFS_TYPE_VDEV, "<ashift>", "ASHIFT");
-	zprop_register_number(VDEV_PROP_ROTATION_RATE, "rotation_rate", 0,
-	    PROP_READONLY, ZFS_TYPE_VDEV, "<rotation_rate>", "ROTRATE");
 
 	/* default index (boolean) properties */
 	zprop_register_index(VDEV_PROP_READONLY, "readonly", 0,
