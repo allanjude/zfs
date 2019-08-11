@@ -5010,10 +5010,6 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				vdev_prop_add_list(outnvl, prop, NULL,
 				    vd->vdev_ashift, ZPROP_SRC_NONE);
 				continue;
-			case VDEV_PROP_ROTATION_RATE:
-				vdev_prop_add_list(outnvl, prop, NULL,
-				    vd->vdev_rotation_rate, ZPROP_SRC_NONE);
-				continue;
 			case VDEV_PROP_SIZE:
 				vdev_prop_add_list(outnvl, prop, NULL,
 				    vd->vdev_stat.vs_dspace, ZPROP_SRC_NONE);
