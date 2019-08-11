@@ -53,7 +53,8 @@ typedef enum {
 	ZFS_TYPE_SNAPSHOT	= (1 << 1),
 	ZFS_TYPE_VOLUME		= (1 << 2),
 	ZFS_TYPE_POOL		= (1 << 3),
-	ZFS_TYPE_BOOKMARK	= (1 << 4)
+	ZFS_TYPE_BOOKMARK	= (1 << 4),
+	ZFS_TYPE_VDEV		= (1 << 5),
 } zfs_type_t;
 
 /*
@@ -298,6 +299,33 @@ typedef int (*zprop_func)(int, void *);
 #define	ZFS_WRITTEN_PROP_PREFIX_LEN	8
 
 /*
+ * VDEV properties are identified by these constants and must be added to the
+ * end of this list to ensure that external consumers are not affected
+ * by the change. If you make any changes to this list, be sure to update
+ * the property table in usr/src/common/zfs/zpool_prop.c.
+ */
+typedef enum {
+	VDEV_PROP_INVAL = -1,
+	VDEV_PROP_NAME,
+	VDEV_PROP_CAPACITY,
+	VDEV_PROP_STATE,
+	VDEV_PROP_GUID,
+	VDEV_PROP_ASIZE,
+	VDEV_PROP_PSIZE,
+	VDEV_PROP_ASHIFT,
+	VDEV_PROP_ROTATION_RATE,
+	VDEV_PROP_SIZE,
+	VDEV_PROP_FREE,
+	VDEV_PROP_ALLOCATED,
+	VDEV_PROP_READONLY,
+	VDEV_PROP_COMMENT,
+	VDEV_PROP_EXPANDSZ,
+	VDEV_PROP_FRAGMENTATION,
+	VDEV_PROP_BOOTSIZE,
+	VDEV_NUM_PROPS
+} vdev_prop_t;
+
+/*
  * Dataset property functions shared between libzfs and kernel.
  */
 const char *zfs_prop_default_string(zfs_prop_t);
@@ -332,6 +360,18 @@ boolean_t zpool_prop_unsupported(const char *);
 int zpool_prop_index_to_string(zpool_prop_t, uint64_t, const char **);
 int zpool_prop_string_to_index(zpool_prop_t, const char *, uint64_t *);
 uint64_t zpool_prop_random_value(zpool_prop_t, uint64_t seed);
+
+/*
+ * VDEV property functions shared between libzfs and kernel.
+ */
+vdev_prop_t vdev_name_to_prop(const char *);
+const char *vdev_prop_to_name(vdev_prop_t);
+const char *vdev_prop_default_string(vdev_prop_t);
+uint64_t vdev_prop_default_numeric(vdev_prop_t);
+boolean_t vdev_prop_readonly(vdev_prop_t prop);
+int vdev_prop_index_to_string(vdev_prop_t, uint64_t, const char **);
+int vdev_prop_string_to_index(vdev_prop_t, const char *, uint64_t *);
+boolean_t zpool_prop_vdev(const char *name);
 
 /*
  * Definitions for the Delegation.
@@ -1193,7 +1233,7 @@ typedef enum {
  */
 typedef enum zfs_ioc {
 	/*
-	 * illumos - 81/128 numbers reserved.
+	 * illumos - 83/128 numbers reserved.
 	 */
 #ifdef __FreeBSD__
 	ZFS_IOC_FIRST =	0,
@@ -1284,6 +1324,8 @@ typedef enum zfs_ioc {
 	ZFS_IOC_POOL_TRIM,			/* 0x5a50 */
 	ZFS_IOC_REDACT,				/* 0x5a51 */
 	ZFS_IOC_GET_BOOKMARK_PROPS,		/* 0x5a52 */
+	ZFS_IOC_VDEV_GET_PROPS,			/* 0x5a53 */
+	ZFS_IOC_VDEV_SET_PROPS,			/* 0x5a54 */
 
 	/*
 	 * Linux - 3/64 numbers reserved.
