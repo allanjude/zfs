@@ -1441,6 +1441,18 @@ typedef enum {
 #define	ZPOOL_TRIM_SECURE		"trim_secure"
 
 /*
+ * The following are names used when invoking ZFS_IOC_VDEV_GET_PROP.
+ */
+#define	ZPOOL_VDEV_GET_PROPS_VDEV	"vdevprops_get_vdev"
+#define	ZPOOL_VDEV_GET_PROPS_PROPS	"vdevprops_get_props"
+
+/*
+ * The following are names used when invoking ZFS_IOC_VDEV_SET_PROP.
+ */
+#define	ZPOOL_VDEV_SET_PROPS_VDEV	"vdevprops_set_vdev"
+#define	ZPOOL_VDEV_SET_PROPS_PROPS	"vdevprops_set_props"
+
+/*
  * Flags for ZFS_IOC_VDEV_SET_STATE
  */
 #define	ZFS_ONLINE_CHECKREMOVE	0x1
