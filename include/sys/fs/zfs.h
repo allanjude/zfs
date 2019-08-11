@@ -1459,6 +1459,17 @@ typedef enum {
 #define	ZPOOL_WAIT_TAG			"wait_tag"
 #define	ZPOOL_WAIT_WAITED		"wait_waited"
 
+ * The following are names used when invoking ZFS_IOC_VDEV_GET_PROP.
+ */
+#define	ZPOOL_VDEV_GET_PROPS_VDEV	"vdevprops_get_vdev"
+#define	ZPOOL_VDEV_GET_PROPS_PROPS	"vdevprops_get_props"
+
+/*
+ * The following are names used when invoking ZFS_IOC_VDEV_SET_PROP.
+ */
+#define	ZPOOL_VDEV_SET_PROPS_VDEV	"vdevprops_set_vdev"
+#define	ZPOOL_VDEV_SET_PROPS_PROPS	"vdevprops_set_props"
+
 /*
  * Flags for ZFS_IOC_VDEV_SET_STATE
  */

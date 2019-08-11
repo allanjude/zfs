@@ -4526,7 +4526,7 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 	if (nvlist_alloc(&reqprops, NV_UNIQUE_NAME, 0) != 0)
 		return (no_memory(zhp->zpool_hdl));
 
-	fnvlist_add_uint64(reqnvl, "vdev", vdev_guid);
+	fnvlist_add_uint64(reqnvl, ZPOOL_VDEV_GET_PROPS_VDEV, vdev_guid);
 
 	if (nvlist_add_uint64(reqprops, vdev_prop_to_name(prop), prop) != 0) {
 		nvlist_free(reqnvl);
@@ -4534,7 +4534,7 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 		return (no_memory(zhp->zpool_hdl));
 	}
 
-	fnvlist_add_nvlist(reqnvl, "props", reqprops);
+	fnvlist_add_nvlist(reqnvl, ZPOOL_VDEV_SET_PROPS_PROPS, reqprops);
 
 	(void) snprintf(errbuf, sizeof (errbuf),
 	    dgettext(TEXT_DOMAIN, "cannot get vdev property %s from %s"),
@@ -4698,7 +4698,7 @@ zpool_get_all_vdev_props(zpool_handle_t *zhp, const char *vdevname,
 	if (nvlist_alloc(&nvl, NV_UNIQUE_NAME, 0) != 0)
 		return (no_memory(zhp->zpool_hdl));
 
-	fnvlist_add_uint64(nvl, "vdev", vdev_guid);
+	fnvlist_add_uint64(nvl, ZPOOL_VDEV_GET_PROPS_VDEV, vdev_guid);
 
 	ret = lzc_get_vdev_prop(zhp->zpool_name, nvl, outnvl);
 
@@ -4762,7 +4762,7 @@ zpool_set_vdev_prop(zpool_handle_t *zhp, const char *propname,
 	if (nvlist_alloc(&props, NV_UNIQUE_NAME, 0) != 0)
 		return (no_memory(zhp->zpool_hdl));
 
-	fnvlist_add_uint64(nvl, "vdev", vdev_guid);
+	fnvlist_add_uint64(nvl, ZPOOL_VDEV_SET_PROPS_VDEV, vdev_guid);
 
 	if (nvlist_add_string(props, vdevprop, propval) != 0) {
 		nvlist_free(props);
@@ -4781,7 +4781,7 @@ zpool_set_vdev_prop(zpool_handle_t *zhp, const char *propname,
 	nvlist_free(props);
 	props = realprops;
 
-	fnvlist_add_nvlist(nvl, "props", props);
+	fnvlist_add_nvlist(nvl, ZPOOL_VDEV_SET_PROPS_PROPS, props);
 
 	ret = lzc_set_vdev_prop(zhp->zpool_name, nvl, &outnvl);
 
