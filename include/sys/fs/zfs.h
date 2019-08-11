@@ -1436,7 +1436,7 @@ typedef enum {
  * The following are names used when invoking ZFS_IOC_VDEV_GET_PROP.
  */
 #define	ZPOOL_VDEV_GET_PROPS_VDEV	"vdevprops_get_vdev"
-#define	ZPOOL_VDEV_SET_PROPS_PROPS	"vdevprops_get_props"
+#define	ZPOOL_VDEV_GET_PROPS_PROPS	"vdevprops_get_props"
 
 /*
  * The following are names used when invoking ZFS_IOC_VDEV_SET_PROP.
