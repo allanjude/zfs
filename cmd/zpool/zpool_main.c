@@ -3507,16 +3507,14 @@ zpool_do_sync(int argc, char **argv)
 
 typedef struct iostat_cbdata {
 	uint64_t cb_flags;
-	int cb_name_flags;
 	int cb_namewidth;
 	int cb_iteration;
-	char **cb_vdev_names; /* Only show these vdevs */
-	unsigned int cb_vdev_names_count;
 	boolean_t cb_verbose;
 	boolean_t cb_literal;
 	boolean_t cb_scripted;
 	zpool_list_t *cb_list;
 	vdev_cmd_data_list_t *vcdl;
+	vdev_cbdata_t cb_vdevs;
 } iostat_cbdata_t;
 
 /*  iostat labels */
@@ -3766,7 +3764,7 @@ print_iostat_dashes(iostat_cbdata_t *cb, unsigned int force_column_width,
 
 	if (cb->cb_flags & IOS_ANYHISTO_M) {
 		title = histo_to_title[IOS_HISTO_IDX(cb->cb_flags)];
-	} else if (cb->cb_vdev_names_count) {
+	} else if (cb->cb_vdevs.cb_names_count) {
 		title = "vdev";
 	} else  {
 		title = "pool";
@@ -3826,7 +3824,7 @@ print_iostat_header_impl(iostat_cbdata_t *cb, unsigned int force_column_width,
 
 	if (cb->cb_flags & IOS_ANYHISTO_M) {
 		title = histo_to_title[IOS_HISTO_IDX(cb->cb_flags)];
-	} else if (cb->cb_vdev_names_count) {
+	} else if (cb->cb_vdevs.cb_names_count) {
 		title = "vdev";
 	} else  {
 		title = "pool";
@@ -4331,9 +4329,9 @@ print_vdev_stats(zpool_handle_t *zhp, const char *name, nvlist_t *oldnv,
 	}
 
 	/* Do we only want to see a specific vdev? */
-	for (i = 0; i < cb->cb_vdev_names_count; i++) {
+	for (i = 0; i < cb->cb_vdevs.cb_names_count; i++) {
 		/* Yes we do.  Is this the vdev? */
-		if (strcmp(name, cb->cb_vdev_names[i]) == 0) {
+		if (strcmp(name, cb->cb_vdevs.cb_names[i]) == 0) {
 			/*
 			 * This is our vdev.  Since it is the only vdev we
 			 * will be displaying, make depth = 0 so that it
@@ -4344,7 +4342,7 @@ print_vdev_stats(zpool_handle_t *zhp, const char *name, nvlist_t *oldnv,
 		}
 	}
 
-	if (cb->cb_vdev_names_count && (i == cb->cb_vdev_names_count)) {
+	if (cb->cb_vdevs.cb_names_count && (i == cb->cb_vdevs.cb_names_count)) {
 		/* Couldn't match the name */
 		goto children;
 	}
@@ -4451,7 +4449,7 @@ children:
 			continue;
 
 		vname = zpool_vdev_name(g_zfs, zhp, newchild[c],
-		    cb->cb_name_flags);
+		    cb->cb_vdevs.cb_name_flags);
 		ret += print_vdev_stats(zhp, vname, oldnv ? oldchild[c] : NULL,
 		    newchild[c], cb, depth + 2);
 		free(vname);
@@ -4485,7 +4483,8 @@ children:
 
 			if (!printed) {
 				if ((!(cb->cb_flags & IOS_ANYHISTO_M)) &&
-				    !cb->cb_scripted && !cb->cb_vdev_names) {
+				    !cb->cb_scripted &&
+				    !cb->cb_vdevs.cb_names) {
 					print_iostat_dashes(cb, 0,
 					    class_name[n]);
 				}
@@ -4494,7 +4493,7 @@ children:
 			}
 
 			vname = zpool_vdev_name(g_zfs, zhp, newchild[c],
-			    cb->cb_name_flags);
+			    cb->cb_vdevs.cb_name_flags);
 			ret += print_vdev_stats(zhp, vname, oldnv ?
 			    oldchild[c] : NULL, newchild[c], cb, depth + 2);
 			free(vname);
@@ -4518,14 +4517,14 @@ children:
 
 	if (children > 0) {
 		if ((!(cb->cb_flags & IOS_ANYHISTO_M)) && !cb->cb_scripted &&
-		    !cb->cb_vdev_names) {
+		    !cb->cb_vdevs.cb_names) {
 			print_iostat_dashes(cb, 0, "cache");
 		}
 		printf("\n");
 
 		for (c = 0; c < children; c++) {
 			vname = zpool_vdev_name(g_zfs, zhp, newchild[c],
-			    cb->cb_name_flags);
+			    cb->cb_vdevs.cb_name_flags);
 			ret += print_vdev_stats(zhp, vname, oldnv ? oldchild[c]
 			    : NULL, newchild[c], cb, depth + 2);
 			free(vname);
@@ -4581,7 +4580,8 @@ print_iostat(zpool_handle_t *zhp, void *data)
 	ret = print_vdev_stats(zhp, zpool_get_name(zhp), oldnvroot, newnvroot,
 	    cb, 0);
 	if ((ret != 0) && !(cb->cb_flags & IOS_ANYHISTO_M) &&
-	    !cb->cb_scripted && cb->cb_verbose && !cb->cb_vdev_names_count) {
+	    !cb->cb_scripted && cb->cb_verbose &&
+	    !cb->cb_vdevs.cb_names_count) {
 		print_iostat_separator(cb);
 		if (cb->vcdl != NULL) {
 			print_cmd_columns(cb->vcdl, 1);
@@ -4788,18 +4788,18 @@ get_stat_flags(zpool_list_t *list)
 }
 
 /*
- * Return 1 if cb_data->cb_vdev_names[0] is this vdev's name, 0 otherwise.
+ * Return 1 if cb_data->cb_names[0] is this vdev's name, 0 otherwise.
  */
 static int
 is_vdev_cb(zpool_handle_t *zhp, nvlist_t *nv, void *cb_data)
 {
-	iostat_cbdata_t *cb = cb_data;
+	vdev_cbdata_t *cb = cb_data;
 	char *name = NULL;
 	int ret = 0;
 
 	name = zpool_vdev_name(g_zfs, zhp, nv, cb->cb_name_flags);
 
-	if (strcmp(name, cb->cb_vdev_names[0]) == 0)
+	if (strcmp(name, cb->cb_names[0]) == 0)
 		ret = 1; /* match */
 	free(name);
 
@@ -4807,7 +4807,7 @@ is_vdev_cb(zpool_handle_t *zhp, nvlist_t *nv, void *cb_data)
 }
 
 /*
- * Returns 1 if cb_data->cb_vdev_names[0] is a vdev name, 0 otherwise.
+ * Returns 1 if cb_data->cb_names[0] is a vdev name, 0 otherwise.
  */
 static int
 is_vdev(zpool_handle_t *zhp, void *cb_data)
@@ -4823,7 +4823,7 @@ is_vdev(zpool_handle_t *zhp, void *cb_data)
  */
 static int
 are_vdevs_in_pool(int argc, char **argv, char *pool_name,
-    iostat_cbdata_t *cb)
+    vdev_cbdata_t *cb)
 {
 	char **tmp_name;
 	int ret = 0;
@@ -4836,12 +4836,12 @@ are_vdevs_in_pool(int argc, char **argv, char *pool_name,
 	if (pool_name)
 		pool_count = 1;
 
-	/* Temporarily hijack cb_vdev_names for a second... */
-	tmp_name = cb->cb_vdev_names;
+	/* Temporarily hijack cb_names for a second... */
+	tmp_name = cb->cb_names;
 
 	/* Go though our list of prospective vdev names */
 	for (i = 0; i < argc; i++) {
-		cb->cb_vdev_names = argv + i;
+		cb->cb_names = argv + i;
 
 		/* Is this name a vdev in our pools? */
 		ret = for_each_pool(pool_count, &pool_name, B_TRUE, NULL,
@@ -4852,7 +4852,7 @@ are_vdevs_in_pool(int argc, char **argv, char *pool_name,
 		}
 	}
 
-	cb->cb_vdev_names = tmp_name;
+	cb->cb_names = tmp_name;
 
 	return (ret);
 }
@@ -4906,9 +4906,9 @@ error_list_unresolved_vdevs(int argc, char **argv, char *pool_name,
 
 		if (is_pool(name))
 			str = gettext("pool");
-		else if (are_vdevs_in_pool(1, &name, pool_name, cb))
+		else if (are_vdevs_in_pool(1, &name, pool_name, &cb->cb_vdevs))
 			str = gettext("vdev in this pool");
-		else if (are_vdevs_in_pool(1, &name, NULL, cb))
+		else if (are_vdevs_in_pool(1, &name, NULL, &cb->cb_vdevs))
 			str = gettext("vdev in another pool");
 		else
 			str = gettext("unknown");
@@ -4920,7 +4920,7 @@ error_list_unresolved_vdevs(int argc, char **argv, char *pool_name,
 /*
  * Same as get_interval_count(), but with additional checks to not misinterpret
  * guids as interval/count values.  Assumes VDEV_NAME_GUID is set in
- * cb.cb_name_flags.
+ * cb.cb_vdevs.cb_name_flags.
  */
 static void
 get_interval_count_filter_guids(int *argc, char **argv, float *interval,
@@ -4930,7 +4930,8 @@ get_interval_count_filter_guids(int *argc, char **argv, float *interval,
 	int argc_for_interval = 0;
 
 	/* Is the last arg an interval value?  Or a guid? */
-	if (*argc >= 1 && !are_vdevs_in_pool(1, &argv[*argc - 1], NULL, cb)) {
+	if (*argc >= 1 && !are_vdevs_in_pool(1, &argv[*argc - 1], NULL,
+	    &cb->cb_vdevs)) {
 		/*
 		 * The last arg is not a guid, so it's probably an
 		 * interval value.
@@ -4938,7 +4939,8 @@ get_interval_count_filter_guids(int *argc, char **argv, float *interval,
 		argc_for_interval++;
 
 		if (*argc >= 2 &&
-		    !are_vdevs_in_pool(1, &argv[*argc - 2], NULL, cb)) {
+		    !are_vdevs_in_pool(1, &argv[*argc - 2], NULL,
+		    &cb->cb_vdevs)) {
 			/*
 			 * The 2nd to last arg is not a guid, so it's probably
 			 * an interval value.
@@ -5077,7 +5079,7 @@ get_namewidth_iostat(zpool_handle_t *zhp, void *data)
 	iostat_cbdata_t *cb = data;
 	int width, columns;
 
-	width = get_namewidth(zhp, cb->cb_namewidth, cb->cb_name_flags,
+	width = get_namewidth(zhp, cb->cb_namewidth, cb->cb_vdevs.cb_name_flags,
 	    cb->cb_verbose);
 	columns = get_columns();
 
@@ -5234,11 +5236,11 @@ zpool_do_iostat(int argc, char **argv)
 	cb.cb_scripted = scripted;
 
 	if (guid)
-		cb.cb_name_flags |= VDEV_NAME_GUID;
+		cb.cb_vdevs.cb_name_flags |= VDEV_NAME_GUID;
 	if (follow_links)
-		cb.cb_name_flags |= VDEV_NAME_FOLLOW_LINKS;
+		cb.cb_vdevs.cb_name_flags |= VDEV_NAME_FOLLOW_LINKS;
 	if (full_name)
-		cb.cb_name_flags |= VDEV_NAME_PATH;
+		cb.cb_vdevs.cb_name_flags |= VDEV_NAME_PATH;
 	cb.cb_iteration = 0;
 	cb.cb_namewidth = 0;
 	cb.cb_verbose = verbose;
@@ -5255,17 +5257,18 @@ zpool_do_iostat(int argc, char **argv)
 		/* No args, so just print the defaults. */
 	} else if (are_all_pools(argc, argv)) {
 		/* All the args are pool names */
-	} else if (are_vdevs_in_pool(argc, argv, NULL, &cb)) {
+	} else if (are_vdevs_in_pool(argc, argv, NULL, &cb.cb_vdevs)) {
 		/* All the args are vdevs */
-		cb.cb_vdev_names = argv;
-		cb.cb_vdev_names_count = argc;
+		cb.cb_vdevs.cb_names = argv;
+		cb.cb_vdevs.cb_names_count = argc;
 		argc = 0; /* No pools to process */
 	} else if (are_all_pools(1, argv)) {
 		/* The first arg is a pool name */
-		if (are_vdevs_in_pool(argc - 1, argv + 1, argv[0], &cb)) {
+		if (are_vdevs_in_pool(argc - 1, argv + 1, argv[0],
+		    &cb.cb_vdevs)) {
 			/* ...and the rest are vdev names */
-			cb.cb_vdev_names = argv + 1;
-			cb.cb_vdev_names_count = argc - 1;
+			cb.cb_vdevs.cb_names = argv + 1;
+			cb.cb_vdevs.cb_names_count = argc - 1;
 			argc = 1; /* One pool to process */
 		} else {
 			fprintf(stderr, gettext("Expected either a list of "));
@@ -5288,7 +5291,7 @@ zpool_do_iostat(int argc, char **argv)
 		return (1);
 	}
 
-	if (cb.cb_vdev_names_count != 0) {
+	if (cb.cb_vdevs.cb_names_count != 0) {
 		/*
 		 * If user specified vdevs, it implies verbose.
 		 */
@@ -5407,8 +5410,9 @@ zpool_do_iostat(int argc, char **argv)
 			if (cmd != NULL && cb.cb_verbose &&
 			    !(cb.cb_flags & IOS_ANYHISTO_M)) {
 				cb.vcdl = all_pools_for_each_vdev_run(argc,
-				    argv, cmd, g_zfs, cb.cb_vdev_names,
-				    cb.cb_vdev_names_count, cb.cb_name_flags);
+				    argv, cmd, g_zfs, cb.cb_vdevs.cb_names,
+				    cb.cb_vdevs.cb_names_count,
+				    cb.cb_vdevs.cb_name_flags);
 			} else {
 				cb.vcdl = NULL;
 			}
@@ -5460,7 +5464,7 @@ zpool_do_iostat(int argc, char **argv)
 			if (((npools > 1 && !verbose &&
 			    !(cb.cb_flags & IOS_ANYHISTO_M)) ||
 			    (!(cb.cb_flags & IOS_ANYHISTO_M) &&
-			    cb.cb_vdev_names_count)) &&
+			    cb.cb_vdevs.cb_names_count)) &&
 			    !cb.cb_scripted) {
 				print_iostat_separator(&cb);
 				if (cb.vcdl != NULL)
@@ -9262,18 +9266,19 @@ zpool_do_get(int argc, char **argv)
 		/* No args, so just print the defaults. */
 	} else if (are_all_pools(argc, argv)) {
 		/* All the args are pool names */
-	} else if (are_vdevs_in_pool(argc, argv, NULL, &cb)) {
+	} else if (are_vdevs_in_pool(argc, argv, NULL, &cb.cb_vdevs)) {
 		/* All the args are vdevs */
-		cb.cb_vdev_names = argv;
-		cb.cb_vdev_names_count = argc;
+		cb.cb_vdevs.cb_names = argv;
+		cb.cb_vdevs.cb_names_count = argc;
 		cb.cb_type = ZFS_TYPE_VDEV;
 		argc = 0; /* No pools to process */
 	} else if (are_all_pools(1, argv)) {
 		/* The first arg is a pool name */
-		if (are_vdevs_in_pool(argc - 1, argv + 1, argv[0], &cb)) {
+		if (are_vdevs_in_pool(argc - 1, argv + 1, argv[0],
+		    &cb.cb_vdevs)) {
 			/* ...and the rest are vdev names */
-			cb.cb_vdev_names = argv + 1;
-			cb.cb_vdev_names_count = argc - 1;
+			cb.cb_vdevs.cb_names = argv + 1;
+			cb.cb_vdevs.cb_names_count = argc - 1;
 			cb.cb_type = ZFS_TYPE_VDEV;
 			argc = 1; /* One pool to process */
 		} else {
