@@ -4955,7 +4955,7 @@ vdev_prop_set(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 
 	ASSERT(vd != NULL);
 
-	if (nvlist_lookup_uint64(innvl, ZPOOL_VDEV_SET_PROPS_PROPS,
+	if (nvlist_lookup_uint64(innvl, ZPOOL_VDEV_SET_PROPS_VDEV,
 	    &vdev_guid) != 0)
 		return (SET_ERROR(EINVAL));
 

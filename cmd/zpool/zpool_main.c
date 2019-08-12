@@ -4896,7 +4896,7 @@ are_all_pools(int argc, char **argv)
  */
 static void
 error_list_unresolved_vdevs(int argc, char **argv, char *pool_name,
-    iostat_cbdata_t *cb)
+    vdev_cbdata_t *cb)
 {
 	int i;
 	char *name;
@@ -4906,9 +4906,9 @@ error_list_unresolved_vdevs(int argc, char **argv, char *pool_name,
 
 		if (is_pool(name))
 			str = gettext("pool");
-		else if (are_vdevs_in_pool(1, &name, pool_name, &cb->cb_vdevs))
+		else if (are_vdevs_in_pool(1, &name, pool_name, cb))
 			str = gettext("vdev in this pool");
-		else if (are_vdevs_in_pool(1, &name, NULL, &cb->cb_vdevs))
+		else if (are_vdevs_in_pool(1, &name, NULL, cb))
 			str = gettext("vdev in another pool");
 		else
 			str = gettext("unknown");
@@ -5276,7 +5276,7 @@ zpool_do_iostat(int argc, char **argv)
 			fprintf(stderr, " \"%s\", ", argv[0]);
 			fprintf(stderr, gettext("but got:\n"));
 			error_list_unresolved_vdevs(argc - 1, argv + 1,
-			    argv[0], &cb);
+			    argv[0], &cb.cb_vdevs);
 			fprintf(stderr, "\n");
 			usage(B_FALSE);
 			return (1);
@@ -9287,7 +9287,7 @@ zpool_do_get(int argc, char **argv)
 			fprintf(stderr, " \"%s\", ", argv[0]);
 			fprintf(stderr, gettext("but got:\n"));
 			error_list_unresolved_vdevs(argc - 1, argv + 1,
-			    argv[0], &cb);
+			    argv[0], &cb.cb_vdevs);
 			fprintf(stderr, "\n");
 			usage(B_FALSE);
 			return (1);
