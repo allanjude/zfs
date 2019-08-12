@@ -489,7 +489,6 @@ zpool_valid_proplist(libzfs_handle_t *hdl, const char *poolname,
 		const char *propname = nvpair_name(elem);
 
 		if (flags.vdevprop && zpool_prop_vdev(propname)) {
-			int err;
 			vdev_prop_t vprop = vdev_name_to_prop(propname);
 
 			ASSERT3U(vprop, !=, VDEV_PROP_INVAL);
@@ -4979,7 +4978,8 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 			else
 				(void) snprintf(buf, len, "%llu RPM", intval);
 		default:
-			(void) snprintf(buf, len, "%llu", intval);
+			(void) snprintf(buf, len, "%llu",
+			    (u_longlong_t)intval);
 		}
 		break;
 
@@ -4992,7 +4992,8 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 			src = ZPROP_SRC_DEFAULT;
 			intval = vdev_prop_default_numeric(prop);
 		}
-		if (vdev_prop_index_to_string(prop, intval, &strval) != 0)
+		if (vdev_prop_index_to_string(prop, intval,
+		    (const char **)&strval) != 0)
 			return (-1);
 		(void) strlcpy(buf, strval, len);
 		break;
@@ -5016,7 +5017,6 @@ int
 zpool_get_all_vdev_props(zpool_handle_t *zhp, const char *vdevname,
     nvlist_t **outnvl)
 {
-	libzfs_handle_t *hdl = zhp->zpool_hdl;
 	nvlist_t *tgt;
 	nvlist_t *nvl = NULL;
 	uint64_t vdev_guid;
