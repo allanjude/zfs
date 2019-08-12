@@ -4970,13 +4970,6 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 			(void) strlcpy(buf, zpool_state_to_name(intval,
 			    vs->vs_aux), len);
 			break;
-		case VDEV_PROP_ROTATION_RATE:
-			if (intval == 0) /* VDEV_RATE_UNKNOWN */
-				(void) snprintf(buf, len, "Unknown");
-			else if (intval == 1) /* VDEV_RATE_NON_ROTATING */
-				(void) snprintf(buf, len, "Non-Rotating");
-			else
-				(void) snprintf(buf, len, "%llu RPM", intval);
 		default:
 			(void) snprintf(buf, len, "%llu",
 			    (u_longlong_t)intval);
