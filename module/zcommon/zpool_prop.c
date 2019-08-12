@@ -421,7 +421,6 @@ EXPORT_SYMBOL(zpool_prop_get_table);
 EXPORT_SYMBOL(vdev_prop_init);
 EXPORT_SYMBOL(vdev_prop_get_type);
 EXPORT_SYMBOL(vdev_prop_get_table);
-
 /* Pool property functions shared between libzfs and kernel. */
 EXPORT_SYMBOL(zpool_name_to_prop);
 EXPORT_SYMBOL(zpool_prop_to_name);
@@ -432,6 +431,7 @@ EXPORT_SYMBOL(zpool_prop_feature);
 EXPORT_SYMBOL(zpool_prop_unsupported);
 EXPORT_SYMBOL(zpool_prop_index_to_string);
 EXPORT_SYMBOL(zpool_prop_string_to_index);
+EXPORT_SYMBOL(zpool_prop_vdev);
 EXPORT_SYMBOL(vdev_name_to_prop);
 EXPORT_SYMBOL(vdev_prop_to_name);
 EXPORT_SYMBOL(vdev_prop_default_string);
