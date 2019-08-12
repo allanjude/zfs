@@ -578,6 +578,12 @@ typedef enum {
 /*
  * Functions for printing zfs or zpool properties
  */
+typedef struct vdev_cbdata {
+	int cb_name_flags;
+	char **cb_names;
+	unsigned int cb_names_count;
+} vdev_cbdata_t;
+
 typedef struct zprop_get_cbdata {
 	int cb_sources;
 	zfs_get_column_t cb_columns[ZFS_GET_NCOLS];
@@ -587,8 +593,7 @@ typedef struct zprop_get_cbdata {
 	boolean_t cb_first;
 	zprop_list_t *cb_proplist;
 	zfs_type_t cb_type;
-	char **cb_vdev_names; /* Only show these vdevs */
-	unsigned int cb_vdev_names_count;
+	vdev_cbdata_t cb_vdevs;
 } zprop_get_cbdata_t;
 
 void zprop_print_one_property(const char *, zprop_get_cbdata_t *,
