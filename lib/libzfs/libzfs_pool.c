@@ -4520,7 +4520,7 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 		return (no_memory(zhp->zpool_hdl));
 	}
 
-	fnvlist_add_nvlist(reqnvl, ZPOOL_VDEV_SET_PROPS_PROPS, reqprops);
+	fnvlist_add_nvlist(reqnvl, ZPOOL_VDEV_GET_PROPS_PROPS, reqprops);
 
 	(void) snprintf(errbuf, sizeof (errbuf),
 	    dgettext(TEXT_DOMAIN, "cannot get vdev property %s from %s"),

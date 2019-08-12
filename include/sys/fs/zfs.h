@@ -372,6 +372,7 @@ boolean_t vdev_prop_readonly(vdev_prop_t prop);
 int vdev_prop_index_to_string(vdev_prop_t, uint64_t, const char **);
 int vdev_prop_string_to_index(vdev_prop_t, const char *, uint64_t *);
 boolean_t zpool_prop_vdev(const char *name);
+uint64_t vdev_prop_random_value(vdev_prop_t prop, uint64_t seed);
 
 /*
  * Definitions for the Delegation.
