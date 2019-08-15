@@ -9250,6 +9250,8 @@ zpool_do_get(int argc, char **argv)
 typedef struct set_cbdata {
 	char *cb_propname;
 	char *cb_value;
+	zfs_type_t cb_type;
+	vdev_cbdata_t cb_vdevs;
 	boolean_t cb_any_successful;
 } set_cbdata_t;
 
@@ -9259,8 +9261,9 @@ set_callback(zpool_handle_t *zhp, void *data)
 	int error;
 	set_cbdata_t *cb = (set_cbdata_t *)data;
 
-	if (zpool_prop_vdev(cb->cb_propname))
-		error = zpool_set_vdev_prop(zhp, cb->cb_propname, cb->cb_value);
+	if (cb->cb_type == ZFS_TYPE_VDEV && zpool_prop_vdev(cb->cb_propname))
+		error = zpool_set_vdev_prop(zhp, *cb->cb_vdevs.cb_names,
+		    cb->cb_propname, cb->cb_value);
 	else
 		error = zpool_set_prop(zhp, cb->cb_propname, cb->cb_value);
 
@@ -9293,12 +9296,13 @@ zpool_do_set(int argc, char **argv)
 		usage(B_FALSE);
 	}
 
-	if (argc > 3) {
+	if (argc > 4) {
 		(void) fprintf(stderr, gettext("too many pool names\n"));
 		usage(B_FALSE);
 	}
 
 	cb.cb_propname = argv[1];
+	cb.cb_type = ZFS_TYPE_POOL;
 	cb.cb_value = strchr(cb.cb_propname, '=');
 	if (cb.cb_value == NULL) {
 		(void) fprintf(stderr, gettext("missing value in "
@@ -9308,8 +9312,32 @@ zpool_do_set(int argc, char **argv)
 
 	*(cb.cb_value) = '\0';
 	cb.cb_value++;
+	argc -= 2;
+	argv += 2;
 
-	error = for_each_pool(argc - 2, argv + 2, B_TRUE, NULL,
+	if (are_vdevs_in_pool(argc, argv, NULL, &cb.cb_vdevs)) {
+		/* Argument is a vdev */
+		cb.cb_vdevs.cb_names = argv;
+		cb.cb_vdevs.cb_names_count = 1;
+		cb.cb_type = ZFS_TYPE_VDEV;
+		argc = 0; /* No pools to process */
+	} else if (are_all_pools(1, argv)) {
+		/* The first arg is a pool name */
+		if (are_vdevs_in_pool(argc - 1, argv + 1, argv[0],
+		    &cb.cb_vdevs)) {
+			/* 2nd argument is a vdev */
+			cb.cb_vdevs.cb_names = argv + 1;
+			cb.cb_vdevs.cb_names_count = 1;
+			cb.cb_type = ZFS_TYPE_VDEV;
+			argc = 1; /* One pool to process */
+		} else {
+			(void) fprintf(stderr,
+			    gettext("too many pool names\n"));
+			usage(B_FALSE);
+		}
+	}
+
+	error = for_each_pool(argc, argv, B_TRUE, NULL,
 	    set_callback, &cb);
 
 	return (error);
