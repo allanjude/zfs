@@ -1309,10 +1309,12 @@ zprop_print_headers(zprop_get_cbdata_t *cbp, zfs_type_t type)
 			    vdev_prop_to_name(pl->pl_prop) :
 			    zfs_prop_to_name(pl->pl_prop)));
 
+			assert(propname != NULL);
 			len = strlen(propname);
 			if (len > cbp->cb_colwidths[GET_COL_PROPERTY])
 				cbp->cb_colwidths[GET_COL_PROPERTY] = len;
 		} else {
+			assert(pl->pl_user_prop != NULL);
 			len = strlen(pl->pl_user_prop);
 			if (len > cbp->cb_colwidths[GET_COL_PROPERTY])
 				cbp->cb_colwidths[GET_COL_PROPERTY] = len;
