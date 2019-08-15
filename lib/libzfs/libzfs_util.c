@@ -1141,7 +1141,7 @@ zprop_print_headers(zprop_get_cbdata_t *cbp, zfs_type_t type)
 	/* first property is always NAME */
 	assert(cbp->cb_proplist->pl_prop ==
 	    ((type == ZFS_TYPE_POOL) ?  ZPOOL_PROP_NAME :
-	    (type == ZFS_TYPE_VDEV) ? VDEV_PROP_NAME : ZFS_PROP_NAME));
+	    ((type == ZFS_TYPE_VDEV) ? VDEV_PROP_NAME : ZFS_PROP_NAME)));
 
 	/*
 	 * Go through and calculate the widths for each column.  For the
@@ -1192,9 +1192,9 @@ zprop_print_headers(zprop_get_cbdata_t *cbp, zfs_type_t type)
 		/*
 		 * 'NAME' and 'SOURCE' columns
 		 */
-		if (pl->pl_prop == (type == ZFS_TYPE_POOL ? ZPOOL_PROP_NAME :
-		    ZFS_PROP_NAME) &&
-		    pl->pl_width > cbp->cb_colwidths[GET_COL_NAME]) {
+		if (pl->pl_prop == ((type == ZFS_TYPE_POOL) ? ZPOOL_PROP_NAME :
+		    ((type == ZFS_TYPE_VDEV) ? VDEV_PROP_NAME : ZFS_PROP_NAME))
+		    && pl->pl_width > cbp->cb_colwidths[GET_COL_NAME]) {
 			cbp->cb_colwidths[GET_COL_NAME] = pl->pl_width;
 			cbp->cb_colwidths[GET_COL_SOURCE] = pl->pl_width +
 			    strlen(dgettext(TEXT_DOMAIN, "inherited from"));
@@ -1814,8 +1814,8 @@ zprop_expand_list(libzfs_handle_t *hdl, zprop_list_t **plp, zfs_type_t type)
 		if ((entry = zfs_alloc(hdl, sizeof (zprop_list_t))) == NULL)
 			return (-1);
 
-		entry->pl_prop = (type == ZFS_TYPE_POOL) ?  ZPOOL_PROP_NAME :
-		    ZFS_PROP_NAME;
+		entry->pl_prop = ((type == ZFS_TYPE_POOL) ?  ZPOOL_PROP_NAME :
+		    ((type == ZFS_TYPE_VDEV) ? VDEV_PROP_NAME : ZFS_PROP_NAME));
 		entry->pl_width = zprop_width(entry->pl_prop,
 		    &entry->pl_fixed, type);
 		entry->pl_all = B_TRUE;
