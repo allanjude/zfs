@@ -779,11 +779,6 @@ zpool_set_prop(zpool_handle_t *zhp, const char *propname, const char *propval)
 	    dgettext(TEXT_DOMAIN, "cannot set property for ALLAN2 '%s'"),
 	    zhp->zpool_name);
 
-	if (zpool_prop_vdev(propname)) {
-		/* XXX: Allan: do we need this? We can't do get this way. */
-		return (zpool_set_vdev_prop(zhp, propname, propval));
-	}
-
 	if (nvlist_alloc(&nvl, NV_UNIQUE_NAME, 0) != 0)
 		return (no_memory(zhp->zpool_hdl));
 
@@ -4705,16 +4700,14 @@ zpool_get_all_vdev_props(zpool_handle_t *zhp, const char *vdevname,
 }
 
 /*
- * Set vdev property : vdevprop@vdevname=propval.
+ * Set vdev property
  */
 int
-zpool_set_vdev_prop(zpool_handle_t *zhp, const char *propname,
-    const char *propval)
+zpool_set_vdev_prop(zpool_handle_t *zhp, const char *vdevname,
+    const char *propname, const char *propval)
 {
 	int ret = -1;
 	char errbuf[1024];
-	const char *vdevname;
-	const char *vdevprop;
 	vdev_prop_t vprop;
 	nvlist_t *nvl = NULL;
 	nvlist_t *outnvl = NULL;
@@ -4734,8 +4727,6 @@ zpool_set_vdev_prop(zpool_handle_t *zhp, const char *propname,
 	}
 
 	vprop = vdev_name_to_prop(propname);
-	vdevprop = vdev_prop_to_name(vprop);
-	vdevname = strchr(propname, '@') + 1;
 
 	(void) snprintf(errbuf, sizeof (errbuf),
 	    dgettext(TEXT_DOMAIN, "cannot find %s"), vdevname);
@@ -4748,7 +4739,7 @@ zpool_set_vdev_prop(zpool_handle_t *zhp, const char *propname,
 
 	(void) snprintf(errbuf, sizeof (errbuf),
 	    dgettext(TEXT_DOMAIN, "cannot set property '%s' for '%s'"),
-	    vdevprop, vdevname);
+	    propname, vdevname);
 
 	if (nvlist_alloc(&nvl, NV_UNIQUE_NAME, 0) != 0)
 		return (no_memory(zhp->zpool_hdl));
@@ -4757,7 +4748,7 @@ zpool_set_vdev_prop(zpool_handle_t *zhp, const char *propname,
 
 	fnvlist_add_uint64(nvl, ZPOOL_VDEV_SET_PROPS_VDEV, vdev_guid);
 
-	if (nvlist_add_string(props, vdevprop, propval) != 0) {
+	if (nvlist_add_string(props, propname, propval) != 0) {
 		nvlist_free(props);
 		return (no_memory(zhp->zpool_hdl));
 	}
