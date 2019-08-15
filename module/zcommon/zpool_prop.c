@@ -318,16 +318,7 @@ vdev_prop_init(void)
 vdev_prop_t
 vdev_name_to_prop(const char *propname)
 {
-	char vdevprop[MAXPATHLEN] = { 0 };
-	char *vpname = (char *)&vdevprop;
-	char *atsign = NULL;
-
-	strlcpy(vpname, propname, sizeof(vdevprop));
-	atsign = strchr(vpname, '@');
-	if (atsign != NULL)
-		*atsign= '\0';
-
-	return (zprop_name_to_prop((const char *)vpname, ZFS_TYPE_VDEV));
+	return (zprop_name_to_prop(propname, ZFS_TYPE_VDEV));
 }
 
 /*
