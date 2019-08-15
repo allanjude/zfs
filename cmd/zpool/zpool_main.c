@@ -8996,6 +8996,33 @@ get_callback(zpool_handle_t *zhp, void *data)
 	zprop_list_t *pl;
 	int vd;
 
+	/* Adjust the column widths for the vdev properties */
+	for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
+		/*
+		 * Skip the special fake placeholder. This will also skip
+		 * over the name property when 'all' is specified.
+		 */
+		if (pl->pl_prop == ZPOOL_PROP_NAME &&
+		    pl == cbp->cb_proplist)
+			continue;
+
+		if (cbp->cb_type == ZFS_TYPE_VDEV) {
+			for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
+				if (zpool_get_vdev_prop(zhp,
+				    cbp->cb_vdevs.cb_names[vd], pl->pl_prop,
+				    value, sizeof (value), &srctype,
+				    cbp->cb_literal) != 0)
+					continue;
+
+				if (strlen(value) > pl->pl_width)
+					pl->pl_width = strlen(value);
+			}
+			if (pl != cbp->cb_proplist &&
+			    pl->pl_width > cbp->cb_colwidths[GET_COL_VALUE])
+				cbp->cb_colwidths[GET_COL_VALUE] = pl->pl_width;
+		}
+	}
+
 	for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
 
 		/*
