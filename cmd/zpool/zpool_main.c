@@ -8998,14 +8998,6 @@ get_callback(zpool_handle_t *zhp, void *data)
 
 	/* Adjust the column widths for the vdev properties */
 	for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
-		/*
-		 * Skip the special fake placeholder. This will also skip
-		 * over the name property when 'all' is specified.
-		 */
-		if (pl->pl_prop == ZPOOL_PROP_NAME &&
-		    pl == cbp->cb_proplist)
-			continue;
-
 		if (cbp->cb_type == ZFS_TYPE_VDEV) {
 			for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
 				if (zpool_get_vdev_prop(zhp,
