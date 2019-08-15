@@ -5101,10 +5101,17 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				break;
 			}
 
+			/*
+			 * za.za_integer_length is an int, but zap_length()
+			 * expects a uint64_t. Use za_first_integer instead.
+			 */
 			err = zap_length(mos, objid, nvpair_name(elem),
-			    &za.za_integer_length, &za.za_num_integers);
+			    &za.za_first_integer, &za.za_num_integers);
 			if (err)
 				break;
+
+			za.za_integer_length = za.za_first_integer;
+			za.za_first_integer = NULL;
 
 			switch (za.za_integer_length) {
 			case 8:
