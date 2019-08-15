@@ -8994,6 +8994,7 @@ get_callback(zpool_handle_t *zhp, void *data)
 	char value[MAXNAMELEN];
 	zprop_source_t srctype;
 	zprop_list_t *pl;
+	int vd;
 
 	for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
 
@@ -9016,19 +9017,19 @@ get_callback(zpool_handle_t *zhp, void *data)
 				    cbp, pl->pl_user_prop, value, srctype,
 				    NULL, NULL);
 			}
-		} else if (pl->pl_prop == ZPROP_INVAL &&
-		    zpool_prop_vdev(pl->pl_user_prop)) {
-			vdev_prop_t vprop = vdev_name_to_prop(pl->pl_user_prop);
-			char *vdevname = strchr(pl->pl_user_prop, '@') + 1;
+		} else if (cbp->cb_type == ZFS_TYPE_VDEV) {
+			for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
+				if (zpool_get_vdev_prop(zhp,
+				    cbp->cb_vdevs.cb_names[vd], pl->pl_prop,
+				    value, sizeof (value), &srctype,
+				    cbp->cb_literal) != 0)
+					continue;
 
-			if (zpool_get_vdev_prop(zhp, vdevname, vprop,
-			    value, sizeof (value), &srctype,
-			    cbp->cb_literal) != 0)
-				continue;
-
-			zprop_print_one_property(zpool_get_name(zhp), cbp,
-			    pl->pl_user_prop, value, srctype,
-			    NULL, NULL);
+				zprop_print_one_property(
+				    cbp->cb_vdevs.cb_names[vd], cbp,
+				    vdev_prop_to_name(pl->pl_prop), value,
+				    srctype, NULL, NULL);
+			}
 		} else {
 			if (zpool_get_prop(zhp, pl->pl_prop, value,
 			    sizeof (value), &srctype, cbp->cb_literal) != 0)
