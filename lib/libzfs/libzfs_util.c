@@ -1303,9 +1303,11 @@ zprop_print_headers(zprop_get_cbdata_t *cbp, zfs_type_t type)
 		 * 'PROPERTY' column
 		 */
 		if (pl->pl_prop != ZPROP_INVAL) {
-			const char *propname = (type == ZFS_TYPE_POOL) ?
+			const char *propname = ((type == ZFS_TYPE_POOL) ?
 			    zpool_prop_to_name(pl->pl_prop) :
-			    zfs_prop_to_name(pl->pl_prop);
+			    ((type == ZFS_TYPE_VDEV) ?
+			    vdev_prop_to_name(pl->pl_prop) :
+			    zfs_prop_to_name(pl->pl_prop)));
 
 			len = strlen(propname);
 			if (len > cbp->cb_colwidths[GET_COL_PROPERTY])
