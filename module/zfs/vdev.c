@@ -4989,6 +4989,8 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	uint64_t vdev_guid;
 	nvpair_t *elem = NULL;
 	nvlist_t *nvprops;
+	uint64_t intval = 0;
+	char *strval = NULL;
 
 	ASSERT(vd != NULL);
 
@@ -5019,11 +5021,10 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	mutex_enter(&spa->spa_props_lock);
 
 	if (nvprops != NULL) {
-		zap_cursor_init(&zc, mos, objid);
 		while ((elem = nvlist_next_nvpair(nvprops, elem)) != NULL) {
+			intval = 0;
+			strval = NULL;
 			vdev_prop_t prop = vdev_name_to_prop(nvpair_name(elem));
-			uint64_t intval = 0;
-			char *strval = NULL;
 			zprop_source_t src = ZPROP_SRC_DEFAULT;
 
 			/* Special Read-only Properties */
@@ -5100,11 +5101,8 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				break;
 			}
 
-			err = zap_cursor_move_to_key(&zc, nvpair_name(elem),
-			    MT_NORMALIZE);
-			if (err)
-				break;
-			err = zap_cursor_retrieve(&zc, &za);
+			err = zap_length(mos, objid, nvpair_name(elem),
+			    &za.za_integer_length, &za.za_num_integers);
 			if (err)
 				break;
 
@@ -5116,7 +5114,11 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 					src = ZPROP_SRC_LOCAL;
 
 				strval = NULL;
-				intval = za.za_first_integer;
+				err = zap_lookup(mos, objid, nvpair_name(elem),
+				    za.za_integer_length, za.za_num_integers,
+				    &intval);
+				if (err)
+					break;
 
 				vdev_prop_add_list(outnvl, prop, strval, intval,
 				    src);
@@ -5127,8 +5129,8 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				/* string property */
 				strval = kmem_alloc(za.za_num_integers,
 				    KM_SLEEP);
-				err = zap_lookup(mos, objid, za.za_name, 1,
-				    za.za_num_integers, strval);
+				err = zap_lookup(mos, objid, nvpair_name(elem),
+				    1, za.za_num_integers, strval);
 				if (err) {
 					kmem_free(strval, za.za_num_integers);
 					break;
@@ -5142,16 +5144,15 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				break;
 			}
 		}
-		zap_cursor_fini(&zc);
 	} else {
 		/*
-		 * Get properties from the MOS vdev property object.
+		 * Get all properties from the MOS vdev property object.
 		 */
 		for (zap_cursor_init(&zc, mos, objid);
 		    (err = zap_cursor_retrieve(&zc, &za)) == 0;
 		    zap_cursor_advance(&zc)) {
-			uint64_t intval = 0;
-			char *strval = NULL;
+			intval = 0;
+			strval = NULL;
 			zprop_source_t src = ZPROP_SRC_DEFAULT;
 			vdev_prop_t prop;
 
