@@ -5075,17 +5075,17 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				break;
 
 			za.za_integer_length = za.za_first_integer;
-			za.za_first_integer = NULL;
+			za.za_first_integer = 0;
 
 			switch (za.za_integer_length) {
 			case 8:
 				/* integer property */
-				if (za.za_first_integer !=
-				    vdev_prop_default_numeric(prop))
-					src = ZPROP_SRC_LOCAL;
 
 				strval = NULL;
 				intval = za.za_first_integer;
+
+				if (intval != vdev_prop_default_numeric(prop))
+					src = ZPROP_SRC_LOCAL;
 
 				vdev_prop_add_list(outnvl, prop, strval, intval,
 				    src);
@@ -5094,6 +5094,8 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 
 			case 1:
 				/* string property */
+				src = ZPROP_SRC_LOCAL;
+
 				strval = kmem_alloc(za.za_num_integers,
 				    KM_SLEEP);
 				err = zap_lookup(mos, objid, za.za_name, 1,
