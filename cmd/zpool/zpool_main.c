@@ -9166,6 +9166,7 @@ zpool_do_get(int argc, char **argv)
 	int ret;
 	int c, i;
 	char *value;
+	char *propstr = NULL;
 
 	cb.cb_first = B_TRUE;
 
@@ -9255,19 +9256,11 @@ zpool_do_get(int argc, char **argv)
 		usage(B_FALSE);
 	}
 
-	if (zprop_get_list(g_zfs, argv[0], &cb.cb_proplist,
-	    ZFS_TYPE_POOL) != 0)
-		usage(B_FALSE);
+	/* Save the comma separated list of properties for later */
+	propstr = argv[0];
 
 	argc--;
 	argv++;
-
-	if (cb.cb_proplist != NULL) {
-		fake_name.pl_prop = ZPOOL_PROP_NAME;
-		fake_name.pl_width = strlen(gettext("NAME"));
-		fake_name.pl_next = cb.cb_proplist;
-		cb.cb_proplist = &fake_name;
-	}
 
 	if (argc == 0) {
 		/* No args, so just print the defaults. */
@@ -9307,6 +9300,16 @@ zpool_do_get(int argc, char **argv)
 		fprintf(stderr, gettext("Unable to parse pools/vdevs list.\n"));
 		fprintf(stderr, "\n");
 		return (1);
+	}
+
+	if (zprop_get_list(g_zfs, propstr, &cb.cb_proplist,
+	    cb.cb_type) != 0)
+		usage(B_FALSE);
+	if (cb.cb_proplist != NULL) {
+		fake_name.pl_prop = ZPOOL_PROP_NAME;
+		fake_name.pl_width = strlen(gettext("NAME"));
+		fake_name.pl_next = cb.cb_proplist;
+		cb.cb_proplist = &fake_name;
 	}
 
 	ret = for_each_pool(argc, argv, B_TRUE, &cb.cb_proplist,
