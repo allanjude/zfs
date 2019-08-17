@@ -9105,39 +9105,10 @@ get_callback(zpool_handle_t *zhp, void *data)
 	zprop_source_t srctype;
 	zprop_list_t *pl;
 	int vd;
+	int num = 1;
 
-#if 0
-	if (cbp->cb_type == ZFS_TYPE_VDEV && cbp->cb_proplist == NULL)
-	{
-		/* Get All Properties */
-		nvlist_t *retprops;
-		nvpair_t *elem = NULL;
-		vdev_prop_t prop;
-		int ret;
-
-		for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
-			if (zpool_get_all_vdev_props(zhp,
-			    cbp->cb_vdevs.cb_names[vd], &retprops) != 0)
-				continue;
-
-			while ((elem = nvlist_next_nvpair(retprops, elem)) !=
-			    NULL) {
-				prop = vdev_name_to_prop(nvpair_name(elem));
-				ret = zpool_get_vdev_prop_value(retprops, prop,
-				    value, sizeof(value), &srctype,
-				    cbp->cb_literal);
-				if (ret)
-					continue;
-
-				zprop_print_one_property(
-				    cbp->cb_vdevs.cb_names[vd], cbp,
-				    nvpair_name(elem), value, srctype, NULL,
-				    NULL);
-			}
-		}
-	} else
-#endif
 	if (cbp->cb_type == ZFS_TYPE_VDEV) {
+		num = cbp->cb_vdevs.cb_names_count;
 		/* Adjust the column widths for the vdev properties */
 		for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
 			for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
@@ -9156,8 +9127,8 @@ get_callback(zpool_handle_t *zhp, void *data)
 		}
 	}
 
-	for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
-
+	for (vd = 0; vd < num; vd++) {
+		for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
 		/*
 		 * Skip the special fake placeholder. This will also skip
 		 * over the name property when 'all' is specified.
@@ -9178,18 +9149,14 @@ get_callback(zpool_handle_t *zhp, void *data)
 				    NULL, NULL);
 			}
 		} else if (cbp->cb_type == ZFS_TYPE_VDEV) {
-			for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
-				if (zpool_get_vdev_prop(zhp,
-				    cbp->cb_vdevs.cb_names[vd], pl->pl_prop,
-				    value, sizeof (value), &srctype,
-				    cbp->cb_literal) != 0)
-					continue;
+			if (zpool_get_vdev_prop(zhp, cbp->cb_vdevs.cb_names[vd],
+			    pl->pl_prop, value, sizeof (value), &srctype,
+			    cbp->cb_literal) != 0)
+				continue;
 
-				zprop_print_one_property(
-				    cbp->cb_vdevs.cb_names[vd], cbp,
-				    vdev_prop_to_name(pl->pl_prop), value,
-				    srctype, NULL, NULL);
-			}
+			zprop_print_one_property(cbp->cb_vdevs.cb_names[vd],
+			    cbp, vdev_prop_to_name(pl->pl_prop), value, srctype,
+			    NULL, NULL);
 		} else {
 			if (zpool_get_prop(zhp, pl->pl_prop, value,
 			    sizeof (value), &srctype, cbp->cb_literal) != 0)
