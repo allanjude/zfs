@@ -274,6 +274,16 @@ vdev_prop_init(void)
 	/* string properties */
 	zprop_register_string(VDEV_PROP_COMMENT, "comment", NULL,
 	    PROP_DEFAULT, ZFS_TYPE_VDEV, "<comment-string>", "COMMENT");
+	zprop_register_string(VDEV_PROP_PATH, "path", NULL,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<device-path>", "PATH");
+	zprop_register_string(VDEV_PROP_DEVID, "devid", NULL,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<devid>", "DEVID");
+	zprop_register_string(VDEV_PROP_PHYS_PATH, "physpath", NULL,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<physpath>", "PHYSPATH");
+	zprop_register_string(VDEV_PROP_ENC_PATH, "encpath", NULL,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<encpath>", "ENCPATH");
+	zprop_register_string(VDEV_PROP_FRU, "fru", NULL,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<fru>", "FRU");
 
 	/* readonly number properties */
 	zprop_register_number(VDEV_PROP_SIZE, "size", 0, PROP_READONLY,
@@ -290,7 +300,7 @@ vdev_prop_init(void)
 	    ZFS_TYPE_VDEV, "<size>", "CAP");
 	zprop_register_number(VDEV_PROP_GUID, "guid", 0, PROP_READONLY,
 	    ZFS_TYPE_VDEV, "<guid>", "GUID");
-	zprop_register_number(VDEV_PROP_STATE, "stage", 0, PROP_READONLY,
+	zprop_register_number(VDEV_PROP_STATE, "state", 0, PROP_READONLY,
 	    ZFS_TYPE_VDEV, "<state>", "STATE");
 	zprop_register_number(VDEV_PROP_BOOTSIZE, "bootsize", 0, PROP_READONLY,
 	    ZFS_TYPE_VDEV, "<size>", "BOOTSIZE");
@@ -300,6 +310,8 @@ vdev_prop_init(void)
 	    ZFS_TYPE_VDEV, "<psize>", "PSIZE");
 	zprop_register_number(VDEV_PROP_ASHIFT, "ashift", 0, PROP_READONLY,
 	    ZFS_TYPE_VDEV, "<ashift>", "ASHIFT");
+	zprop_register_number(VDEV_PROP_PARITY, "parity", 0, PROP_READONLY,
+	    ZFS_TYPE_VDEV, "<parity>", "PARITY");
 
 	/* default index (boolean) properties */
 	zprop_register_index(VDEV_PROP_READONLY, "readonly", 0,
