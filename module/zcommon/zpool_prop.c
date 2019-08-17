@@ -290,7 +290,7 @@ vdev_prop_init(void)
 	    ZFS_TYPE_VDEV, "<size>", "CAP");
 	zprop_register_number(VDEV_PROP_GUID, "guid", 0, PROP_READONLY,
 	    ZFS_TYPE_VDEV, "<guid>", "GUID");
-	zprop_register_number(VDEV_PROP_STATE, "STATE", 0, PROP_READONLY,
+	zprop_register_number(VDEV_PROP_STATE, "stage", 0, PROP_READONLY,
 	    ZFS_TYPE_VDEV, "<state>", "STATE");
 	zprop_register_number(VDEV_PROP_BOOTSIZE, "bootsize", 0, PROP_READONLY,
 	    ZFS_TYPE_VDEV, "<size>", "BOOTSIZE");
