@@ -4487,13 +4487,11 @@ int
 zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *buf,
     size_t len, zprop_source_t *srctype, boolean_t literal)
 {
-	nvlist_t *nv, *nvroot;
+	nvlist_t *nv;
 	const char *propname = vdev_prop_to_name(prop);
 	uint64_t intval;
 	char *strval;
 	zprop_source_t src = ZPROP_SRC_NONE;
-	vdev_stat_t *vs;
-	uint_t vsc;
 
 	switch (vdev_prop_get_type(prop)) {
 	case PROP_TYPE_STRING:
@@ -4565,17 +4563,13 @@ zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *buf,
 			}
 			break;
 		case VDEV_PROP_STATE:
-			/* XXX: This is the root vdev, not our vdev... */
-			/*
-			verify(nvlist_lookup_nvlist(zpool_get_config(zhp, NULL),
-			    ZPOOL_CONFIG_VDEV_TREE, &nvroot) == 0);
-			verify(nvlist_lookup_uint64_array(nvroot,
-			    ZPOOL_CONFIG_VDEV_STATS, (uint64_t **)&vs, &vsc)
-			    == 0);
-
-			(void) strlcpy(buf, zpool_state_to_name(intval,
-			    vs->vs_aux), len);
-			*/
+			if (literal) {
+				(void) snprintf(buf, len, "%llu",
+				    (u_longlong_t)intval);
+			} else {
+				(void) strlcpy(buf, zpool_state_to_name(intval,
+				    VDEV_AUX_NONE), len);
+			}
 			break;
 		default:
 			(void) snprintf(buf, len, "%llu",
