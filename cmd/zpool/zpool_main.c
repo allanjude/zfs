@@ -5300,7 +5300,8 @@ zpool_do_iostat(int argc, char **argv)
 	 * Construct the list of all interesting pools.
 	 */
 	ret = 0;
-	if ((list = pool_list_get(argc, argv, NULL, &ret)) == NULL)
+	if ((list = pool_list_get(argc, argv, NULL, ZFS_TYPE_POOL, &ret))
+	    == NULL)
 		return (1);
 
 	if (pool_list_count(list) == 0 && argc != 0) {
@@ -5975,7 +5976,7 @@ zpool_do_list(int argc, char **argv)
 
 	for (;;) {
 		if ((list = pool_list_get(argc, argv, &cb.cb_proplist,
-		    &ret)) == NULL)
+		    ZFS_TYPE_POOL, &ret)) == NULL)
 			return (1);
 
 		if (pool_list_count(list) == 0)
