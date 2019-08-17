@@ -5042,8 +5042,13 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 			/* Special Read-only Properties */
 			switch (prop) {
 			case VDEV_PROP_NAME:
+				if (vd->vdev_path == NULL)
+					continue;
 				strval = strrchr(vd->vdev_path, '/');
-				strval++;
+				if (strval == NULL)
+					strval = vd->vdev_path;
+				else
+					strval++;
 				vdev_prop_add_list(outnvl, prop, strval, 0,
 				    ZPROP_SRC_NONE);
 				continue;
