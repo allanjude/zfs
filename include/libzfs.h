@@ -331,6 +331,8 @@ extern const char *zpool_prop_values(zpool_prop_t);
 /*
  * Functions to manage vdev properties
  */
+extern int zpool_get_vdev_prop_value(nvlist_t *, vdev_prop_t, char *, size_t,
+    zprop_source_t *, boolean_t);
 extern int zpool_set_vdev_prop(zpool_handle_t *, const char *, const char *,
     const char *);
 extern int zpool_get_vdev_prop(zpool_handle_t *, const char *, vdev_prop_t,
@@ -556,7 +558,8 @@ extern void zfs_prune_proplist(zfs_handle_t *, uint8_t *);
 /*
  * zpool property management
  */
-extern int zpool_expand_proplist(zpool_handle_t *, zprop_list_t **);
+extern int zpool_expand_proplist(zpool_handle_t *, zprop_list_t **,
+    zfs_type_t);
 extern int zpool_prop_get_feature(zpool_handle_t *, const char *, char *,
     size_t);
 extern const char *zpool_prop_default_string(zpool_prop_t);
