@@ -4954,6 +4954,9 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	uint64_t vdev_guid;
 	nvpair_t *elem = NULL;
 	nvlist_t *nvprops;
+	uint64_t intval = 0;
+	char *strval = NULL;
+	char *errstr = "ERROR";
 
 	ASSERT(vd != NULL);
 
@@ -5064,22 +5067,35 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				    vd->vdev_nparity, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_PATH:
+				if (vd->vdev_path == NULL)
+					continue;
 				vdev_prop_add_list(outnvl, prop, vd->vdev_path,
 				    0, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_DEVID:
+				if (vd->vdev_devid == NULL) {
+					vdev_prop_add_list(outnvl, prop, errstr,
+					    0, ZPROP_SRC_NONE);
+					continue;
+				}
 				vdev_prop_add_list(outnvl, prop, vd->vdev_devid,
 				    0, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_PHYS_PATH:
+				if (vd->vdev_physpath == NULL)
+					continue;
 				vdev_prop_add_list(outnvl, prop,
 				    vd->vdev_physpath, 0, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_ENC_PATH:
+				if (vd->vdev_enc_sysfs_path == NULL)
+					continue;
 				vdev_prop_add_list(outnvl, prop,
 				    vd->vdev_enc_sysfs_path, 0, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_FRU:
+				if (vd->vdev_fru == NULL)
+					continue;
 				vdev_prop_add_list(outnvl, prop, vd->vdev_fru,
 				    0, ZPROP_SRC_NONE);
 				continue;
