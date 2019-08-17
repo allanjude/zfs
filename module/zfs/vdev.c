@@ -4991,7 +4991,6 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	nvlist_t *nvprops;
 	uint64_t intval = 0;
 	char *strval = NULL;
-	char *errstr = "ERROR";
 
 	ASSERT(vd != NULL);
 
@@ -5107,11 +5106,8 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				    0, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_DEVID:
-				if (vd->vdev_devid == NULL) {
-					vdev_prop_add_list(outnvl, prop, errstr,
-					    0, ZPROP_SRC_NONE);
+				if (vd->vdev_devid == NULL)
 					continue;
-				}
 				vdev_prop_add_list(outnvl, prop, vd->vdev_devid,
 				    0, ZPROP_SRC_NONE);
 				continue;
