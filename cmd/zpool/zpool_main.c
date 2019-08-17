@@ -9093,9 +9093,40 @@ get_callback(zpool_handle_t *zhp, void *data)
 	zprop_list_t *pl;
 	int vd;
 
-	/* Adjust the column widths for the vdev properties */
-	for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
-		if (cbp->cb_type == ZFS_TYPE_VDEV) {
+#if 0
+	if (cbp->cb_type == ZFS_TYPE_VDEV && cbp->cb_proplist == NULL)
+	{
+		/* Get All Properties */
+		nvlist_t *retprops;
+		nvpair_t *elem = NULL;
+		vdev_prop_t prop;
+		int ret;
+
+		for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
+			if (zpool_get_all_vdev_props(zhp,
+			    cbp->cb_vdevs.cb_names[vd], &retprops) != 0)
+				continue;
+
+			while ((elem = nvlist_next_nvpair(retprops, elem)) !=
+			    NULL) {
+				prop = vdev_name_to_prop(nvpair_name(elem));
+				ret = zpool_get_vdev_prop_value(retprops, prop,
+				    value, sizeof(value), &srctype,
+				    cbp->cb_literal);
+				if (ret)
+					continue;
+
+				zprop_print_one_property(
+				    cbp->cb_vdevs.cb_names[vd], cbp,
+				    nvpair_name(elem), value, srctype, NULL,
+				    NULL);
+			}
+		}
+	} else
+#endif
+	if (cbp->cb_type == ZFS_TYPE_VDEV) {
+		/* Adjust the column widths for the vdev properties */
+		for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
 			for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
 				if (zpool_get_vdev_prop(zhp,
 				    cbp->cb_vdevs.cb_names[vd], pl->pl_prop,
@@ -9318,6 +9349,7 @@ zpool_do_get(int argc, char **argv)
 	if (zprop_get_list(g_zfs, propstr, &cb.cb_proplist,
 	    cb.cb_type) != 0)
 		usage(B_FALSE);
+
 	if (cb.cb_proplist != NULL) {
 		fake_name.pl_prop = ZPOOL_PROP_NAME;
 		fake_name.pl_width = strlen(gettext("NAME"));
@@ -9325,7 +9357,7 @@ zpool_do_get(int argc, char **argv)
 		cb.cb_proplist = &fake_name;
 	}
 
-	ret = for_each_pool(argc, argv, B_TRUE, &cb.cb_proplist,
+	ret = for_each_pool(argc, argv, B_TRUE, &cb.cb_proplist, cb.cb_type,
 	    get_callback, &cb);
 
 	if (cb.cb_proplist == &fake_name)

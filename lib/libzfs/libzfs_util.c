@@ -1140,7 +1140,7 @@ zprop_print_headers(zprop_get_cbdata_t *cbp, zfs_type_t type)
 
 	/* first property is always NAME */
 	assert(cbp->cb_proplist->pl_prop ==
-	    ((type == ZFS_TYPE_POOL) ?  ZPOOL_PROP_NAME :
+	    ((type == ZFS_TYPE_POOL) ? ZPOOL_PROP_NAME :
 	    ((type == ZFS_TYPE_VDEV) ? VDEV_PROP_NAME : ZFS_PROP_NAME)));
 
 	/*
