@@ -1710,7 +1710,7 @@ zpool_do_export(int argc, char **argv)
 			usage(B_FALSE);
 		}
 
-		return (for_each_pool(argc, argv, B_TRUE, NULL,
+		return (for_each_pool(argc, argv, B_TRUE, NULL, ZFS_TYPE_POOL,
 		    zpool_export_one, &cb));
 	}
 
@@ -1720,7 +1720,8 @@ zpool_do_export(int argc, char **argv)
 		usage(B_FALSE);
 	}
 
-	ret = for_each_pool(argc, argv, B_TRUE, NULL, zpool_export_one, &cb);
+	ret = for_each_pool(argc, argv, B_TRUE, NULL,  ZFS_TYPE_POOL,
+	    zpool_export_one, &cb);
 
 	return (ret);
 }
@@ -3445,7 +3446,8 @@ zpool_do_sync(int argc, char **argv)
 	argv += optind;
 
 	/* if argc == 0 we will execute zpool_sync_one on all pools */
-	ret = for_each_pool(argc, argv, B_FALSE, NULL, zpool_sync_one, &force);
+	ret = for_each_pool(argc, argv, B_FALSE, NULL, ZFS_TYPE_POOL,
+	    zpool_sync_one, &force);
 
 	return (ret);
 }
@@ -4790,7 +4792,7 @@ are_vdevs_in_pool(int argc, char **argv, char *pool_name,
 
 		/* Is this name a vdev in our pools? */
 		ret = for_each_pool(pool_count, &pool_name, B_TRUE, NULL,
-		    is_vdev, cb);
+		    ZFS_TYPE_POOL, is_vdev, cb);
 		if (!ret) {
 			/* No match */
 			break;
@@ -4818,7 +4820,8 @@ is_pool_cb(zpool_handle_t *zhp, void *data)
 static int
 is_pool(char *name)
 {
-	return (for_each_pool(0, NULL, B_TRUE, NULL,  is_pool_cb, name));
+	return (for_each_pool(0, NULL, B_TRUE, NULL, ZFS_TYPE_POOL, is_pool_cb,
+	    name));
 }
 
 /* Are all our argv[] strings pool names?  If so return 1, 0 otherwise. */
@@ -6647,8 +6650,8 @@ zpool_do_reopen(int argc, char **argv)
 	argv += optind;
 
 	/* if argc == 0 we will execute zpool_reopen_one on all pools */
-	ret = for_each_pool(argc, argv, B_TRUE, NULL, zpool_reopen_one,
-	    &scrub_restart);
+	ret = for_each_pool(argc, argv, B_TRUE, NULL, ZFS_TYPE_POOL,
+	    zpool_reopen_one, &scrub_restart);
 
 	return (ret);
 }
@@ -6761,7 +6764,8 @@ zpool_do_scrub(int argc, char **argv)
 		usage(B_FALSE);
 	}
 
-	return (for_each_pool(argc, argv, B_TRUE, NULL, scrub_callback, &cb));
+	return (for_each_pool(argc, argv, B_TRUE, NULL, ZFS_TYPE_POOL,
+	    scrub_callback, &cb));
 }
 
 /*
@@ -6798,7 +6802,8 @@ zpool_do_resilver(int argc, char **argv)
 		usage(B_FALSE);
 	}
 
-	return (for_each_pool(argc, argv, B_TRUE, NULL, scrub_callback, &cb));
+	return (for_each_pool(argc, argv, B_TRUE, NULL, ZFS_TYPE_POOL,
+	    scrub_callback, &cb));
 }
 
 /*
@@ -7899,7 +7904,7 @@ zpool_do_status(int argc, char **argv)
 			cb.vcdl = all_pools_for_each_vdev_run(argc, argv, cmd,
 			    NULL, NULL, 0, 0);
 
-		ret = for_each_pool(argc, argv, B_TRUE, NULL,
+		ret = for_each_pool(argc, argv, B_TRUE, NULL, ZFS_TYPE_POOL,
 		    status_callback, &cb);
 
 		if (cb.vcdl != NULL)
@@ -8418,7 +8423,7 @@ zpool_do_upgrade(int argc, char **argv)
 			(void) printf(gettext("\n"));
 		}
 	} else {
-		ret = for_each_pool(argc, argv, B_FALSE, NULL,
+		ret = for_each_pool(argc, argv, B_FALSE, NULL, ZFS_TYPE_POOL,
 		    upgrade_one, &cb);
 	}
 
@@ -8589,8 +8594,8 @@ zpool_do_history(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
-	ret = for_each_pool(argc, argv, B_FALSE,  NULL, get_history_one,
-	    &cbdata);
+	ret = for_each_pool(argc, argv, B_FALSE,  NULL, ZFS_TYPE_POOL,
+	    get_history_one, &cbdata);
 
 	if (argc == 0 && cbdata.first == B_TRUE) {
 		(void) fprintf(stderr, gettext("no pools available\n"));
@@ -9361,7 +9366,7 @@ zpool_do_set(int argc, char **argv)
 		}
 	}
 
-	error = for_each_pool(argc, argv, B_TRUE, NULL,
+	error = for_each_pool(argc, argv, B_TRUE, NULL, ZFS_TYPE_POOL,
 	    set_callback, &cb);
 
 	return (error);
