@@ -825,7 +825,7 @@ zpool_set_prop(zpool_handle_t *zhp, const char *propname, const char *propval)
 }
 
 int
-zpool_expand_proplist(zpool_handle_t *zhp, zprop_list_t **plp)
+zpool_expand_proplist(zpool_handle_t *zhp, zprop_list_t **plp, zfs_type_t type)
 {
 	libzfs_handle_t *hdl = zhp->zpool_hdl;
 	zprop_list_t *entry;
@@ -836,7 +836,7 @@ zpool_expand_proplist(zpool_handle_t *zhp, zprop_list_t **plp)
 	boolean_t firstexpand = (NULL == *plp);
 	int i;
 
-	if (zprop_expand_list(hdl, plp, ZFS_TYPE_POOL) != 0)
+	if (zprop_expand_list(hdl, plp, type) != 0)
 		return (-1);
 
 	last = plp;
@@ -4828,88 +4828,42 @@ zpool_label_disk(libzfs_handle_t *hdl, zpool_handle_t *zhp, char *name)
 	return (0);
 }
 
-/*
- * Get a vdev property value for 'prop' and return the value in
- * a pre-allocated buffer.
- */
 int
-zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
-    char *buf, size_t len, zprop_source_t *srctype, boolean_t literal)
+zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *buf,
+    size_t len, zprop_source_t *srctype, boolean_t literal)
 {
+	nvlist_t *nv, *nvroot;
+	const char *propname = vdev_prop_to_name(prop);
 	uint64_t intval;
 	char *strval;
 	zprop_source_t src = ZPROP_SRC_NONE;
-	nvlist_t *tgt, *reqnvl, *reqprops, *retprops, *nv;
-	uint64_t vdev_guid;
-	boolean_t avail_spare, l2cache;
-	char errbuf[1024];
-	int ret = -1;
-	nvlist_t *nvroot;
 	vdev_stat_t *vs;
 	uint_t vsc;
 
-	verify(zhp != NULL);
-	if (zpool_get_state(zhp) == POOL_STATE_UNAVAIL) {
-		(void) snprintf(errbuf, sizeof (errbuf),
-		    dgettext(TEXT_DOMAIN, "pool is in an unavailable state"));
-		return (zfs_error(zhp->zpool_hdl, EZFS_POOLUNAVAIL, errbuf));
-	}
-
-	(void) snprintf(errbuf, sizeof (errbuf),
-	    dgettext(TEXT_DOMAIN, "cannot find %s"), vdevname);
-
-	if ((tgt = zpool_find_vdev(zhp, vdevname, &avail_spare, &l2cache,
-	    NULL)) == NULL)
-		return (zfs_error(zhp->zpool_hdl, EZFS_NODEVICE, errbuf));
-
-	verify(nvlist_lookup_uint64(tgt, ZPOOL_CONFIG_GUID, &vdev_guid) == 0);
-
-	if (nvlist_alloc(&reqnvl, NV_UNIQUE_NAME, 0) != 0)
-		return (no_memory(zhp->zpool_hdl));
-	if (nvlist_alloc(&reqprops, NV_UNIQUE_NAME, 0) != 0)
-		return (no_memory(zhp->zpool_hdl));
-
-	fnvlist_add_uint64(reqnvl, ZPOOL_VDEV_GET_PROPS_VDEV, vdev_guid);
-
-	if (nvlist_add_uint64(reqprops, vdev_prop_to_name(prop), prop) != 0) {
-		nvlist_free(reqnvl);
-		nvlist_free(reqprops);
-		return (no_memory(zhp->zpool_hdl));
-	}
-
-	fnvlist_add_nvlist(reqnvl, ZPOOL_VDEV_GET_PROPS_PROPS, reqprops);
-
-	(void) snprintf(errbuf, sizeof (errbuf),
-	    dgettext(TEXT_DOMAIN, "cannot get vdev property %s from %s"),
-	    vdev_prop_to_name(prop), vdevname);
-
-	ret = lzc_get_vdev_prop(zhp->zpool_name, reqnvl, &retprops);
-
-	if (ret)
-		(void) zpool_standard_error(zhp->zpool_hdl, ret, errbuf);
-
-	nvlist_free(reqnvl);
-	nvlist_free(reqprops);
-
 	switch (vdev_prop_get_type(prop)) {
 	case PROP_TYPE_STRING:
-		if (nvlist_lookup_nvlist(retprops, vdev_prop_to_name(prop), &nv) == 0) {
-			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE, &intval) == 0);
+		if (nvlist_lookup_nvlist(nvprop, propname, &nv) == 0) {
+			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE, &intval)
+			    == 0);
 			src = intval;
-			verify(nvlist_lookup_string(nv, ZPROP_VALUE, &strval) == 0);
+			verify(nvlist_lookup_string(nv, ZPROP_VALUE, &strval)
+			    == 0);
 		} else {
 			src = ZPROP_SRC_DEFAULT;
-			if ((strval = (char *)vdev_prop_default_string(prop)) == NULL)
+			if ((strval = (char *)vdev_prop_default_string(prop))
+			    == NULL)
 				strval = "-";
 		}
 		(void) strlcpy(buf, strval, len);
 		break;
 
 	case PROP_TYPE_NUMBER:
-		if (nvlist_lookup_nvlist(retprops, vdev_prop_to_name(prop), &nv) == 0) {
-			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE, &intval) == 0);
+		if (nvlist_lookup_nvlist(nvprop, propname, &nv) == 0) {
+			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE, &intval)
+			    == 0);
 			src = intval;
-			verify(nvlist_lookup_uint64(nv, ZPROP_VALUE, &intval) == 0);
+			verify(nvlist_lookup_uint64(nv, ZPROP_VALUE, &intval)
+			    == 0);
 		} else {
 			src = ZPROP_SRC_DEFAULT;
 			intval = vdev_prop_default_numeric(prop);
@@ -4956,6 +4910,8 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 			}
 			break;
 		case VDEV_PROP_STATE:
+			/* XXX: This is the root vdev, not our vdev... */
+			/*
 			verify(nvlist_lookup_nvlist(zpool_get_config(zhp, NULL),
 			    ZPOOL_CONFIG_VDEV_TREE, &nvroot) == 0);
 			verify(nvlist_lookup_uint64_array(nvroot,
@@ -4964,6 +4920,7 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 
 			(void) strlcpy(buf, zpool_state_to_name(intval,
 			    vs->vs_aux), len);
+			*/
 			break;
 		default:
 			(void) snprintf(buf, len, "%llu",
@@ -4972,10 +4929,12 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 		break;
 
 	case PROP_TYPE_INDEX:
-		if (nvlist_lookup_nvlist(retprops, vdev_prop_to_name(prop), &nv) == 0) {
-			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE, &intval) == 0);
+		if (nvlist_lookup_nvlist(nvprop, propname, &nv) == 0) {
+			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE, &intval)
+			    == 0);
 			src = intval;
-			verify(nvlist_lookup_uint64(nv, ZPROP_VALUE, &intval) == 0);
+			verify(nvlist_lookup_uint64(nv, ZPROP_VALUE, &intval)
+			    == 0);
 		} else {
 			src = ZPROP_SRC_DEFAULT;
 			intval = vdev_prop_default_numeric(prop);
@@ -4992,6 +4951,70 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 
 	if (srctype)
 		*srctype = src;
+
+	return (0);
+}
+
+/*
+ * Get a vdev property value for 'prop' and return the value in
+ * a pre-allocated buffer.
+ */
+int
+zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
+    char *buf, size_t len, zprop_source_t *srctype, boolean_t literal)
+{
+	nvlist_t *tgt, *reqnvl, *reqprops, *retprops;
+	uint64_t vdev_guid;
+	boolean_t avail_spare, l2cache;
+	char errbuf[1024];
+	int ret = -1;
+
+	verify(zhp != NULL);
+	if (zpool_get_state(zhp) == POOL_STATE_UNAVAIL) {
+		(void) snprintf(errbuf, sizeof (errbuf),
+		    dgettext(TEXT_DOMAIN, "pool is in an unavailable state"));
+		return (zfs_error(zhp->zpool_hdl, EZFS_POOLUNAVAIL, errbuf));
+	}
+
+	(void) snprintf(errbuf, sizeof (errbuf),
+	    dgettext(TEXT_DOMAIN, "cannot find %s"), vdevname);
+
+	if ((tgt = zpool_find_vdev(zhp, vdevname, &avail_spare, &l2cache,
+	    NULL)) == NULL)
+		return (zfs_error(zhp->zpool_hdl, EZFS_NODEVICE, errbuf));
+
+	verify(nvlist_lookup_uint64(tgt, ZPOOL_CONFIG_GUID, &vdev_guid) == 0);
+
+	if (nvlist_alloc(&reqnvl, NV_UNIQUE_NAME, 0) != 0)
+		return (no_memory(zhp->zpool_hdl));
+	if (nvlist_alloc(&reqprops, NV_UNIQUE_NAME, 0) != 0)
+		return (no_memory(zhp->zpool_hdl));
+
+	fnvlist_add_uint64(reqnvl, ZPOOL_VDEV_GET_PROPS_VDEV, vdev_guid);
+
+	if (nvlist_add_uint64(reqprops, vdev_prop_to_name(prop), prop) != 0) {
+		nvlist_free(reqnvl);
+		nvlist_free(reqprops);
+		return (no_memory(zhp->zpool_hdl));
+	}
+
+	fnvlist_add_nvlist(reqnvl, ZPOOL_VDEV_GET_PROPS_PROPS, reqprops);
+
+	(void) snprintf(errbuf, sizeof (errbuf),
+	    dgettext(TEXT_DOMAIN, "cannot get vdev property %s from %s"),
+	    vdev_prop_to_name(prop), vdevname);
+
+	ret = lzc_get_vdev_prop(zhp->zpool_name, reqnvl, &retprops);
+
+	if (ret)
+		(void) zpool_standard_error(zhp->zpool_hdl, ret, errbuf);
+
+	nvlist_free(reqnvl);
+	nvlist_free(reqprops);
+
+	if (ret == 0)
+		ret = zpool_get_vdev_prop_value(retprops, prop, buf, len,
+		    srctype, literal);
 
 	nvlist_free(retprops);
 
