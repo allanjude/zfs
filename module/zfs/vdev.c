@@ -5040,8 +5040,10 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 			/* Special Read-only Properties */
 			switch (prop) {
 			case VDEV_PROP_NAME:
-				vdev_prop_add_list(outnvl, prop, vd->vdev_path,
-				    0, ZPROP_SRC_NONE);
+				strval = strrchr(vd->vdev_path, '/');
+				strval++;
+				vdev_prop_add_list(outnvl, prop, strval, 0,
+				    ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_CAPACITY:
 				/* % used */
@@ -5084,6 +5086,13 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				vdev_prop_add_list(outnvl, prop, NULL,
 				    vd->vdev_stat.vs_alloc, ZPROP_SRC_NONE);
 				continue;
+			case VDEV_PROP_READONLY:
+				/* XXX: can't we tell per vdev? */
+				/* This might need to be writable */
+				continue;
+			case VDEV_PROP_COMMENT:
+				/* Exists in the ZAP below */
+				break;
 			case VDEV_PROP_EXPANDSZ:
 				vdev_prop_add_list(outnvl, prop, NULL,
 				    vd->vdev_stat.vs_esize, ZPROP_SRC_NONE);
@@ -5096,10 +5105,42 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 			case VDEV_PROP_BOOTSIZE:
 				/* XXX: Allan TODO */
 				continue;
-			case VDEV_PROP_READONLY:
-				// This might need to be writable
+			case VDEV_PROP_PARITY:
+				vdev_prop_add_list(outnvl, prop, NULL,
+				    vd->vdev_nparity, ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_PATH:
+				vdev_prop_add_list(outnvl, prop, vd->vdev_path,
+				    0, ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_DEVID:
+				vdev_prop_add_list(outnvl, prop, vd->vdev_devid,
+				    0, ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_PHYS_PATH:
+				vdev_prop_add_list(outnvl, prop,
+				    vd->vdev_physpath, 0, ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_ENC_PATH:
+				vdev_prop_add_list(outnvl, prop,
+				    vd->vdev_enc_sysfs_path, 0, ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_FRU:
+				vdev_prop_add_list(outnvl, prop, vd->vdev_fru,
+				    0, ZPROP_SRC_NONE);
 				continue;
 #if 0
+	/*
+	 * parent
+	 * children (count)
+	 * children (list)
+	 *
+	 *
+	 *
+	 */
+	boolean_t	vdev_has_trim;	/* TRIM is supported		*/
+	boolean_t	vdev_has_securetrim; /* secure TRIM is supported */
+
 	uint64_t	vs_ops[ZIO_TYPES];	/* operation count	*/
 	uint64_t	vs_bytes[ZIO_TYPES];	/* bytes read/written	*/
 	uint64_t	vs_read_errors;		/* read errors		*/
