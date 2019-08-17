@@ -9136,6 +9136,7 @@ get_callback(zpool_handle_t *zhp, void *data)
 			}
 		}
 	} else
+#endif
 	if (cbp->cb_type == ZFS_TYPE_VDEV) {
 		/* Adjust the column widths for the vdev properties */
 		for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
@@ -9154,7 +9155,6 @@ get_callback(zpool_handle_t *zhp, void *data)
 				cbp->cb_colwidths[GET_COL_VALUE] = pl->pl_width;
 		}
 	}
-#endif
 
 	for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
 

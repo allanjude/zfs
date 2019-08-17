@@ -914,19 +914,6 @@ zpool_expand_proplist(zpool_handle_t *zhp, zprop_list_t **plp, zfs_type_t type)
 					entry->pl_width = strlen(buf);
 			}
 		}
-	} else if (type == ZFS_TYPE_VDEV) {
-		for (entry = *plp; entry != NULL; entry = entry->pl_next) {
-
-			if (entry->pl_fixed)
-				continue;
-
-			if (entry->pl_prop != ZPROP_INVAL &&
-			    zpool_get_vdev_prop(zhp, entry->pl_prop, buf,
-			    sizeof (buf), NULL, B_FALSE) == 0) {
-				if (strlen(buf) > entry->pl_width)
-					entry->pl_width = strlen(buf);
-			}
-		}
 	}
 
 	return (0);
