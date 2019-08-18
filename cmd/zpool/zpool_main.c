@@ -9119,7 +9119,9 @@ get_callback(zpool_handle_t *zhp, void *data)
 			for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
 				if (pl->pl_prop == ZPOOL_PROP_NAME &&
 				    pl == cbp->cb_proplist) {
-					value = cbp->cb_vdevs.cb_names[vd];
+					strlcpy(value,
+					    cbp->cb_vdevs.cb_names[vd],
+					    sizeof (value));
 				} else if (zpool_get_vdev_prop(zhp,
 				    cbp->cb_vdevs.cb_names[vd], pl->pl_prop,
 				    value, sizeof (value), &srctype,
@@ -9129,9 +9131,6 @@ get_callback(zpool_handle_t *zhp, void *data)
 				if (strlen(value) > pl->pl_width)
 					pl->pl_width = strlen(value);
 			}
-			if (pl != cbp->cb_proplist &&
-			    pl->pl_width > cbp->cb_colwidths[GET_COL_VALUE])
-				cbp->cb_colwidths[GET_COL_VALUE] = pl->pl_width;
 		}
 	}
 
