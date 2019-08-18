@@ -4996,8 +4996,8 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 	fnvlist_add_nvlist(reqnvl, ZPOOL_VDEV_GET_PROPS_PROPS, reqprops);
 
 	(void) snprintf(errbuf, sizeof (errbuf),
-	    dgettext(TEXT_DOMAIN, "cannot get vdev property %s from %s"),
-	    vdev_prop_to_name(prop), vdevname);
+	    dgettext(TEXT_DOMAIN, "cannot get vdev property %s from %s in %s"),
+	    vdev_prop_to_name(prop), vdevname, zhp->zpool_name);
 
 	ret = lzc_get_vdev_prop(zhp->zpool_name, reqnvl, &retprops);
 
@@ -5044,8 +5044,8 @@ zpool_get_all_vdev_props(zpool_handle_t *zhp, const char *vdevname,
 	verify(nvlist_lookup_uint64(tgt, ZPOOL_CONFIG_GUID, &vdev_guid) == 0);
 
 	(void) snprintf(errbuf, sizeof (errbuf),
-	    dgettext(TEXT_DOMAIN, "cannot get vdev properties for '%s'"),
-	    vdevname);
+	    dgettext(TEXT_DOMAIN, "cannot get vdev properties for %s in %s"),
+	    vdevname, zhp->zpool_name);
 
 	if (nvlist_alloc(&nvl, NV_UNIQUE_NAME, 0) != 0)
 		return (no_memory(zhp->zpool_hdl));
@@ -5099,8 +5099,8 @@ zpool_set_vdev_prop(zpool_handle_t *zhp, const char *vdevname,
 	verify(nvlist_lookup_uint64(tgt, ZPOOL_CONFIG_GUID, &vdev_guid) == 0);
 
 	(void) snprintf(errbuf, sizeof (errbuf),
-	    dgettext(TEXT_DOMAIN, "cannot set property '%s' for '%s'"),
-	    propname, vdevname);
+	    dgettext(TEXT_DOMAIN, "cannot set property %s for %s on %s"),
+	    propname, vdevname, zhp->zpool_name);
 
 	if (nvlist_alloc(&nvl, NV_UNIQUE_NAME, 0) != 0)
 		return (no_memory(zhp->zpool_hdl));
