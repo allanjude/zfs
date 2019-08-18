@@ -9007,6 +9007,11 @@ get_callback(zpool_handle_t *zhp, void *data)
 		num = cbp->cb_vdevs.cb_names_count;
 		/* Adjust the column widths for the vdev properties */
 		for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
+			if (pl->pl_prop == ZPOOL_PROP_NAME &&
+			    pl == cbp->cb_proplist &&
+			    pl->pl_width > cbp->cb_colwidths[GET_COL_NAME])
+				cbp->cb_colwidths[GET_COL_NAME] = pl->pl_width;
+
 			for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
 				if (zpool_get_vdev_prop(zhp,
 				    cbp->cb_vdevs.cb_names[vd], pl->pl_prop,
