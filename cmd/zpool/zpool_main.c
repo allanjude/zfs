@@ -9404,6 +9404,7 @@ zpool_do_set(int argc, char **argv)
 
 	cb.cb_propname = argv[1];
 	cb.cb_type = ZFS_TYPE_POOL;
+	cb.cb_vdevs.cb_name_flags |= VDEV_NAME_TYPE_ID;
 	cb.cb_value = strchr(cb.cb_propname, '=');
 	if (cb.cb_value == NULL) {
 		(void) fprintf(stderr, gettext("missing value in "
