@@ -4625,12 +4625,9 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 		return (zfs_error(zhp->zpool_hdl, EZFS_POOLUNAVAIL, errbuf));
 	}
 
-	(void) snprintf(errbuf, sizeof (errbuf),
-	    dgettext(TEXT_DOMAIN, "cannot find %s"), vdevname);
-
 	if ((tgt = zpool_find_vdev(zhp, vdevname, &avail_spare, &l2cache,
 	    NULL)) == NULL)
-		return (zfs_error(zhp->zpool_hdl, EZFS_NODEVICE, errbuf));
+		return (-1);
 
 	verify(nvlist_lookup_uint64(tgt, ZPOOL_CONFIG_GUID, &vdev_guid) == 0);
 
@@ -4691,12 +4688,9 @@ zpool_get_all_vdev_props(zpool_handle_t *zhp, const char *vdevname,
 		return (zfs_error(zhp->zpool_hdl, EZFS_POOLUNAVAIL, errbuf));
 	}
 
-	(void) snprintf(errbuf, sizeof (errbuf),
-	    dgettext(TEXT_DOMAIN, "cannot find %s"), vdevname);
-
 	if ((tgt = zpool_find_vdev(zhp, vdevname, &avail_spare, &l2cache,
 	    NULL)) == NULL)
-		return (zfs_error(zhp->zpool_hdl, EZFS_NODEVICE, errbuf));
+		return (-1);
 
 	verify(nvlist_lookup_uint64(tgt, ZPOOL_CONFIG_GUID, &vdev_guid) == 0);
 
@@ -4749,12 +4743,9 @@ zpool_set_vdev_prop(zpool_handle_t *zhp, const char *vdevname,
 
 	vprop = vdev_name_to_prop(propname);
 
-	(void) snprintf(errbuf, sizeof (errbuf),
-	    dgettext(TEXT_DOMAIN, "cannot find %s"), vdevname);
-
 	if ((tgt = zpool_find_vdev(zhp, vdevname, &avail_spare, &l2cache,
 	    NULL)) == NULL)
-		return (zfs_error(zhp->zpool_hdl, EZFS_NODEVICE, errbuf));
+		return (-1);
 
 	verify(nvlist_lookup_uint64(tgt, ZPOOL_CONFIG_GUID, &vdev_guid) == 0);
 
