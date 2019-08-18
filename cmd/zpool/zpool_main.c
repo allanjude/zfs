@@ -9117,7 +9117,10 @@ get_callback(zpool_handle_t *zhp, void *data)
 				cbp->cb_colwidths[GET_COL_NAME] = pl->pl_width;
 
 			for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
-				if (zpool_get_vdev_prop(zhp,
+				if (pl->pl_prop == ZPOOL_PROP_NAME &&
+				    pl == cbp->cb_proplist) {
+					value = cbp->cb_vdevs.cb_names[vd];
+				} else if (zpool_get_vdev_prop(zhp,
 				    cbp->cb_vdevs.cb_names[vd], pl->pl_prop,
 				    value, sizeof (value), &srctype,
 				    cbp->cb_literal) != 0)
