@@ -9105,6 +9105,7 @@ zpool_do_get(int argc, char **argv)
 	cb.cb_columns[2] = GET_COL_VALUE;
 	cb.cb_columns[3] = GET_COL_SOURCE;
 	cb.cb_type = ZFS_TYPE_POOL;
+	cb.cb_vdevs.cb_name_flags |= VDEV_NAME_TYPE_ID;
 
 	/* check options */
 	while ((c = getopt(argc, argv, ":Hpo:")) != -1) {
