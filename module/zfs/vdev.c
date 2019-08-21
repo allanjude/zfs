@@ -55,9 +55,10 @@
 #include <sys/zvol.h>
 #include <sys/zfs_ratelimit.h>
 
+#include "zfs_prop.h"
+
 /* default target for number of metaslabs per top-level vdev */
 int zfs_vdev_default_ms_count = 200;
-#include "zfs_prop.h"
 
 /* minimum number of metaslabs per top-level vdev */
 int zfs_vdev_min_ms_count = 16;
