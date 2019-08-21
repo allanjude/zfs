@@ -939,8 +939,12 @@ vdev_expand_proplist(zpool_handle_t *zhp, const char *vdevname,
 		    sizeof (buf), NULL, B_FALSE) == 0) {
 			if (strlen(buf) > entry->pl_width)
 				entry->pl_width = strlen(buf);
+		} else {
+			/* User properties */
 		}
 	}
+
+	return (0);
 }
 
 /*
