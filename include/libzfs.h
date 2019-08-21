@@ -559,6 +559,9 @@ extern uint64_t zpool_prop_default_numeric(zpool_prop_t);
 extern const char *zpool_prop_column_name(zpool_prop_t);
 extern boolean_t zpool_prop_align_right(zpool_prop_t);
 
+extern int vdev_expand_proplist(zpool_handle_t *, const char *,
+    zprop_list_t **);
+
 /*
  * Functions shared by zfs and zpool property management.
  */

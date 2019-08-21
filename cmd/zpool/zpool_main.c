@@ -9006,22 +9006,9 @@ get_callback(zpool_handle_t *zhp, void *data)
 	if (cbp->cb_type == ZFS_TYPE_VDEV) {
 		num = cbp->cb_vdevs.cb_names_count;
 		/* Adjust the column widths for the vdev properties */
-		for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
-			for (vd = 0; vd < cbp->cb_vdevs.cb_names_count; vd++) {
-				if (pl->pl_prop == ZPOOL_PROP_NAME &&
-				    pl == cbp->cb_proplist) {
-					strlcpy(value,
-					    cbp->cb_vdevs.cb_names[vd],
-					    sizeof (value));
-				} else if (zpool_get_vdev_prop(zhp,
-				    cbp->cb_vdevs.cb_names[vd], pl->pl_prop,
-				    value, sizeof (value), &srctype,
-				    cbp->cb_literal) != 0)
-					continue;
-
-				if (strlen(value) > pl->pl_width)
-					pl->pl_width = strlen(value);
-			}
+		for (vd = 0; vd < num; vd++) {
+			vdev_expand_proplist(zhp, cbp->cb_vdevs.cb_names[vd],
+			    cbp->cb_literal);
 		}
 	}
 

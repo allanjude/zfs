@@ -922,6 +922,27 @@ zpool_expand_proplist(zpool_handle_t *zhp, zprop_list_t **plp, zfs_type_t type)
 	return (0);
 }
 
+int
+vdev_expand_proplist(zpool_handle_t *zhp, const char *vdevname,
+    zprop_list_t **plp)
+{
+	zprop_list_t *entry;
+	char buf[ZFS_MAXPROPLEN];
+
+	for (entry = *plp; entry != NULL; entry = entry->pl_next) {
+
+		if (entry->pl_fixed)
+			continue;
+
+		if (entry->pl_prop != ZPROP_INVAL &&
+		    zpool_get_vdev_prop(zhp, vdevname, entry->pl_prop, buf,
+		    sizeof (buf), NULL, B_FALSE) == 0) {
+			if (strlen(buf) > entry->pl_width)
+				entry->pl_width = strlen(buf);
+		}
+	}
+}
+
 /*
  * Get the state for the given feature on the given ZFS pool.
  */
