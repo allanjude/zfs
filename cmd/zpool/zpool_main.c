@@ -9105,7 +9105,7 @@ get_callback(zpool_handle_t *zhp, void *data)
 		/* Adjust the column widths for the vdev properties */
 		for (vd = 0; vd < num; vd++) {
 			vdev_expand_proplist(zhp, cbp->cb_vdevs.cb_names[vd],
-			    cbp->cb_proplist);
+			    &cbp->cb_proplist);
 		}
 	}
 
