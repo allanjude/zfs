@@ -5031,13 +5031,20 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 			/* Special Read-only Properties */
 			switch (prop) {
 			case VDEV_PROP_NAME:
-				if (vd->vdev_path == NULL)
-					continue;
-				strval = strrchr(vd->vdev_path, '/');
+				strval = vd->vdev_path;
+				if (strval == NULL) {
+					if (!vd->vdev_ops->vdev_op_leaf) {
+						char namestr[64] = { 0 };
+
+						snprintf(&namestr,
+						    sizeof (namestr), "%s-%llu",
+						    vd->vdev_ops->vdev_op_type,
+						    (u_longlong_t)vd->vdev_id);
+						strval = &namestr;
+					}
+				}
 				if (strval == NULL)
-					strval = vd->vdev_path;
-				else
-					strval++;
+					continue;
 				vdev_prop_add_list(outnvl, prop, strval, 0,
 				    ZPROP_SRC_NONE);
 				continue;
