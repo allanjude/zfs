@@ -5002,11 +5002,11 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 					if (!vd->vdev_ops->vdev_op_leaf) {
 						char namestr[64] = { 0 };
 
-						snprintf(&namestr,
+						snprintf((char *)&namestr,
 						    sizeof (namestr), "%s-%llu",
 						    vd->vdev_ops->vdev_op_type,
 						    (u_longlong_t)vd->vdev_id);
-						strval = &namestr;
+						strval = (char *)&namestr;
 					}
 				}
 				if (strval == NULL)
