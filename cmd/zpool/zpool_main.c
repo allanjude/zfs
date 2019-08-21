@@ -9421,7 +9421,7 @@ zpool_do_set(int argc, char **argv)
 			cb.cb_vdevs.cb_names_count = 1;
 			cb.cb_type = ZFS_TYPE_VDEV;
 			argc = 1; /* One pool to process */
-		} else {
+		} else if (argc > 1) {
 			(void) fprintf(stderr,
 			    gettext("too many pool names\n"));
 			usage(B_FALSE);
