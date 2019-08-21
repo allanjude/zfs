@@ -839,84 +839,83 @@ zpool_expand_proplist(zpool_handle_t *zhp, zprop_list_t **plp, zfs_type_t type)
 	if (zprop_expand_list(hdl, plp, type) != 0)
 		return (-1);
 
-	if (type == ZFS_TYPE_POOL) {
-		last = plp;
-		while (*last != NULL)
-			last = &(*last)->pl_next;
+	if (type == ZFS_TYPE_VDEV)
+		return (0);
 
-		if ((*plp)->pl_all)
-			features = zpool_get_features(zhp);
+	last = plp;
+	while (*last != NULL)
+		last = &(*last)->pl_next;
 
-		if ((*plp)->pl_all && firstexpand) {
-			for (i = 0; i < SPA_FEATURES; i++) {
-				zprop_list_t *entry = zfs_alloc(hdl,
-				    sizeof (zprop_list_t));
-				entry->pl_prop = ZPROP_INVAL;
-				entry->pl_user_prop = zfs_asprintf(hdl,
-				    "feature@%s",
-				    spa_feature_table[i].fi_uname);
-				entry->pl_width = strlen(entry->pl_user_prop);
-				entry->pl_all = B_TRUE;
+	if ((*plp)->pl_all)
+		features = zpool_get_features(zhp);
 
-				*last = entry;
-				last = &entry->pl_next;
-			}
-		}
-
-		/* add any unsupported features */
-		for (nvp = nvlist_next_nvpair(features, NULL);
-		    nvp != NULL; nvp = nvlist_next_nvpair(features, nvp)) {
-			char *propname;
-			boolean_t found;
-			zprop_list_t *entry;
-
-			if (zfeature_is_supported(nvpair_name(nvp)))
-				continue;
-
-			propname = zfs_asprintf(hdl, "unsupported@%s",
-			    nvpair_name(nvp));
-
-			/*
-			 * Before adding the property to the list make sure that
-			 * no other pool already added the same property.
-			 */
-			found = B_FALSE;
-			entry = *plp;
-			while (entry != NULL) {
-				if (entry->pl_user_prop != NULL &&
-				    strcmp(propname, entry->pl_user_prop)
-				    == 0) {
-					found = B_TRUE;
-					break;
-				}
-				entry = entry->pl_next;
-			}
-			if (found) {
-				free(propname);
-				continue;
-			}
-
-			entry = zfs_alloc(hdl, sizeof (zprop_list_t));
+	if ((*plp)->pl_all && firstexpand) {
+		for (i = 0; i < SPA_FEATURES; i++) {
+			zprop_list_t *entry = zfs_alloc(hdl,
+			    sizeof (zprop_list_t));
 			entry->pl_prop = ZPROP_INVAL;
-			entry->pl_user_prop = propname;
+			entry->pl_user_prop = zfs_asprintf(hdl, "feature@%s",
+			    spa_feature_table[i].fi_uname);
 			entry->pl_width = strlen(entry->pl_user_prop);
 			entry->pl_all = B_TRUE;
 
 			*last = entry;
 			last = &entry->pl_next;
 		}
+	}
 
-		for (entry = *plp; entry != NULL; entry = entry->pl_next) {
+	/* add any unsupported features */
+	for (nvp = nvlist_next_nvpair(features, NULL);
+	    nvp != NULL; nvp = nvlist_next_nvpair(features, nvp)) {
+		char *propname;
+		boolean_t found;
+		zprop_list_t *entry;
 
-			if (entry->pl_fixed)
-				continue;
+		if (zfeature_is_supported(nvpair_name(nvp)))
+			continue;
 
-			if (entry->pl_prop != ZPROP_INVAL &&
-			    zpool_get_prop(zhp, entry->pl_prop, buf,
-			    sizeof (buf), NULL, B_FALSE) == 0) {
-				if (strlen(buf) > entry->pl_width)
-					entry->pl_width = strlen(buf);
+		propname = zfs_asprintf(hdl, "unsupported@%s",
+		    nvpair_name(nvp));
+
+		/*
+		 * Before adding the property to the list make sure that no
+		 * other pool already added the same property.
+		 */
+		found = B_FALSE;
+		entry = *plp;
+		while (entry != NULL) {
+			if (entry->pl_user_prop != NULL &&
+			    strcmp(propname, entry->pl_user_prop) == 0) {
+				found = B_TRUE;
+				break;
 			}
+			entry = entry->pl_next;
+		}
+		if (found) {
+			free(propname);
+			continue;
+		}
+
+		entry = zfs_alloc(hdl, sizeof (zprop_list_t));
+		entry->pl_prop = ZPROP_INVAL;
+		entry->pl_user_prop = propname;
+		entry->pl_width = strlen(entry->pl_user_prop);
+		entry->pl_all = B_TRUE;
+
+		*last = entry;
+		last = &entry->pl_next;
+	}
+
+	for (entry = *plp; entry != NULL; entry = entry->pl_next) {
+
+		if (entry->pl_fixed)
+			continue;
+
+		if (entry->pl_prop != ZPROP_INVAL &&
+		    zpool_get_prop(zhp, entry->pl_prop, buf, sizeof (buf),
+		    NULL, B_FALSE) == 0) {
+			if (strlen(buf) > entry->pl_width)
+				entry->pl_width = strlen(buf);
 		}
 	}
 
