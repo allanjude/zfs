@@ -9091,21 +9091,6 @@ zpool_do_events(int argc, char **argv)
 }
 
 static int
-get_callback_vdev_cb(zpool_handle_t *zhp, nvlist_t *nv, void *data)
-{
-	zprop_get_cbdata_t *cbp = (zprop_get_cbdata_t *)data;
-	char *vdevname = zpool_vdev_name(g_zfs, zhp, nv, 0);
-	int ret = 0;
-
-	/* Adjust the column widths for the vdev properties */
-	ret = vdev_expand_proplist(zhp, vdevname, &cbp->cb_proplist);
-	/* Display the properties */
-	ret |= get_callback_vdev(zhp, vdevname, data);
-
-	return (ret);
-}
-
-static int
 get_callback_vdev(zpool_handle_t *zhp, char *vdevname, void *data)
 {
 	zprop_get_cbdata_t *cbp = (zprop_get_cbdata_t *)data;
@@ -9150,6 +9135,21 @@ get_callback_vdev(zpool_handle_t *zhp, char *vdevname, void *data)
 }
 
 static int
+get_callback_vdev_cb(zpool_handle_t *zhp, nvlist_t *nv, void *data)
+{
+	zprop_get_cbdata_t *cbp = (zprop_get_cbdata_t *)data;
+	char *vdevname = zpool_vdev_name(g_zfs, zhp, nv, 0);
+	int ret = 0;
+
+	/* Adjust the column widths for the vdev properties */
+	ret = vdev_expand_proplist(zhp, vdevname, &cbp->cb_proplist);
+	/* Display the properties */
+	ret |= get_callback_vdev(zhp, vdevname, data);
+
+	return (ret);
+}
+
+static int
 get_callback(zpool_handle_t *zhp, void *data)
 {
 	zprop_get_cbdata_t *cbp = (zprop_get_cbdata_t *)data;
@@ -9159,17 +9159,17 @@ get_callback(zpool_handle_t *zhp, void *data)
 	int vid;
 
 	if (cbp->cb_type == ZFS_TYPE_VDEV) {
-		if (strcmp(cbp->cb_vdevs.cb_names[vd], "all") == 0) {
+		if (strcmp(cbp->cb_vdevs.cb_names[0], "all") == 0) {
 			for_each_vdev(zhp, get_callback_vdev_cb, data);
 		} else {
 			for (vid = 0; vid < cbp->cb_vdevs.cb_names_count; vid++) {
 				/* Adjust column widths for vdev properties */
 				vdev_expand_proplist(zhp,
-				    cbp->cb_vdevs.cb_names[vd],
+				    cbp->cb_vdevs.cb_names[vid],
 				    &cbp->cb_proplist);
 				/* Display the properties */
 				get_callback_vdev(zhp,
-				    cbp->cb_vdevs.cb_names[vd], data);
+				    cbp->cb_vdevs.cb_names[vid], data);
 			}
 		}
 
@@ -9340,7 +9340,7 @@ zpool_do_get(int argc, char **argv)
 	} else if (are_all_pools(1, argv)) {
 		/* The first arg is a pool name */
 		if (are_vdevs_in_pool(argc - 1, argv + 1, argv[0],
-		    &cb.cb_vdevs) || (strcmp(argv[1], "all") == 0) {
+		    &cb.cb_vdevs) || (strcmp(argv[1], "all") == 0)) {
 			/* ...and the rest are vdev names */
 			cb.cb_vdevs.cb_names = argv + 1;
 			cb.cb_vdevs.cb_names_count = argc - 1;
