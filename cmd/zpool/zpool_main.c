@@ -8994,70 +8994,122 @@ zpool_do_events(int argc, char **argv)
 }
 
 static int
+get_callback_vdev_cb(zpool_handle_t *zhp, nvlist_t *nv, void *data)
+{
+	zprop_get_cbdata_t *cbp = (zprop_get_cbdata_t *)data;
+	char *vdevname = zpool_vdev_name(g_zfs, zhp, nv, 0);
+	int ret = 0;
+
+	/* Adjust the column widths for the vdev properties */
+	ret = vdev_expand_proplist(zhp, vdevname, &cbp->cb_proplist);
+	/* Display the properties */
+	ret |= get_callback_vdev(zhp, vdevname, data);
+
+	return (ret);
+}
+
+static int
+get_callback_vdev(zpool_handle_t *zhp, char *vdevname, void *data)
+{
+	zprop_get_cbdata_t *cbp = (zprop_get_cbdata_t *)data;
+	char value[MAXNAMELEN];
+	zprop_source_t srctype;
+	zprop_list_t *pl;
+
+	for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
+		/*
+		 * Skip the special fake placeholder. This will also skip
+		 * over the name property when 'all' is specified.
+		 */
+		if (pl->pl_prop == ZPOOL_PROP_NAME &&
+		    pl == cbp->cb_proplist)
+			continue;
+
+		if (pl->pl_prop == ZPROP_INVAL) {
+			/* User Properties */
+			srctype = ZPROP_SRC_LOCAL;
+
+#if 0
+			if (zpool_get_vdev_userprop(zhp, vdevname,
+			    pl->pl_user_prop, value, sizeof (value)) == 0) {
+				zprop_print_one_property(
+				    vdevname, cbp, pl->pl_user_prop, value,
+				    srctype, NULL, NULL);
+			}
+#endif
+		} else {
+			if (zpool_get_vdev_prop(zhp, vdevname, pl->pl_prop,
+			    value, sizeof (value), &srctype,
+			    cbp->cb_literal) != 0)
+				continue;
+
+			zprop_print_one_property(
+			    vdevname, cbp, vdev_prop_to_name(pl->pl_prop),
+			    value, srctype, NULL, NULL);
+		}
+	}
+
+	return (0);
+}
+
+static int
 get_callback(zpool_handle_t *zhp, void *data)
 {
 	zprop_get_cbdata_t *cbp = (zprop_get_cbdata_t *)data;
 	char value[MAXNAMELEN];
 	zprop_source_t srctype;
 	zprop_list_t *pl;
-	int vd;
-	int num = 1;
+	int vid;
 
 	if (cbp->cb_type == ZFS_TYPE_VDEV) {
-		num = cbp->cb_vdevs.cb_names_count;
-		/* Adjust the column widths for the vdev properties */
-		for (vd = 0; vd < num; vd++) {
-			vdev_expand_proplist(zhp, cbp->cb_vdevs.cb_names[vd],
-			    &cbp->cb_proplist);
-		}
-	}
-
-	for (vd = 0; vd < num; vd++) {
-		for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
-			/*
-			 * Skip the special fake placeholder. This will also skip
-			 * over the name property when 'all' is specified.
-			 */
-			if (pl->pl_prop == ZPOOL_PROP_NAME &&
-			    pl == cbp->cb_proplist)
-				continue;
-
-			if (pl->pl_prop == ZPROP_INVAL &&
-			    (zpool_prop_feature(pl->pl_user_prop) ||
-			    zpool_prop_unsupported(pl->pl_user_prop))) {
-				srctype = ZPROP_SRC_LOCAL;
-
-				if (zpool_prop_get_feature(zhp,
-				    pl->pl_user_prop, value, sizeof (value))
-				    == 0) {
-					zprop_print_one_property(
-					    zpool_get_name(zhp), cbp,
-					    pl->pl_user_prop, value, srctype,
-					    NULL, NULL);
-				}
-			} else if (cbp->cb_type == ZFS_TYPE_VDEV) {
-				if (zpool_get_vdev_prop(zhp,
-				    cbp->cb_vdevs.cb_names[vd], pl->pl_prop,
-				    value, sizeof (value), &srctype,
-				    cbp->cb_literal) != 0)
-					continue;
-
-				zprop_print_one_property(
-				    cbp->cb_vdevs.cb_names[vd], cbp,
-				    vdev_prop_to_name(pl->pl_prop), value,
-				    srctype, NULL, NULL);
-			} else {
-				if (zpool_get_prop(zhp, pl->pl_prop, value,
-				    sizeof (value), &srctype, cbp->cb_literal)
-				    != 0)
-					continue;
-
-				zprop_print_one_property(zpool_get_name(zhp),
-				    cbp, zpool_prop_to_name(pl->pl_prop), value,
-				    srctype, NULL, NULL);
+		if (strcmp(cbp->cb_vdevs.cb_names[vd], "all") == 0) {
+			for_each_vdev(zhp, get_callback_vdev_cb, data);
+		} else {
+			for (vid = 0; vid < cbp->cb_vdevs.cb_names_count; vid++) {
+				/* Adjust column widths for vdev properties */
+				vdev_expand_proplist(zhp,
+				    cbp->cb_vdevs.cb_names[vd],
+				    &cbp->cb_proplist);
+				/* Display the properties */
+				get_callback_vdev(zhp,
+				    cbp->cb_vdevs.cb_names[vd], data);
 			}
 		}
+
+		return (0);
 	}
+
+	for (pl = cbp->cb_proplist; pl != NULL; pl = pl->pl_next) {
+		/*
+		 * Skip the special fake placeholder. This will also skip
+		 * over the name property when 'all' is specified.
+		 */
+		if (pl->pl_prop == ZPOOL_PROP_NAME &&
+		    pl == cbp->cb_proplist)
+			continue;
+
+		if (pl->pl_prop == ZPROP_INVAL &&
+		    (zpool_prop_feature(pl->pl_user_prop) ||
+		    zpool_prop_unsupported(pl->pl_user_prop))) {
+			srctype = ZPROP_SRC_LOCAL;
+
+			if (zpool_prop_get_feature(zhp, pl->pl_user_prop, value,
+			    sizeof (value)) == 0) {
+				zprop_print_one_property(zpool_get_name(zhp),
+				    cbp, pl->pl_user_prop, value, srctype,
+				    NULL, NULL);
+			}
+		} else {
+			if (zpool_get_prop(zhp, pl->pl_prop, value,
+			    sizeof (value), &srctype, cbp->cb_literal) != 0)
+				continue;
+
+			zprop_print_one_property(zpool_get_name(zhp), cbp,
+			    zpool_prop_to_name(pl->pl_prop), value, srctype,
+			    NULL, NULL);
+		}
+	}
+
 	return (0);
 }
 
@@ -9191,7 +9243,7 @@ zpool_do_get(int argc, char **argv)
 	} else if (are_all_pools(1, argv)) {
 		/* The first arg is a pool name */
 		if (are_vdevs_in_pool(argc - 1, argv + 1, argv[0],
-		    &cb.cb_vdevs)) {
+		    &cb.cb_vdevs) || (strcmp(argv[1], "all") == 0) {
 			/* ...and the rest are vdev names */
 			cb.cb_vdevs.cb_names = argv + 1;
 			cb.cb_vdevs.cb_names_count = argc - 1;
