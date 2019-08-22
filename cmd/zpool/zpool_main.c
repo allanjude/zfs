@@ -9041,7 +9041,8 @@ static int
 get_callback_vdev_cb(zpool_handle_t *zhp, nvlist_t *nv, void *data)
 {
 	zprop_get_cbdata_t *cbp = (zprop_get_cbdata_t *)data;
-	char *vdevname = zpool_vdev_name(g_zfs, zhp, nv, 0);
+	char *vdevname = zpool_vdev_name(g_zfs, zhp, nv,
+	    cbp->cb_vdevs.cb_name_flags);
 	int ret = 0;
 
 	/* Adjust the column widths for the vdev properties */
