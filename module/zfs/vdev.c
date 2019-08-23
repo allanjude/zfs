@@ -5180,20 +5180,9 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 
 				switch (za.za_integer_length) {
 				case 8:
-					/* integer property */
-					strval = NULL;
-					err = zap_lookup(mos, objid,
-					    nvpair_name(elem),
-					    za.za_integer_length,
-					    za.za_num_integers, &intval);
-					if (err)
-						break;
-
-					vdev_prop_add_list(outnvl, prop, strval,
-					    intval, src);
-
+					/* User properties cannot be integers */
+					err = EINVAL;
 					break;
-
 				case 1:
 					/* string property */
 					strval = kmem_alloc(za.za_num_integers,
@@ -5241,15 +5230,11 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				if (za.za_first_integer !=
 				    vdev_prop_default_numeric(prop))
 					src = ZPROP_SRC_LOCAL;
-
 				strval = NULL;
 				intval = za.za_first_integer;
-
 				vdev_prop_add_list(outnvl, prop, strval, intval,
 				    src);
-
 				break;
-
 			case 1:
 				/* string property */
 				strval = kmem_alloc(za.za_num_integers,
