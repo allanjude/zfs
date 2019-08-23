@@ -5000,7 +5000,7 @@ zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *user_prop,
  * Get a vdev property value for 'prop_name' and return the value in
  * a pre-allocated buffer.
  */
-
+int
 zpool_get_vdev_prop_name(zpool_handle_t *zhp, const char *vdevname,
     char *prop_name, char *buf, size_t len, zprop_source_t *srctype,
     boolean_t literal)
@@ -5053,8 +5053,9 @@ zpool_get_vdev_prop_name(zpool_handle_t *zhp, const char *vdevname,
 	nvlist_free(reqprops);
 
 	if (ret == 0)
-		ret = zpool_get_vdev_prop_value(retprops, prop, prop_name, buf,
-		    len, srctype, literal);
+		ret = zpool_get_vdev_prop_value(retprops,
+		    vdev_name_to_prop(prop_name), prop_name, buf, len, srctype,
+		    literal);
 
 	nvlist_free(retprops);
 
@@ -5066,8 +5067,8 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
     char *buf, size_t len, zprop_source_t *srctype, boolean_t literal)
 {
 
-	return (zpool_get_vdev_userprop(zhp, vdevname, vdev_prop_to_name(prop),
-	    buf, len, srctype, literal));
+	return (zpool_get_vdev_prop_name(zhp, vdevname,
+	    (char *)vdev_prop_to_name(prop), buf, len, srctype, literal));
 }
 
 /*
