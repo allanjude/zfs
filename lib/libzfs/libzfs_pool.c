@@ -488,10 +488,10 @@ zpool_valid_proplist(libzfs_handle_t *hdl, const char *poolname,
 	while ((elem = nvlist_next_nvpair(props, elem)) != NULL) {
 		const char *propname = nvpair_name(elem);
 
-		if (flags.vdevprop && zpool_prop_vdev(propname)) {
+		if (flags.vdevprop && (zpool_prop_vdev(propname) ||
+		    vdev_prop_user(propname))) {
 			vdev_prop_t vprop = vdev_name_to_prop(propname);
 
-			ASSERT3U(vprop, !=, VDEV_PROP_INVAL);
 			if (vdev_prop_readonly(vprop)) {
 				zfs_error_aux(hdl, dgettext(TEXT_DOMAIN, "'%s' "
 				    "is readonly"), propname);
