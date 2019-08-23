@@ -405,6 +405,18 @@ zprop_valid_for_type(int prop, zfs_type_t type, boolean_t headcheck)
 	return ((prop_tbl[prop].pd_types & type) != 0);
 }
 
+/*
+ * For user property names, we allow all lowercase alphanumeric characters, plus
+ * a few useful punctuation characters.
+ */
+int
+zprop_valid_char(char c)
+{
+	return ((c >= 'a' && c <= 'z') ||
+	    (c >= '0' && c <= '9') ||
+	    c == '-' || c == '_' || c == '.' || c == ':');
+}
+
 #ifndef _KERNEL
 
 /*
@@ -491,4 +503,5 @@ EXPORT_SYMBOL(zprop_index_to_string);
 EXPORT_SYMBOL(zprop_random_value);
 EXPORT_SYMBOL(zprop_values);
 EXPORT_SYMBOL(zprop_valid_for_type);
+EXPORT_SYMBOL(zprop_valid_char);
 #endif
