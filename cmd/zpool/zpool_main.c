@@ -9304,7 +9304,7 @@ set_callback(zpool_handle_t *zhp, void *data)
 	int error;
 	set_cbdata_t *cb = (set_cbdata_t *)data;
 
-	if (cb->cb_type == ZFS_TYPE_VDEV && zpool_prop_vdev(cb->cb_propname))
+	if (cb->cb_type == ZFS_TYPE_VDEV)
 		error = zpool_set_vdev_prop(zhp, *cb->cb_vdevs.cb_names,
 		    cb->cb_propname, cb->cb_value);
 	else
