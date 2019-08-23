@@ -926,17 +926,14 @@ vdev_expand_proplist(zpool_handle_t *zhp, const char *vdevname,
 	char buf[ZFS_MAXPROPLEN];
 
 	for (entry = *plp; entry != NULL; entry = entry->pl_next) {
-
 		if (entry->pl_fixed)
 			continue;
 
-		if (entry->pl_prop != ZPROP_INVAL &&
-		    zpool_get_vdev_prop(zhp, vdevname, entry->pl_prop, buf,
-		    sizeof (buf), NULL, B_FALSE) == 0) {
+		if (zpool_get_vdev_prop(zhp, vdevname, entry->pl_prop,
+		    entry->pl_user_prop, buf, sizeof (buf), NULL,
+		    B_FALSE) == 0) {
 			if (strlen(buf) > entry->pl_width)
 				entry->pl_width = strlen(buf);
-		} else {
-			/* User properties */
 		}
 	}
 
@@ -4522,7 +4519,7 @@ zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *prop_name,
 	}
 
 	if (prop_name == NULL)
-		prop_name = vdev_prop_to_name(prop);
+		prop_name = (char *)vdev_prop_to_name(prop);
 
 	switch (vdev_prop_get_type(prop)) {
 	case PROP_TYPE_STRING:
@@ -4671,7 +4668,7 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 	fnvlist_add_uint64(reqnvl, ZPOOL_VDEV_GET_PROPS_VDEV, vdev_guid);
 
 	if (prop != VDEV_PROP_INVAL && prop_name == NULL)
-		prop_name = vdev_prop_to_name(prop);
+		prop_name = (char *)vdev_prop_to_name(prop);
 
 	assert(prop_name != NULL);
 	if (nvlist_add_uint64(reqprops, prop_name, prop) != 0) {
