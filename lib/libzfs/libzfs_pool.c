@@ -4814,6 +4814,8 @@ zpool_set_vdev_prop(zpool_handle_t *zhp, const char *vdevname,
 
 	ret = lzc_set_vdev_prop(zhp->zpool_name, nvl, &outnvl);
 
+/* XXX: Allan: check for errors! */
+
 	nvlist_free(props);
 	nvlist_free(nvl);
 	nvlist_free(outnvl);
