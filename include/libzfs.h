@@ -342,6 +342,7 @@ extern int zpool_set_vdev_prop(zpool_handle_t *, const char *, const char *,
 
 extern const char *vdev_prop_to_name(vdev_prop_t);
 extern const char *vdev_prop_values(vdev_prop_t);
+extern boolean_t vdev_prop_user(const char *name);
 
 /*
  * Pool health statistics.

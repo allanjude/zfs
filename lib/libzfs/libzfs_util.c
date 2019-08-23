@@ -1632,7 +1632,7 @@ addlist(libzfs_handle_t *hdl, char *propname, zprop_list_t **listp,
 	    !zpool_prop_unsupported(propname)) ||
 	    (type == ZFS_TYPE_DATASET && !zfs_prop_user(propname) &&
 	    !zfs_prop_userquota(propname) && !zfs_prop_written(propname)) ||
-	    (type == ZFS_TYPE_VDEV))) {
+	    (type == ZFS_TYPE_VDEV && !vdev_prop_user(propname)))) {
 		zfs_error_aux(hdl, dgettext(TEXT_DOMAIN,
 		    "invalid property '%s'"), propname);
 		return (zfs_error(hdl, EZFS_BADPROP,
