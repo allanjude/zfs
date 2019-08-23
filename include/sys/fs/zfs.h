@@ -371,6 +371,7 @@ uint64_t zpool_prop_random_value(zpool_prop_t, uint64_t seed);
  * VDEV property functions shared between libzfs and kernel.
  */
 vdev_prop_t vdev_name_to_prop(const char *);
+boolean_t vdev_prop_user(const char *name);
 const char *vdev_prop_to_name(vdev_prop_t);
 const char *vdev_prop_default_string(vdev_prop_t);
 uint64_t vdev_prop_default_numeric(vdev_prop_t);
