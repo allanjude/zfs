@@ -9116,16 +9116,13 @@ get_callback_vdev(zpool_handle_t *zhp, char *vdevname, void *data)
 
 		if (pl->pl_prop == ZPROP_INVAL) {
 			/* User Properties */
-			srctype = ZPROP_SRC_LOCAL;
-
-#if 0
-			if (zpool_get_vdev_userprop(zhp, vdevname,
-			    pl->pl_user_prop, value, sizeof (value)) == 0) {
+			if (zpool_get_vdev_prop_name(zhp, vdevname, pl->pl_prop,
+			    pl->pl_user_prop, value, sizeof (value), &srctype,
+			    cbp->cb_literal) == 0) {
 				zprop_print_one_property(
 				    vdevname, cbp, pl->pl_user_prop, value,
 				    srctype, NULL, NULL);
 			}
-#endif
 		} else {
 			if (zpool_get_vdev_prop(zhp, vdevname, pl->pl_prop,
 			    value, sizeof (value), &srctype,
