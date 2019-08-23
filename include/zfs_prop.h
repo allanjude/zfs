@@ -138,6 +138,7 @@ uint64_t zprop_random_value(int, uint64_t, zfs_type_t);
 const char *zprop_values(int, zfs_type_t);
 size_t zprop_width(int, boolean_t *, zfs_type_t);
 boolean_t zprop_valid_for_type(int, zfs_type_t, boolean_t);
+int zprop_valid_char(char c);
 
 #ifdef	__cplusplus
 }
