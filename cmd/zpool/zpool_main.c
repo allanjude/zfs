@@ -9012,7 +9012,7 @@ get_callback_vdev(zpool_handle_t *zhp, char *vdevname, void *data)
 
 		if (pl->pl_prop == ZPROP_INVAL) {
 			/* User Properties */
-			if (zpool_get_vdev_prop_name(zhp, vdevname, pl->pl_prop,
+			if (zpool_get_vdev_prop(zhp, vdevname, pl->pl_prop,
 			    pl->pl_user_prop, value, sizeof (value), &srctype,
 			    cbp->cb_literal) == 0) {
 				zprop_print_one_property(
@@ -9021,7 +9021,7 @@ get_callback_vdev(zpool_handle_t *zhp, char *vdevname, void *data)
 			}
 		} else {
 			if (zpool_get_vdev_prop(zhp, vdevname, pl->pl_prop,
-			    value, sizeof (value), &srctype,
+			    NULL, value, sizeof (value), &srctype,
 			    cbp->cb_literal) != 0)
 				continue;
 
