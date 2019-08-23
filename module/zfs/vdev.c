@@ -5129,6 +5129,7 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 #endif
 			case VDEV_PROP_INVAL:
 				/* User Properites */
+				src = ZPROP_SRC_LOCAL;
 
 				/*
 				 * za.za_integer_length is an int, but
@@ -5154,10 +5155,6 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 					if (err)
 						break;
 
-					if (intval !=
-					    vdev_prop_default_numeric(prop))
-						src = ZPROP_SRC_LOCAL;
-
 					vdev_prop_add_list(outnvl, prop, strval,
 					    intval, src);
 
@@ -5165,8 +5162,6 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 
 				case 1:
 					/* string property */
-					src = ZPROP_SRC_LOCAL;
-
 					strval = kmem_alloc(za.za_num_integers,
 					    KM_SLEEP);
 					err = zap_lookup(mos, objid,
