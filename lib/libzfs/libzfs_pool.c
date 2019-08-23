@@ -503,7 +503,7 @@ zpool_valid_proplist(libzfs_handle_t *hdl, const char *poolname,
 		} else if (flags.vdevprop && vdev_prop_user(propname)) {
 			if (nvlist_add_nvpair(retprops, elem) != 0) {
 				(void) no_memory(hdl);
-				return (-1);
+				goto error;
 			}
 			continue;
 		} else if (flags.vdevprop) {
