@@ -1474,8 +1474,6 @@ zprop_parse_value(libzfs_handle_t *hdl, nvpair_t *elem, int prop,
 	} else if (type == ZFS_TYPE_VDEV) {
 		proptype = vdev_prop_get_type(prop);
 		propname = vdev_prop_to_name(prop);
-		if (prop == VDEV_PROP_INVAL)
-			proptype = PROP_TYPE_STRING;
 	} else {
 		proptype = zfs_prop_get_type(prop);
 		propname = zfs_prop_to_name(prop);
