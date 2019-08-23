@@ -4877,27 +4877,34 @@ vdev_sync_props(void *arg, dmu_tx_t *tx)
 		uint64_t intval, objid = 0;
 		char *strval;
 		vdev_prop_t prop;
-		const char *propname;
+		const char *propname = nvpair_name(elem);
 		zprop_type_t proptype;
 
-		switch (prop = vdev_name_to_prop(nvpair_name(elem))) {
+		/*
+		 * Set vdev property values in the vdev props mos object.
+		 */
+		if (vd->vdev_top_zap != 0) {
+			objid = vd->vdev_top_zap;
+		} else if (vd->vdev_leaf_zap != 0) {
+			objid = vd->vdev_leaf_zap;
+		} else {
+			/* XXX: what do we do here? */
+			ASSERT(0);
+		}
+
+		switch (prop = vdev_name_to_prop(propname)) {
 		case VDEV_PROP_INVAL:
-			/* No @feature here */
-			break;
-
-		default:
-			/*
-			 * Set vdev property values in the vdev props mos object.
-			 */
-			if (vd->vdev_top_zap != 0) {
-				objid = vd->vdev_top_zap;
-			} else if (vd->vdev_leaf_zap != 0) {
-				objid = vd->vdev_leaf_zap;
-			} else {
-				/* XXX: what do we do here? */
-				ASSERT(0);
+			if (vdev_prop_user(propname)) {
+				strval = fnvpair_value_string(elem);
+				VERIFY0(zap_update(mos, objid, propname,
+				    1, strlen(strval) + 1, strval, tx));
+				spa_history_log_internal(spa, "vdev set", tx,
+				    "vdev_guid=%llu: %s=%s",
+				    (u_longlong_t)vdev_guid, nvpair_name(elem),
+				    strval);
 			}
-
+			break;
+		default:
 			/* normalize the property name */
 			propname = vdev_prop_to_name(prop);
 			proptype = vdev_prop_get_type(prop);
@@ -4957,11 +4964,12 @@ vdev_prop_set(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 #endif
 
 	while ((elem = nvlist_next_nvpair(nvprops, elem)) != NULL) {
-		vdev_prop_t prop = vdev_name_to_prop(nvpair_name(elem));
+		char *propname = nvpair_name(elem);
+		vdev_prop_t prop = vdev_name_to_prop(propname);
 		uint64_t intval = 0;
 		char *strval = NULL;
 
-		if (prop == VDEV_PROP_INVAL) {
+		if (prop == VDEV_PROP_INVAL && !vdev_prop_user(propname)) {
 			intval = EINVAL;
 			vdev_prop_add_list(outnvl, prop, strval, intval, 0);
 			continue;
