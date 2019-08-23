@@ -5173,57 +5173,68 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	uint64_t	vs_checksum_errors;	/* checksum errors	*/
 	uint64_t	vs_self_healed;		/* self-healed bytes	*/
 #endif
-			default:
-				break;
-			}
+			case VDEV_PROP_INVAL:
+				/* User Properites */
 
-			/*
-			 * za.za_integer_length is an int, but zap_length()
-			 * expects a uint64_t. Use za_first_integer instead.
-			 */
-			err = zap_length(mos, objid, nvpair_name(elem),
-			    &za.za_first_integer, &za.za_num_integers);
-			if (err)
-				break;
+				/*
+				 * za.za_integer_length is an int, but
+				 * zap_length() expects a uint64_t.
+				 * Use za_first_integer instead.
+				 */
+				err = zap_length(mos, objid, nvpair_name(elem),
+				    &za.za_first_integer, &za.za_num_integers);
+				if (err)
+					break;
 
-			za.za_integer_length = za.za_first_integer;
-			za.za_first_integer = 0;
+				za.za_integer_length = za.za_first_integer;
+				za.za_first_integer = 0;
 
-			switch (za.za_integer_length) {
-			case 8:
-				/* integer property */
+				switch (za.za_integer_length) {
+				case 8:
+					/* integer property */
+					strval = NULL;
+					err = zap_lookup(mos, objid,
+					    nvpair_name(elem),
+					    za.za_integer_length,
+					    za.za_num_integers, &intval);
+					if (err)
+						break;
 
-				strval = NULL;
-				intval = za.za_first_integer;
+					if (intval !=
+					    vdev_prop_default_numeric(prop))
+						src = ZPROP_SRC_LOCAL;
 
-				if (intval != vdev_prop_default_numeric(prop))
+					vdev_prop_add_list(outnvl, prop, strval,
+					    intval, src);
+
+					break;
+
+				case 1:
+					/* string property */
 					src = ZPROP_SRC_LOCAL;
 
-				vdev_prop_add_list(outnvl, prop, strval, intval,
-				    src);
-
-				break;
-
-			case 1:
-				/* string property */
-				src = ZPROP_SRC_LOCAL;
-
-				strval = kmem_alloc(za.za_num_integers,
-				    KM_SLEEP);
-				err = zap_lookup(mos, objid, za.za_name, 1,
-				    za.za_num_integers, strval);
-				if (err) {
+					strval = kmem_alloc(za.za_num_integers,
+					    KM_SLEEP);
+					err = zap_lookup(mos, objid,
+					    nvpair_name(elem), 1,
+					    za.za_num_integers, strval);
+					if (err) {
+						kmem_free(strval,
+						    za.za_num_integers);
+						break;
+					}
+					vdev_prop_add_list(outnvl, prop, strval,
+					    0, src);
 					kmem_free(strval, za.za_num_integers);
 					break;
 				}
-				vdev_prop_add_list(outnvl, prop, strval, 0,
-				    src);
-				kmem_free(strval, za.za_num_integers);
 				break;
-
 			default:
+				err = ENOENT;
 				break;
 			}
+			if (err)
+				break;
 		}
 		zap_cursor_fini(&zc);
 	} else {
@@ -5280,9 +5291,6 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	}
 
 	mutex_exit(&spa->spa_props_lock);
-#if 0
-out:
-#endif
 	if (err && err != ENOENT) {
 		return (err);
 	}
