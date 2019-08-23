@@ -4508,23 +4508,42 @@ zpool_wait_status(zpool_handle_t *zhp, zpool_wait_activity_t activity,
 }
 
 int
-zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *buf,
-    size_t len, zprop_source_t *srctype, boolean_t literal)
+zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *user_prop,
+    char *buf, size_t len, zprop_source_t *srctype, boolean_t literal)
 {
 	nvlist_t *nv;
-	const char *propname = vdev_prop_to_name(prop);
+	const char *propname = NULL;
 	uint64_t intval;
 	char *strval;
 	zprop_source_t src = ZPROP_SRC_NONE;
 
+	if (prop == VDEV_PROP_INVAL) {
+		assert(user_prop != NULL);
+		if (nvlist_lookup_nvlist(nvprop, user_prop, &nv) == 0) {
+			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE,
+			    &intval) == 0);
+			src = intval;
+			verify(nvlist_lookup_string(nv, ZPROP_VALUE,
+			    &strval) == 0);
+		} else {
+			src = ZPROP_SRC_NONE;
+			strval = "-";
+		}
+		(void) strlcpy(buf, strval, len);
+		if (srctype)
+			*srctype = src;
+		return (0);
+	}
+
+	propname = vdev_prop_to_name(prop);
 	switch (vdev_prop_get_type(prop)) {
 	case PROP_TYPE_STRING:
 		if (nvlist_lookup_nvlist(nvprop, propname, &nv) == 0) {
-			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE, &intval)
-			    == 0);
+			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE,
+			    &intval) == 0);
 			src = intval;
-			verify(nvlist_lookup_string(nv, ZPROP_VALUE, &strval)
-			    == 0);
+			verify(nvlist_lookup_string(nv, ZPROP_VALUE,
+			    &strval) == 0);
 		} else {
 			src = ZPROP_SRC_DEFAULT;
 			if ((strval = (char *)vdev_prop_default_string(prop))
@@ -4536,11 +4555,11 @@ zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *buf,
 
 	case PROP_TYPE_NUMBER:
 		if (nvlist_lookup_nvlist(nvprop, propname, &nv) == 0) {
-			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE, &intval)
-			    == 0);
+			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE,
+			    &intval) == 0);
 			src = intval;
-			verify(nvlist_lookup_uint64(nv, ZPROP_VALUE, &intval)
-			    == 0);
+			verify(nvlist_lookup_uint64(nv, ZPROP_VALUE,
+			    &intval) == 0);
 		} else {
 			src = ZPROP_SRC_DEFAULT;
 			intval = vdev_prop_default_numeric(prop);
@@ -4603,11 +4622,11 @@ zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *buf,
 
 	case PROP_TYPE_INDEX:
 		if (nvlist_lookup_nvlist(nvprop, propname, &nv) == 0) {
-			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE, &intval)
-			    == 0);
+			verify(nvlist_lookup_uint64(nv, ZPROP_SOURCE,
+			    &intval) == 0);
 			src = intval;
-			verify(nvlist_lookup_uint64(nv, ZPROP_VALUE, &intval)
-			    == 0);
+			verify(nvlist_lookup_uint64(nv, ZPROP_VALUE,
+			    &intval) == 0);
 		} else {
 			src = ZPROP_SRC_DEFAULT;
 			intval = vdev_prop_default_numeric(prop);
@@ -4629,12 +4648,13 @@ zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *buf,
 }
 
 /*
- * Get a vdev property value for 'prop' and return the value in
+ * Get a vdev property value for 'prop_name' and return the value in
  * a pre-allocated buffer.
  */
-int
-zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
-    char *buf, size_t len, zprop_source_t *srctype, boolean_t literal)
+
+zpool_get_vdev_prop_name(zpool_handle_t *zhp, const char *vdevname,
+    char *prop_name, char *buf, size_t len, zprop_source_t *srctype,
+    boolean_t literal)
 {
 	nvlist_t *tgt, *reqnvl, *reqprops, *retprops;
 	uint64_t vdev_guid;
@@ -4662,7 +4682,8 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 
 	fnvlist_add_uint64(reqnvl, ZPOOL_VDEV_GET_PROPS_VDEV, vdev_guid);
 
-	if (nvlist_add_uint64(reqprops, vdev_prop_to_name(prop), prop) != 0) {
+	if (nvlist_add_uint64(reqprops, prop_name,
+	    vdev_name_to_prop(prop_name)) != 0) {
 		nvlist_free(reqnvl);
 		nvlist_free(reqprops);
 		return (no_memory(zhp->zpool_hdl));
@@ -4672,7 +4693,7 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 
 	(void) snprintf(errbuf, sizeof (errbuf),
 	    dgettext(TEXT_DOMAIN, "cannot get vdev property %s from %s in %s"),
-	    vdev_prop_to_name(prop), vdevname, zhp->zpool_name);
+	    prop_name, vdevname, zhp->zpool_name);
 
 	ret = lzc_get_vdev_prop(zhp->zpool_name, reqnvl, &retprops);
 
@@ -4683,12 +4704,21 @@ zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
 	nvlist_free(reqprops);
 
 	if (ret == 0)
-		ret = zpool_get_vdev_prop_value(retprops, prop, buf, len,
-		    srctype, literal);
+		ret = zpool_get_vdev_prop_value(retprops, prop, prop_name, buf,
+		    len, srctype, literal);
 
 	nvlist_free(retprops);
 
 	return (ret);
+}
+
+int
+zpool_get_vdev_prop(zpool_handle_t *zhp, const char *vdevname, vdev_prop_t prop,
+    char *buf, size_t len, zprop_source_t *srctype, boolean_t literal)
+{
+
+	return (zpool_get_vdev_userprop(zhp, vdevname, vdev_prop_to_name(prop),
+	    buf, len, srctype, literal));
 }
 
 /*
