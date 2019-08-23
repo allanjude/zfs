@@ -460,6 +460,7 @@ EXPORT_SYMBOL(zpool_prop_index_to_string);
 EXPORT_SYMBOL(zpool_prop_string_to_index);
 EXPORT_SYMBOL(zpool_prop_vdev);
 EXPORT_SYMBOL(vdev_name_to_prop);
+EXPORT_SYMBOL(vdev_prop_user);
 EXPORT_SYMBOL(vdev_prop_to_name);
 EXPORT_SYMBOL(vdev_prop_default_string);
 EXPORT_SYMBOL(vdev_prop_default_numeric);
