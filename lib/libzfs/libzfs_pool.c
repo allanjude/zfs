@@ -484,8 +484,7 @@ zpool_valid_proplist(libzfs_handle_t *hdl, const char *poolname,
 	while ((elem = nvlist_next_nvpair(props, elem)) != NULL) {
 		const char *propname = nvpair_name(elem);
 
-		if (flags.vdevprop && (zpool_prop_vdev(propname) ||
-		    vdev_prop_user(propname))) {
+		if (flags.vdevprop && zpool_prop_vdev(propname)) {
 			vdev_prop_t vprop = vdev_name_to_prop(propname);
 
 			if (vdev_prop_readonly(vprop)) {
@@ -500,6 +499,12 @@ zpool_valid_proplist(libzfs_handle_t *hdl, const char *poolname,
 			    retprops, &strval, &intval, errbuf) != 0)
 				goto error;
 
+			continue;
+		} else if (flags.vdevprop && vdev_prop_user(propname)) {
+			if (nvlist_add_nvpair(retprops, elem) != 0) {
+				(void) no_memory(hdl);
+				return (-1);
+			}
 			continue;
 		} else if (flags.vdevprop) {
 			zfs_error_aux(hdl, dgettext(TEXT_DOMAIN,
