@@ -334,6 +334,30 @@ vdev_name_to_prop(const char *propname)
 }
 
 /*
+ * Returns true if this is a valid user-defined property (one with a ':').
+ */
+boolean_t
+vdev_prop_user(const char *name)
+{
+	int i;
+	char c;
+	boolean_t foundsep = B_FALSE;
+
+	for (i = 0; i < strlen(name); i++) {
+		c = name[i];
+		if (!zprop_valid_char(c))
+			return (B_FALSE);
+		if (c == ':')
+			foundsep = B_TRUE;
+	}
+
+	if (!foundsep)
+		return (B_FALSE);
+
+	return (B_TRUE);
+}
+
+/*
  * Given a pool property ID, returns the corresponding name.
  * Assuming the pool propety ID is valid.
  */
