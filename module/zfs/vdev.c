@@ -5198,7 +5198,10 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 
 			switch (za.za_integer_length) {
 			case 8:
-				/* integer property */
+				/* We do not allow integer user properties */
+				/* This is likely an internal value */
+				continue;
+#if 0
 				if (za.za_first_integer !=
 				    vdev_prop_default_numeric(prop))
 					src = ZPROP_SRC_LOCAL;
@@ -5206,6 +5209,7 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				intval = za.za_first_integer;
 				vdev_prop_add_list(outnvl, propname, strval,
 				    intval, src);
+#endif
 				break;
 			case 1:
 				/* string property */
