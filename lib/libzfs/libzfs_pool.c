@@ -929,6 +929,14 @@ vdev_expand_proplist(zpool_handle_t *zhp, const char *vdevname,
 {
 	zprop_list_t *entry;
 	char buf[ZFS_MAXPROPLEN];
+	char *strval = NULL;
+	int err = 0;
+	nvpair_t *elem = NULL;
+	nvlist_t *vprops = NULL;
+	nvlist_t *propval = NULL;
+	const char *propname;
+	vdev_prop_t prop;
+	zprop_list_t **last;
 
 	for (entry = *plp; entry != NULL; entry = entry->pl_next) {
 		if (entry->pl_fixed)
@@ -939,6 +947,46 @@ vdev_expand_proplist(zpool_handle_t *zhp, const char *vdevname,
 		    B_FALSE) == 0) {
 			if (strlen(buf) > entry->pl_width)
 				entry->pl_width = strlen(buf);
+		}
+		if (entry->pl_prop == VDEV_PROP_NAME &&
+		    strlen(vdevname) > entry->pl_width)
+			entry->pl_width = strlen(vdevname);
+	}
+
+	/* Handle the all properties case */
+	last = plp;
+	if (*last != NULL && (*last)->pl_all == B_TRUE) {
+		while (*last != NULL)
+			last = &(*last)->pl_next;
+
+		err = zpool_get_all_vdev_props(zhp, vdevname, &vprops);
+		if (err != 0)
+			return (err);
+
+		while ((elem = nvlist_next_nvpair(vprops, elem)) != NULL) {
+			propname = nvpair_name(elem);
+
+			/* Skip properties that are not user defined */
+			if ((prop = vdev_name_to_prop(propname)) != ZPROP_INVAL)
+				continue;
+
+			if (nvpair_value_nvlist(elem, &propval) != 0)
+				continue;
+
+			verify(nvlist_lookup_string(propval, ZPROP_VALUE,
+			    &strval) == 0);
+
+			if ((entry = zfs_alloc(zhp->zpool_hdl,
+			    sizeof (zprop_list_t))) == NULL)
+				return (ZPROP_INVAL);
+
+			entry->pl_prop = prop;
+			entry->pl_user_prop = zfs_strdup(zhp->zpool_hdl,
+			    propname);
+			entry->pl_width = strlen(strval);
+			entry->pl_all = B_TRUE;
+			*last = entry;
+			last = &entry->pl_next;
 		}
 	}
 
