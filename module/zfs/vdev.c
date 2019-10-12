@@ -5103,9 +5103,6 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				/* XXX: can't we tell per vdev? */
 				/* This might need to be writable */
 				continue;
-			case VDEV_PROP_COMMENT:
-				/* Exists in the ZAP below */
-				break;
 			case VDEV_PROP_EXPANDSZ:
 				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_stat.vs_esize, ZPROP_SRC_NONE);
@@ -5171,6 +5168,9 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	uint64_t	vs_checksum_errors;	/* checksum errors	*/
 	uint64_t	vs_self_healed;		/* self-healed bytes	*/
 #endif
+			case VDEV_PROP_COMMENT:
+				/* Exists in the ZAP below */
+				/* FALLTHRU */
 			case VDEV_PROP_INVAL:
 				/* User Properites */
 				src = ZPROP_SRC_LOCAL;
