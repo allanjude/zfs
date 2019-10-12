@@ -4795,10 +4795,9 @@ vdev_replace_in_progress(vdev_t *vdev)
  * Add a (source=src, propname=propval) list to an nvlist.
  */
 static void
-vdev_prop_add_list(nvlist_t *nvl, vdev_prop_t prop, char *strval,
+vdev_prop_add_list(nvlist_t *nvl, const char *propname, char *strval,
     uint64_t intval, zprop_source_t src)
 {
-	const char *propname = vdev_prop_to_name(prop);
 	nvlist_t *propval;
 
 	if (nvl == NULL)
@@ -4936,13 +4935,13 @@ vdev_prop_set(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 
 		if (prop == VDEV_PROP_INVAL && !vdev_prop_user(propname)) {
 			intval = EINVAL;
-			vdev_prop_add_list(outnvl, prop, strval, intval, 0);
+			vdev_prop_add_list(outnvl, propname, strval, intval, 0);
 			continue;
 		}
 
 		if (vdev_prop_readonly(prop) == B_TRUE) {
 			intval = EROFS;
-			vdev_prop_add_list(outnvl, prop, strval, intval, 0);
+			vdev_prop_add_list(outnvl, propname, strval, intval, 0);
 			continue;
 		}
 	}
@@ -4995,11 +4994,11 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	mutex_enter(&spa->spa_props_lock);
 
 	if (nvprops != NULL) {
-		zap_cursor_init(&zc, mos, objid);
 		while ((elem = nvlist_next_nvpair(nvprops, elem)) != NULL) {
-			vdev_prop_t prop = vdev_name_to_prop(nvpair_name(elem));
-			uint64_t intval = 0;
-			char *strval = NULL;
+			intval = 0;
+			strval = NULL;
+			const char *propname = nvpair_name(elem);
+			vdev_prop_t prop = vdev_name_to_prop(propname);
 			zprop_source_t src = ZPROP_SRC_DEFAULT;
 
 			/* Special Read-only Properties */
@@ -5019,7 +5018,7 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				}
 				if (strval == NULL)
 					continue;
-				vdev_prop_add_list(outnvl, prop, strval, 0,
+				vdev_prop_add_list(outnvl, propname, strval, 0,
 				    ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_CAPACITY:
@@ -5027,40 +5026,40 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				intval = (vd->vdev_stat.vs_dspace == 0) ? 0 :
 				    (vd->vdev_stat.vs_alloc * 100 /
 				     vd->vdev_stat.vs_dspace);
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    intval, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_STATE:
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_state, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_GUID:
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_guid, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_ASIZE:
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_asize, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_PSIZE:
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_psize, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_ASHIFT:
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_ashift, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_SIZE:
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_stat.vs_dspace, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_FREE:
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_stat.vs_dspace -
 				    vd->vdev_stat.vs_alloc, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_ALLOCATED:
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_stat.vs_alloc, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_READONLY:
@@ -5071,11 +5070,11 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				/* Exists in the ZAP below */
 				break;
 			case VDEV_PROP_EXPANDSZ:
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_stat.vs_esize, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_FRAGMENTATION:
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_stat.vs_fragmentation,
 				    ZPROP_SRC_NONE);
 				continue;
@@ -5083,38 +5082,38 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				/* XXX: Allan TODO */
 				continue;
 			case VDEV_PROP_PARITY:
-				vdev_prop_add_list(outnvl, prop, NULL,
+				vdev_prop_add_list(outnvl, propname, NULL,
 				    vd->vdev_nparity, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_PATH:
 				if (vd->vdev_path == NULL)
 					continue;
-				vdev_prop_add_list(outnvl, prop, vd->vdev_path,
-				    0, ZPROP_SRC_NONE);
+				vdev_prop_add_list(outnvl, propname,
+				    vd->vdev_path, 0, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_DEVID:
 				if (vd->vdev_devid == NULL)
 					continue;
-				vdev_prop_add_list(outnvl, prop, vd->vdev_devid,
-				    0, ZPROP_SRC_NONE);
+				vdev_prop_add_list(outnvl, propname,
+				    vd->vdev_devid, 0, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_PHYS_PATH:
 				if (vd->vdev_physpath == NULL)
 					continue;
-				vdev_prop_add_list(outnvl, prop,
+				vdev_prop_add_list(outnvl, propname,
 				    vd->vdev_physpath, 0, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_ENC_PATH:
 				if (vd->vdev_enc_sysfs_path == NULL)
 					continue;
-				vdev_prop_add_list(outnvl, prop,
+				vdev_prop_add_list(outnvl, propname,
 				    vd->vdev_enc_sysfs_path, 0, ZPROP_SRC_NONE);
 				continue;
 			case VDEV_PROP_FRU:
 				if (vd->vdev_fru == NULL)
 					continue;
-				vdev_prop_add_list(outnvl, prop, vd->vdev_fru,
-				    0, ZPROP_SRC_NONE);
+				vdev_prop_add_list(outnvl, propname,
+				    vd->vdev_fru, 0, ZPROP_SRC_NONE);
 				continue;
 #if 0
 	/*
@@ -5169,8 +5168,8 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 						    za.za_num_integers);
 						break;
 					}
-					vdev_prop_add_list(outnvl, prop, strval,
-					    0, src);
+					vdev_prop_add_list(outnvl, propname,
+					    strval, 0, src);
 					kmem_free(strval, za.za_num_integers);
 					break;
 				}
@@ -5182,7 +5181,6 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 			if (err)
 				break;
 		}
-		zap_cursor_fini(&zc);
 	} else {
 		/*
 		 * Get properties from the MOS vdev property object.
@@ -5207,8 +5205,8 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 					src = ZPROP_SRC_LOCAL;
 				strval = NULL;
 				intval = za.za_first_integer;
-				vdev_prop_add_list(outnvl, prop, strval, intval,
-				    src);
+				vdev_prop_add_list(outnvl, propname, strval,
+				    intval, src);
 				break;
 			case 1:
 				/* string property */
@@ -5220,7 +5218,7 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 					kmem_free(strval, za.za_num_integers);
 					break;
 				}
-				vdev_prop_add_list(outnvl, prop, strval, 0,
+				vdev_prop_add_list(outnvl, propname, strval, 0,
 				    src);
 				kmem_free(strval, za.za_num_integers);
 				break;
