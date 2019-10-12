@@ -9140,17 +9140,29 @@ get_callback_vdev(zpool_handle_t *zhp, char *vdevname, void *data)
 }
 
 static int
+get_callback_vdev_width_cb(zpool_handle_t *zhp, nvlist_t *nv, void *data)
+{
+	zprop_get_cbdata_t *cbp = (zprop_get_cbdata_t *)data;
+	char *vdevname = zpool_vdev_name(g_zfs, zhp, nv,
+	    cbp->cb_vdevs.cb_name_flags);
+	int ret;
+
+	/* Adjust the column widths for the vdev properties */
+	ret = vdev_expand_proplist(zhp, vdevname, &cbp->cb_proplist);
+
+	return (ret);
+}
+
+static int
 get_callback_vdev_cb(zpool_handle_t *zhp, nvlist_t *nv, void *data)
 {
 	zprop_get_cbdata_t *cbp = (zprop_get_cbdata_t *)data;
 	char *vdevname = zpool_vdev_name(g_zfs, zhp, nv,
 	    cbp->cb_vdevs.cb_name_flags);
-	int ret = 0;
+	int ret;
 
-	/* Adjust the column widths for the vdev properties */
-	ret = vdev_expand_proplist(zhp, vdevname, &cbp->cb_proplist);
 	/* Display the properties */
-	ret |= get_callback_vdev(zhp, vdevname, data);
+	ret = get_callback_vdev(zhp, vdevname, data);
 
 	return (ret);
 }
@@ -9166,6 +9178,7 @@ get_callback(zpool_handle_t *zhp, void *data)
 
 	if (cbp->cb_type == ZFS_TYPE_VDEV) {
 		if (strcmp(cbp->cb_vdevs.cb_names[0], "all") == 0) {
+			for_each_vdev(zhp, get_callback_vdev_width_cb, data);
 			for_each_vdev(zhp, get_callback_vdev_cb, data);
 		} else {
 			for (vid = 0; vid < cbp->cb_vdevs.cb_names_count; vid++) {
@@ -9173,6 +9186,8 @@ get_callback(zpool_handle_t *zhp, void *data)
 				vdev_expand_proplist(zhp,
 				    cbp->cb_vdevs.cb_names[vid],
 				    &cbp->cb_proplist);
+			}
+			for (vid = 0; vid < cbp->cb_vdevs.cb_names_count; vid++) {
 				/* Display the properties */
 				get_callback_vdev(zhp,
 				    cbp->cb_vdevs.cb_names[vid], data);
