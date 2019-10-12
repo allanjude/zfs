@@ -4800,6 +4800,14 @@ is_vdev_cb(zpool_handle_t *zhp, nvlist_t *nv, void *cb_data)
 		ret = 1; /* match */
 	free(name);
 
+	if (ret)
+		return (ret);
+
+	name = zpool_vdev_name(g_zfs, zhp, nv, VDEV_NAME_GUID);
+	if (strcmp(name, cb->cb_names[0]) == 0)
+		ret = 1; /* match */
+	free(name);
+
 	return (ret);
 }
 
