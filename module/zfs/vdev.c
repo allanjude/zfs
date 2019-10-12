@@ -5007,7 +5007,7 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	uint64_t objid;
 	uint64_t vdev_guid;
 	nvpair_t *elem = NULL;
-	nvlist_t *nvprops;
+	nvlist_t *nvprops = NULL;
 	uint64_t intval = 0;
 	char *strval = NULL;
 	const char *propname = NULL;
