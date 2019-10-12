@@ -4964,6 +4964,8 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	nvlist_t *nvprops;
 	uint64_t intval = 0;
 	char *strval = NULL;
+	const char *propname = NULL;
+	vdev_prop_t prop;
 
 	ASSERT(vd != NULL);
 
@@ -4997,8 +4999,8 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 		while ((elem = nvlist_next_nvpair(nvprops, elem)) != NULL) {
 			intval = 0;
 			strval = NULL;
-			const char *propname = nvpair_name(elem);
-			vdev_prop_t prop = vdev_name_to_prop(propname);
+			propname = nvpair_name(elem);
+			prop = vdev_name_to_prop(propname);
 			zprop_source_t src = ZPROP_SRC_DEFAULT;
 
 			/* Special Read-only Properties */
@@ -5191,11 +5193,8 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 			uint64_t intval = 0;
 			char *strval = NULL;
 			zprop_source_t src = ZPROP_SRC_DEFAULT;
-			vdev_prop_t prop;
-
-			if ((prop = vdev_name_to_prop(za.za_name)) ==
-			    VDEV_PROP_INVAL)
-				continue;
+			propname = za.za_name;
+			prop = vdev_name_to_prop(propname);
 
 			switch (za.za_integer_length) {
 			case 8:
