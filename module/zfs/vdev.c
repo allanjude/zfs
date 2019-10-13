@@ -4826,6 +4826,29 @@ vdev_xlate(vdev_t *vd, const range_seg_t *logical_rs, range_seg_t *physical_rs)
 	physical_rs->rs_end = intermediate.rs_end;
 }
 
+char *
+vdev_name(vdev_t *vd)
+{
+	char *ret;
+
+	ret = vd->vdev_path;
+	if (ret == NULL) {
+		if (strcmp(vd->vdev_ops->vdev_op_type, "root") == 0) {
+			ret = vd->vdev_spa->spa_name;
+		} else if (!vd->vdev_ops->vdev_op_leaf) {
+			char namestr[64] = { 0 };
+
+			snprintf((char *)&namestr,
+			    sizeof (namestr), "%s-%llu",
+			    vd->vdev_ops->vdev_op_type,
+			    (u_longlong_t)vd->vdev_id);
+			ret = (char *)&namestr;
+		}
+	}
+
+	return (ret);
+}
+
 /*
  * Add a (source=src, propname=propval) list to an nvlist.
  */
@@ -5041,18 +5064,7 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 			/* Special Read-only Properties */
 			switch (prop) {
 			case VDEV_PROP_NAME:
-				strval = vd->vdev_path;
-				if (strval == NULL) {
-					if (!vd->vdev_ops->vdev_op_leaf) {
-						char namestr[64] = { 0 };
-
-						snprintf((char *)&namestr,
-						    sizeof (namestr), "%s-%llu",
-						    vd->vdev_ops->vdev_op_type,
-						    (u_longlong_t)vd->vdev_id);
-						strval = (char *)&namestr;
-					}
-				}
+				strval = vdev_name(vd);
 				if (strval == NULL)
 					continue;
 				vdev_prop_add_list(outnvl, propname, strval, 0,
@@ -5148,6 +5160,35 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 					continue;
 				vdev_prop_add_list(outnvl, propname,
 				    vd->vdev_fru, 0, ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_PARENT:
+				if (vd->vdev_parent != NULL) {
+					strval = vdev_name(vd->vdev_parent);
+					vdev_prop_add_list(outnvl, propname,
+					    strval, 0, ZPROP_SRC_NONE);
+				}
+				continue;
+			case VDEV_PROP_CHILDREN:
+				if (vd->vdev_children > 0)
+					strval = kmem_zalloc(ZAP_MAXVALUELEN,
+					    KM_SLEEP);
+				for (uint64_t i = 0; i < vd->vdev_children;
+				    i++) {
+					char *vname;
+
+					vname = vdev_name(vd->vdev_child[i]);
+					if (vname == NULL)
+						vname = "(unknown)";
+					if (strlen(strval) > 0)
+						strlcat(strval, " ",
+						    ZAP_MAXVALUELEN);
+					strlcat(strval, vname, ZAP_MAXVALUELEN);
+				}
+				if (strval != NULL) {
+					vdev_prop_add_list(outnvl, propname,
+					    strval, 0, ZPROP_SRC_NONE);
+					kmem_free(strval, ZAP_MAXVALUELEN);
+				}
 				continue;
 #if 0
 	/*
