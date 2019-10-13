@@ -284,6 +284,10 @@ vdev_prop_init(void)
 	    PROP_READONLY, ZFS_TYPE_VDEV, "<encpath>", "ENCPATH");
 	zprop_register_string(VDEV_PROP_FRU, "fru", NULL,
 	    PROP_READONLY, ZFS_TYPE_VDEV, "<fru>", "FRU");
+	zprop_register_string(VDEV_PROP_PARENT, "parent", NULL,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<parent>", "PARENT");
+	zprop_register_string(VDEV_PROP_CHILDREN, "children", NULL,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<children>", "CHILDREN");
 
 	/* readonly number properties */
 	zprop_register_number(VDEV_PROP_SIZE, "size", 0, PROP_READONLY,
