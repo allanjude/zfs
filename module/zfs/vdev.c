@@ -5190,13 +5190,27 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 					kmem_free(strval, ZAP_MAXVALUELEN);
 				}
 				continue;
+			case VDEV_PROP_NUMCHILDREN:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_children, ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_READ_ERRORS:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_read_errors,
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_WRITE_ERRORS:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_write_errors,
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_CHECKSUM_ERRORS:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_checksum_errors,
+				    ZPROP_SRC_NONE);
+				continue;
 #if 0
 	/*
-	 * parent
-	 * children (count)
-	 * children (list)
-	 *
-	 *
 	 *
 	 */
 	boolean_t	vdev_has_trim;	/* TRIM is supported		*/
@@ -5204,9 +5218,6 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 
 	uint64_t	vs_ops[ZIO_TYPES];	/* operation count	*/
 	uint64_t	vs_bytes[ZIO_TYPES];	/* bytes read/written	*/
-	uint64_t	vs_read_errors;		/* read errors		*/
-	uint64_t	vs_write_errors;	/* write errors		*/
-	uint64_t	vs_checksum_errors;	/* checksum errors	*/
 	uint64_t	vs_self_healed;		/* self-healed bytes	*/
 #endif
 			case VDEV_PROP_COMMENT:
