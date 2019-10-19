@@ -4613,6 +4613,20 @@ zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *prop_name,
 		case VDEV_PROP_WRITE_ERRORS:
 		case VDEV_PROP_CHECKSUM_ERRORS:
 		case VDEV_PROP_INITIALIZE_ERRORS:
+		case VDEV_PROP_OPS_NULL:
+		case VDEV_PROP_OPS_READ:
+		case VDEV_PROP_OPS_WRITE:
+		case VDEV_PROP_OPS_FREE:
+		case VDEV_PROP_OPS_CLAIM:
+		case VDEV_PROP_OPS_IOCTL:
+		case VDEV_PROP_OPS_TRIM:
+		case VDEV_PROP_BYTES_NULL:
+		case VDEV_PROP_BYTES_READ:
+		case VDEV_PROP_BYTES_WRITE:
+		case VDEV_PROP_BYTES_FREE:
+		case VDEV_PROP_BYTES_CLAIM:
+		case VDEV_PROP_BYTES_IOCTL:
+		case VDEV_PROP_BYTES_TRIM:
 			if (literal) {
 				(void) snprintf(buf, len, "%llu",
 				    (u_longlong_t)intval);
