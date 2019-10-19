@@ -128,7 +128,7 @@ zstd_compare(const void *a, const void *b)
 	ASSERT3U(x->kmem_magic, ==, ZSTD_KMEM_MAGIC);
 	ASSERT3U(y->kmem_magic, ==, ZSTD_KMEM_MAGIC);
 
-	return (AVL_CMP(x->kmem_size, y->kmem_size));
+	return (TREE_CMP(x->kmem_size, y->kmem_size));
 }
 
 static enum zio_zstd_levels
