@@ -5238,6 +5238,11 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				    vd->vdev_stat.vs_checksum_errors,
 				    ZPROP_SRC_NONE);
 				continue;
+			case VDEV_PROP_INITIALIZE_ERRORS:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_initialize_errors,
+				    ZPROP_SRC_NONE);
+				continue;
 #if 0
 	/*
 	 *

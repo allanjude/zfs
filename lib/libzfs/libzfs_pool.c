@@ -4974,6 +4974,7 @@ zpool_get_vdev_prop_value(nvlist_t *nvprop, vdev_prop_t prop, char *prop_name,
 		case VDEV_PROP_READ_ERRORS:
 		case VDEV_PROP_WRITE_ERRORS:
 		case VDEV_PROP_CHECKSUM_ERRORS:
+		case VDEV_PROP_INITIALIZE_ERRORS:
 			if (literal) {
 				(void) snprintf(buf, len, "%llu",
 				    (u_longlong_t)intval);
