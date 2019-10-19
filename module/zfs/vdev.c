@@ -5155,6 +5155,10 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 					kmem_free(strval, ZAP_MAXVALUELEN);
 				}
 				continue;
+			case VDEV_PROP_NUMCHILDREN:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_children, ZPROP_SRC_NONE);
+				continue;
 #if 0
 	/*
 	 * parent

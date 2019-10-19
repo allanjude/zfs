@@ -316,6 +316,8 @@ vdev_prop_init(void)
 	    ZFS_TYPE_VDEV, "<ashift>", "ASHIFT");
 	zprop_register_number(VDEV_PROP_PARITY, "parity", 0, PROP_READONLY,
 	    ZFS_TYPE_VDEV, "<parity>", "PARITY");
+	zprop_register_number(VDEV_PROP_NUMCHILDREN, "numchild", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<numchild>", "NUMCHILD");
 
 	/* default index (boolean) properties */
 	zprop_register_index(VDEV_PROP_READONLY, "readonly", 0,
