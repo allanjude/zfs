@@ -5226,6 +5226,77 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				    vd->vdev_stat.vs_initialize_errors,
 				    ZPROP_SRC_NONE);
 				continue;
+			case VDEV_PROP_OPS_NULL:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_ops[ZIO_TYPE_NULL],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_OPS_READ:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_ops[ZIO_TYPE_READ],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_OPS_WRITE:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_ops[ZIO_TYPE_WRITE],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_OPS_FREE:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_ops[ZIO_TYPE_FREE],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_OPS_CLAIM:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_ops[ZIO_TYPE_CLAIM],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_OPS_IOCTL:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_ops[ZIO_TYPE_IOCTL],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_OPS_TRIM:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_ops[ZIO_TYPE_TRIM],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_BYTES_NULL:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_bytes[ZIO_TYPE_NULL],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_BYTES_READ:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_bytes[ZIO_TYPE_READ],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_BYTES_WRITE:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_bytes[ZIO_TYPE_WRITE],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_BYTES_FREE:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_bytes[ZIO_TYPE_FREE],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_BYTES_CLAIM:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_bytes[ZIO_TYPE_CLAIM],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_BYTES_IOCTL:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_bytes[ZIO_TYPE_IOCTL],
+				    ZPROP_SRC_NONE);
+				continue;
+			case VDEV_PROP_BYTES_TRIM:
+				vdev_prop_add_list(outnvl, propname, NULL,
+				    vd->vdev_stat.vs_bytes[ZIO_TYPE_TRIM],
+				    ZPROP_SRC_NONE);
+				continue;
+
 #if 0
 	/*
 	 *

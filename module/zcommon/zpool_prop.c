@@ -326,6 +326,34 @@ vdev_prop_init(void)
 	    PROP_READONLY, ZFS_TYPE_VDEV, "<errors>", "CKERR");
 	zprop_register_number(VDEV_PROP_INITIALIZE_ERRORS, "initialize_errors", 0,
 	    PROP_READONLY, ZFS_TYPE_VDEV, "<errors>", "INITERR");
+	zprop_register_number(VDEV_PROP_OPS_NULL, "null_ops", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "NULLOP");
+	zprop_register_number(VDEV_PROP_OPS_READ, "read_ops", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "READOP");
+	zprop_register_number(VDEV_PROP_OPS_WRITE, "write_ops", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "WRITEOP");
+	zprop_register_number(VDEV_PROP_OPS_FREE, "free_ops", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "FREEOP");
+	zprop_register_number(VDEV_PROP_OPS_CLAIM, "claim_ops", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "CLAIMOP");
+	zprop_register_number(VDEV_PROP_OPS_IOCTL, "oictl_ops", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "IOCTLOP");
+	zprop_register_number(VDEV_PROP_OPS_TRIM, "trim_ops", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "TRIMOP");
+	zprop_register_number(VDEV_PROP_BYTES_NULL, "null_bytes", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "NULLBYTE");
+	zprop_register_number(VDEV_PROP_BYTES_READ, "read_bytes", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "READBYTE");
+	zprop_register_number(VDEV_PROP_BYTES_WRITE, "write_bytes", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "WRITEBYTE");
+	zprop_register_number(VDEV_PROP_BYTES_FREE, "free_bytes", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "FREEBYTE");
+	zprop_register_number(VDEV_PROP_BYTES_CLAIM, "claim_bytes", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "CLAIMBYTE");
+	zprop_register_number(VDEV_PROP_BYTES_IOCTL, "oictl_bytes", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "IOCTLBYTE");
+	zprop_register_number(VDEV_PROP_BYTES_TRIM, "trim_bytes", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<operations>", "TRIMBYTE");
 
 	/* default index (boolean) properties */
 	zprop_register_index(VDEV_PROP_READONLY, "readonly", 0,
