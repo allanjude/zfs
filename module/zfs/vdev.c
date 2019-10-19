@@ -5258,9 +5258,33 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 	boolean_t	vdev_has_trim;	/* TRIM is supported		*/
 	boolean_t	vdev_has_securetrim; /* secure TRIM is supported */
 
-	uint64_t	vs_ops[ZIO_TYPES];	/* operation count	*/
-	uint64_t	vs_bytes[ZIO_TYPES];	/* bytes read/written	*/
 	uint64_t	vs_self_healed;		/* self-healed bytes	*/
+
+	hrtime_t        vs_timestamp;           /* time since vdev load */
+	uint64_t        vs_rsize;               /* replaceable dev size */
+	uint64_t        vs_scan_removing;       /* removing?    */
+	uint64_t        vs_scan_processed;      /* scan processed bytes */
+	uint64_t        vs_initialize_bytes_done; /* bytes initialized */
+	uint64_t        vs_initialize_bytes_est; /* total bytes to initialize */
+	uint64_t        vs_initialize_state;    /* vdev_initializing_state_t */
+	uint64_t        vs_initialize_action_time; /* time_t */
+
+	uint64_t        vs_checkpoint_space;    /* checkpoint-consumed space */
+
+	uint64_t        vs_resilver_deferred;   /* resilver deferred    */
+
+	uint64_t        vs_slow_ios;            /* slow IOs */
+
+	uint64_t        vs_trim_errors;         /* trimming errors      */
+	uint64_t        vs_trim_notsup;         /* supported by device */
+	uint64_t        vs_trim_bytes_done;     /* bytes trimmed */
+	uint64_t        vs_trim_bytes_est;      /* total bytes to trim */
+	uint64_t        vs_trim_state;          /* vdev_trim_state_t */
+	uint64_t        vs_trim_action_time;    /* time_t */
+
+	uint64_t        vs_configured_ashift;   /* TLV vdev_ashift */
+	uint64_t        vs_logical_ashift;      /* vdev_logical_ashift  */
+	uint64_t        vs_physical_ashift;     /* vdev_physical_ashift */
 #endif
 			case VDEV_PROP_COMMENT:
 				/* Exists in the ZAP below */
