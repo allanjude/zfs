@@ -1244,7 +1244,7 @@ typedef enum {
  */
 typedef enum zfs_ioc {
 	/*
-	 * illumos - 83/128 numbers reserved.
+	 * illumos - 85/128 numbers reserved.
 	 */
 	ZFS_IOC_FIRST =	('Z' << 8),
 	ZFS_IOC = ZFS_IOC_FIRST,
@@ -1332,8 +1332,8 @@ typedef enum zfs_ioc {
 	ZFS_IOC_REDACT,				/* 0x5a51 */
 	ZFS_IOC_GET_BOOKMARK_PROPS,		/* 0x5a52 */
 	ZFS_IOC_WAIT,				/* 0x5a53 */
-	ZFS_IOC_VDEV_GET_PROPS,			/* 0x5a53 */
-	ZFS_IOC_VDEV_SET_PROPS,			/* 0x5a54 */
+	ZFS_IOC_VDEV_GET_PROPS,			/* 0x5a54 */
+	ZFS_IOC_VDEV_SET_PROPS,			/* 0x5a55 */
 
 	/*
 	 * Linux - 3/64 numbers reserved.
@@ -1344,7 +1344,7 @@ typedef enum zfs_ioc {
 	ZFS_IOC_EVENTS_SEEK,			/* 0x5a83 */
 
 	/*
-	 * FreeBSD - 1/64 numbers reserved.
+	 * FreeBSD - 3/64 numbers reserved.
 	 */
 	ZFS_IOC_FREEBSD = ('Z' << 8) + 0xC0,
 
@@ -1465,6 +1465,7 @@ typedef enum {
 #define	ZPOOL_WAIT_TAG			"wait_tag"
 #define	ZPOOL_WAIT_WAITED		"wait_waited"
 
+/*
  * The following are names used when invoking ZFS_IOC_VDEV_GET_PROP.
  */
 #define	ZPOOL_VDEV_GET_PROPS_VDEV	"vdevprops_get_vdev"
