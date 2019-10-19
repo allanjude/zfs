@@ -4861,6 +4861,7 @@ vdev_replace_in_progress(vdev_t *vdev)
 	return (B_FALSE);
 }
 
+/*
  * Add a (source=src, propname=propval) list to an nvlist.
  */
 static void
