@@ -316,13 +316,13 @@ vdev_prop_init(void)
 	    ZFS_TYPE_VDEV, "<ashift>", "ASHIFT");
 	zprop_register_number(VDEV_PROP_PARITY, "parity", 0, PROP_READONLY,
 	    ZFS_TYPE_VDEV, "<parity>", "PARITY");
-	zprop_register_number(VDEV_PROP_NUMCHILDREN, "numchild", 0,
-	    PROP_READONLY, ZFS_TYPE_VDEV, "<numchild>", "NUMCHILD");
-	zprop_register_number(VDEV_PROP_READ_ERRORS, "read-errors", 0,
+	zprop_register_number(VDEV_PROP_NUMCHILDREN, "numchildren", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<children>", "NUMCHILD");
+	zprop_register_number(VDEV_PROP_READ_ERRORS, "read_errors", 0,
 	    PROP_READONLY, ZFS_TYPE_VDEV, "<errors>", "RDERR");
-	zprop_register_number(VDEV_PROP_WRITE_ERRORS, "write-errors", 0,
+	zprop_register_number(VDEV_PROP_WRITE_ERRORS, "write_errors", 0,
 	    PROP_READONLY, ZFS_TYPE_VDEV, "<errors>", "WRERR");
-	zprop_register_number(VDEV_PROP_CHECKSUM_ERRORS, "checksum-errors", 0,
+	zprop_register_number(VDEV_PROP_CHECKSUM_ERRORS, "checksum_errors", 0,
 	    PROP_READONLY, ZFS_TYPE_VDEV, "<errors>", "CKERR");
 
 	/* default index (boolean) properties */
