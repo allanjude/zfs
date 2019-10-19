@@ -324,6 +324,8 @@ vdev_prop_init(void)
 	    PROP_READONLY, ZFS_TYPE_VDEV, "<errors>", "WRERR");
 	zprop_register_number(VDEV_PROP_CHECKSUM_ERRORS, "checksum_errors", 0,
 	    PROP_READONLY, ZFS_TYPE_VDEV, "<errors>", "CKERR");
+	zprop_register_number(VDEV_PROP_INITIALIZE_ERRORS, "initialize_errors", 0,
+	    PROP_READONLY, ZFS_TYPE_VDEV, "<errors>", "INITERR");
 
 	/* default index (boolean) properties */
 	zprop_register_index(VDEV_PROP_READONLY, "readonly", 0,
