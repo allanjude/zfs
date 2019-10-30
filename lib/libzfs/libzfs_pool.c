@@ -508,7 +508,7 @@ zpool_valid_proplist(libzfs_handle_t *hdl, const char *poolname,
 			continue;
 		} else if (flags.vdevprop) {
 			zfs_error_aux(hdl, dgettext(TEXT_DOMAIN,
-			    "invalid property ALLAN1: '%s'"), propname);
+			    "invalid property: '%s'"), propname);
 			(void) zfs_error(hdl, EZFS_BADPROP, errbuf);
 			goto error;
 		}
@@ -565,7 +565,7 @@ zpool_valid_proplist(libzfs_handle_t *hdl, const char *poolname,
 		 */
 		if (prop == ZPOOL_PROP_INVAL) {
 			zfs_error_aux(hdl, dgettext(TEXT_DOMAIN,
-			    "invalid property ALLAN1: '%s'"), propname);
+			    "invalid property: '%s'"), propname);
 			(void) zfs_error(hdl, EZFS_BADPROP, errbuf);
 			goto error;
 		}
@@ -781,7 +781,7 @@ zpool_set_prop(zpool_handle_t *zhp, const char *propname, const char *propval)
 	prop_flags_t flags = { 0 };
 
 	(void) snprintf(errbuf, sizeof (errbuf),
-	    dgettext(TEXT_DOMAIN, "cannot set property for ALLAN2 '%s'"),
+	    dgettext(TEXT_DOMAIN, "cannot set property for '%s'"),
 	    zhp->zpool_name);
 
 	if (nvlist_alloc(&nvl, NV_UNIQUE_NAME, 0) != 0)
