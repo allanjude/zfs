@@ -1077,7 +1077,7 @@ typedef enum zpool_errata {
  * order to keep subsequent members at their known fixed offsets.  When
  * adding a new field it must be added to the end the structure.
  */
-#define	VS_ZIO_TYPES	6
+#define	VS_ZIO_TYPES	MAX(ZIO_TYPES, 6)
 
 typedef struct vdev_stat {
 	hrtime_t	vs_timestamp;		/* time since vdev load	*/
