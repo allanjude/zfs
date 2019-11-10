@@ -5054,6 +5054,9 @@ vdev_prop_set(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 			vdev_config_dirty(vd);
 			spa_config_exit(spa, SCL_CONFIG, FTAG);
 			break;
+		default:
+			/* Most processing is done in vdev_sync_props */
+			break;
 		}
 	}
 
