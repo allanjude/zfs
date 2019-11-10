@@ -275,7 +275,7 @@ vdev_prop_init(void)
 	zprop_register_string(VDEV_PROP_COMMENT, "comment", NULL,
 	    PROP_DEFAULT, ZFS_TYPE_VDEV, "<comment-string>", "COMMENT");
 	zprop_register_string(VDEV_PROP_PATH, "path", NULL,
-	    PROP_READONLY, ZFS_TYPE_VDEV, "<device-path>", "PATH");
+	    PROP_DEFAULT, ZFS_TYPE_VDEV, "<device-path>", "PATH");
 	zprop_register_string(VDEV_PROP_DEVID, "devid", NULL,
 	    PROP_READONLY, ZFS_TYPE_VDEV, "<devid>", "DEVID");
 	zprop_register_string(VDEV_PROP_PHYS_PATH, "physpath", NULL,
