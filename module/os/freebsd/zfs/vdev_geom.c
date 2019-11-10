@@ -229,7 +229,7 @@ vdev_geom_attach(struct g_provider *pp, vdev_t *vd, boolean_t sanity)
 		break;
 	}
 	if (gp == NULL) {
-		gp = g_new_geomf(&zfs_vdev_class, vdev_geom_name);
+		gp = g_new_geomf(&zfs_vdev_class, "%s", vdev_geom_name);
 		gp->orphan = vdev_geom_orphan;
 		gp->attrchanged = vdev_geom_attrchanged;
 		cp = g_new_consumer(gp);
