@@ -5034,7 +5034,7 @@ vdev_prop_set(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 
 		/* Special Processing */
 		switch (prop) {
-		case VDEV_PROP_NAME:
+		case VDEV_PROP_PATH:
 			strval = vd->vdev_path;
 			if (strval == NULL)
 				intval = EROFS;
