@@ -342,6 +342,24 @@ vdev_lookup_by_guid(vdev_t *vd, uint64_t guid)
 	return (NULL);
 }
 
+int
+vdev_child_num(vdev_t *vd)
+{
+	int n = 0;
+
+	if (!vd->vdev_parent)
+		return (0);
+
+	for (int c = 0; c < vd->vdev_parent->vdev_children; c++) {
+		if (vd->vdev_parent->vdev_child[c] == vd) {
+			n = c;
+			break;
+		}
+	}
+
+	return (n);
+}
+
 static int
 vdev_count_leaves_impl(vdev_t *vd)
 {
