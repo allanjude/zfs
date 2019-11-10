@@ -5031,6 +5031,30 @@ vdev_prop_set(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 			vdev_prop_add_list(outnvl, propname, strval, intval, 0);
 			continue;
 		}
+
+		/* Special Processing */
+		switch (prop) {
+		case VDEV_PROP_NAME:
+			strval = vd->vdev_path;
+			if (strval == NULL)
+				intval = EROFS;
+			if (nvpair_type(elem) != DATA_TYPE_STRING)
+				intval = EINVAL;
+			if (intval == 0)
+				strval = fnvpair_value_string(elem);
+			if (strval == NULL)
+				intval = EINVAL;
+			if (intval != 0) {
+				vdev_prop_add_list(outnvl, propname, strval, intval, 0);
+				continue;
+			}
+			spa_strfree(vd->vdev_path);
+			vd->vdev_path = spa_strdup(strval);
+			spa_config_enter(spa, SCL_CONFIG, FTAG, RW_WRITER);
+			vdev_config_dirty(vd);
+			spa_config_exit(spa, SCL_CONFIG, FTAG);
+			break;
+		}
 	}
 
 	return (dsl_sync_task(spa->spa_name, NULL, vdev_sync_props,
