@@ -218,8 +218,13 @@ vdev_geom_attach(struct g_provider *pp, vdev_t *vd, boolean_t sanity)
 		}
 	}
 
-	snprintf(vdev_geom_name, sizeof (vdev_geom_name), "zfs:%s/%s/child%d",
-	    vd->vdev_spa->spa_name, vdev_name(vd->vdev_parent), vdev_child_num(vd));
+	if (vd->vdev_parent != NULL) {
+		snprintf(vdev_geom_name, sizeof (vdev_geom_name), "zfs:%s/%s/child%d",
+		    vd->vdev_spa->spa_name, vdev_name(vd->vdev_parent), vdev_child_num(vd));
+	} else {
+		snprintf(vdev_geom_name, sizeof (vdev_geom_name), "zfs:%s/child%d",
+		    vd->vdev_spa->spa_name, vdev_child_num(vd));
+	}
 	/* Do we have geom already? No? Create one. */
 	LIST_FOREACH(gp, &zfs_vdev_class.geom, geom) {
 		if (gp->flags & G_GEOM_WITHER)
