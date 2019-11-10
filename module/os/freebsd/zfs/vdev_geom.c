@@ -198,7 +198,7 @@ vdev_geom_attach(struct g_provider *pp, vdev_t *vd, boolean_t sanity)
 	struct g_geom *gp;
 	struct g_consumer *cp;
 	int error;
-	char vdev_geom_name[64];
+	char vdev_geom_name[64] = { 0 };
 
 	g_topology_assert();
 
@@ -218,12 +218,17 @@ vdev_geom_attach(struct g_provider *pp, vdev_t *vd, boolean_t sanity)
 		}
 	}
 
-	if (vd->vdev_parent != NULL) {
-		snprintf(vdev_geom_name, sizeof (vdev_geom_name), "zfs:%s/%s/child%d",
-		    vd->vdev_spa->spa_name, vdev_name(vd->vdev_parent), vdev_child_num(vd));
+	if (vd == NULL) {
+		snprintf(vdev_geom_name, sizeof (vdev_geom_name), "zfs::vdev");
+	} else if (vd->vdev_parent == NULL ||
+	    strcmp(vd->vdev_parent->vdev_ops->vdev_op_type, "root") == 0) {
+		snprintf(vdev_geom_name, sizeof (vdev_geom_name),
+		    "zfs:%s/child%d", vd->vdev_spa->spa_name,
+		    vdev_child_num(vd));
 	} else {
-		snprintf(vdev_geom_name, sizeof (vdev_geom_name), "zfs:%s/child%d",
-		    vd->vdev_spa->spa_name, vdev_child_num(vd));
+		snprintf(vdev_geom_name, sizeof (vdev_geom_name),
+		    "zfs:%s/%s/child%d", vd->vdev_spa->spa_name,
+		    vdev_name(vd->vdev_parent), vdev_child_num(vd));
 	}
 	/* Do we have geom already? No? Create one. */
 	LIST_FOREACH(gp, &zfs_vdev_class.geom, geom) {
