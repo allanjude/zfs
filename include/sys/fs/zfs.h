@@ -349,6 +349,9 @@ typedef enum {
 	VDEV_PROP_BYTES_CLAIM,
 	VDEV_PROP_BYTES_IOCTL,
 	VDEV_PROP_BYTES_TRIM,
+	VDEV_PROP_KLARA_1, /* Reserved for Klara Systems */
+	VDEV_PROP_KLARA_2, /* Reserved for Klara Systems */
+	VDEV_PROP_KLARA_3, /* Reserved for Klara Systems */
 	VDEV_NUM_PROPS
 } vdev_prop_t;
 

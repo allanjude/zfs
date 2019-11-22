@@ -5340,6 +5340,10 @@ vdev_prop_get(vdev_t *vd, nvlist_t *innvl, nvlist_t *outnvl)
 				    vd->vdev_stat.vs_bytes[ZIO_TYPE_TRIM],
 				    ZPROP_SRC_NONE);
 				continue;
+			case VDEV_PROP_KLARA_1:
+			case VDEV_PROP_KLARA_2:
+			case VDEV_PROP_KLARA_3:
+				continue;
 
 #if 0
 	/*
