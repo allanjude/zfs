@@ -7,6 +7,7 @@ WITH_CTF=1
 
 SRCDIR= ${.CURDIR}
 INCDIR=${.CURDIR:H}/include
+CONTRIBDIR=${.CURDIR:H}/contrib
 
 KMOD=	openzfs
 
@@ -26,10 +27,10 @@ CFLAGS+= -I${INCDIR}/spl
 CFLAGS+= -I${INCDIR}/os/freebsd
 CFLAGS+= -I${INCDIR}/os/freebsd/spl
 CFLAGS+= -I${INCDIR}/os/freebsd/zfs
-CFLAGS+= -I${SRCDIR}/../contrib/zstd
-CFLAGS+= -I${SRCDIR}/../contrib/zstd/common
-CFLAGS+= -I${SRCDIR}/../contrib/zstd/compress
-CFLAGS+= -I${SRCDIR}/../contrib/zstd/decompress
+CFLAGS+= -I${CONTRIBDIR}/zstd
+CFLAGS+= -I${CONTRIBDIR}/zstd/common
+CFLAGS+= -I${CONTRIBDIR}/zstd/compress
+CFLAGS+= -I${CONTRIBDIR}/zstd/decompress
 CFLAGS+= -I${INCDIR}/sys/zstd
 CFLAGS+= -include ${INCDIR}/os/freebsd/spl/sys/ccompile.h
 
@@ -292,7 +293,7 @@ SRCS+=	aggsum.c \
 	zvol.c
 
 #ZSTD
-SRC+=	zstd.c
+SRCS+=	zstd.c
 
 beforeinstall:
 .if ${MK_DEBUG_FILES} != "no"
