@@ -41,6 +41,9 @@
 /* for userspace compile, we disable error debugging */
 #ifndef _KERNEL
 #define	printk(fmt, ...)
+#else
+#define KERN_ERR
+#define printk	printf
 #endif
 
 /* User space tests compatibility */
