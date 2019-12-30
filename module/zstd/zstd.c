@@ -731,9 +731,6 @@ zstd_mempool_deinit(void)
 {
 	int i, type;
 
-	kmem_cache_free(zstd_kmem_cache[ZSTD_KMEM_DCTX], zstd_dctx_emerg.ptr);
-	mutex_destroy(&zstd_dctx_emerg.mtx);
-
 	for (i = 0; i < ZSTD_KMEM_COUNT; i++) {
 		type = zstd_cache_size[i].kmem_type;
 		if (zstd_kmem_cache[type] != NULL) {
