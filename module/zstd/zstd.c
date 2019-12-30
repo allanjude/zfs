@@ -557,7 +557,7 @@ zstd_dctx_alloc(void *opaque __maybe_unused, size_t size)
 {
 	size_t nbytes = sizeof (struct zstd_kmem) + size;
 	struct zstd_kmem *z = NULL;
-	enum zstd_kmem_type type = ZSTD_KMEM_DEFAULT;
+	enum zstd_kmem_type type;
 
 	z = (struct zstd_kmem *)zstd_mempool_alloc(zstd_mempool_dctx, nbytes);
 	if (!z) {
@@ -565,6 +565,7 @@ zstd_dctx_alloc(void *opaque __maybe_unused, size_t size)
 		z = vmem_alloc(nbytes, KM_SLEEP);
 		if (z) {
 			z->pool = NULL;
+			type = ZSTD_KMEM_DEFAULT;
 		}
 	} else {
 		return ((void*)z + (sizeof (struct zstd_kmem)));
