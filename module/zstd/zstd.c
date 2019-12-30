@@ -713,18 +713,6 @@ zstd_meminit(void)
 	return (0);
 }
 
-/* Release object from pool and free memory */
-static void __exit
-release_pool(struct zstd_pool *pool)
-{
-	mutex_enter(&pool->barrier);
-	mutex_exit(&pool->barrier);
-	mutex_destroy(&pool->barrier);
-	kmem_free(pool->mem, pool->size);
-	pool->mem = NULL;
-	pool->size = 0;
-}
-
 #ifdef __FreeBSD__
 static void __exit
 zstd_mempool_deinit(void)
@@ -739,6 +727,18 @@ zstd_mempool_deinit(void)
 	}
 }
 #else
+/* Release object from pool and free memory */
+static void __exit
+release_pool(struct zstd_pool *pool)
+{
+	mutex_enter(&pool->barrier);
+	mutex_exit(&pool->barrier);
+	mutex_destroy(&pool->barrier);
+	kmem_free(pool->mem, pool->size);
+	pool->mem = NULL;
+	pool->size = 0;
+}
+
 /* Release memory pool objects */
 static void __exit
 zstd_mempool_deinit(void)
