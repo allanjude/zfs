@@ -51,7 +51,8 @@
 
 /* These enums are index references to zstd_cache_config */
 enum zstd_kmem_type {
-	ZSTD_KMEM_UNKNOWN = 0,
+	/* allocation type using kmem_vmalloc */
+	ZSTD_KMEM_DEFAULT = 0,
 #ifdef __FreeBSD__
 	ZSTD_KMEM_CCTX,
 	ZSTD_KMEM_WRKSPC_4K_FAST,
@@ -72,8 +73,6 @@ enum zstd_kmem_type {
 	ZSTD_KMEM_WRKSPC_16M_DEF,
 	ZSTD_KMEM_WRKSPC_16M_MAX,
 #else
-	/* allocation type using kmem_vmalloc */
-	ZSTD_KMEM_DEFAULT,
 	/* pool based allocation using mempool_alloc */
 	ZSTD_KMEM_POOL,
 	/* reserved fallback memory for decompression only */
@@ -237,7 +236,7 @@ zstd_mempool_alloc(struct zstd_pool *zstd_mempool __maybe_unused, size_t size)
 	enum zstd_kmem_type type;
 	int i;
 
-	type = ZSTD_KMEM_UNKNOWN;
+	type = ZSTD_KMEM_DEFAULT;
 	for (i = 0; i < ZSTD_KMEM_COUNT; i++) {
 		if (size <= zstd_cache_size[i].kmem_size) {
 			type = zstd_cache_size[i].kmem_type;
@@ -247,7 +246,7 @@ zstd_mempool_alloc(struct zstd_pool *zstd_mempool __maybe_unused, size_t size)
 		}
 	}
 	/* No matching cache */
-	if (type == ZSTD_KMEM_UNKNOWN) {
+	if (type == ZSTD_KMEM_DEFAULT) {
 		z = kmem_alloc(size, KM_NOSLEEP);
 	}
 	if (z == NULL) {
@@ -595,12 +594,12 @@ zstd_free(void *opaque __maybe_unused, void *ptr)
 	enum zstd_kmem_type type;
 
 	ASSERT3U(z->kmem_type, <, ZSTD_KMEM_COUNT);
-	ASSERT3U(z->kmem_type, >, ZSTD_KMEM_UNKNOWN);
+	ASSERT3U(z->kmem_type, >, ZSTD_KMEM_DEFAULT);
 
 	type = z->kmem_type;
 	switch (type) {
 #ifdef __FreeBSD__
-	case ZSTD_KMEM_UNKNOWN:
+	case ZSTD_KMEM_DEFAULT:
 		kmem_free(z, z->kmem_size);
 		break;
 	case ZSTD_KMEM_DCTX:
