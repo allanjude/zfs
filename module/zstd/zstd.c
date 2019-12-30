@@ -43,11 +43,6 @@
 #define printk		printf
 #endif
 
-/* for userspace compile, we disable error debugging */
-#ifndef _KERNEL
-#define	printk(fmt, ...)
-#endif
-
 /* User space tests compatibility */
 #ifndef _KERNEL
 #define	__init
