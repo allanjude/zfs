@@ -38,12 +38,14 @@
 #include <zstd_errors.h>
 #include <error_private.h>
 
+#ifdef __FreeBSD__
+#define KERN_ERR
+#define printk		printf
+#endif
+
 /* for userspace compile, we disable error debugging */
 #ifndef _KERNEL
 #define	printk(fmt, ...)
-#else
-#define KERN_ERR
-#define printk	printf
 #endif
 
 /* User space tests compatibility */
@@ -55,11 +57,32 @@
 /* These enums are index references to zstd_cache_config */
 enum zstd_kmem_type {
 	ZSTD_KMEM_UNKNOWN = 0,
+#ifdef __FreeBSD__
+	ZSTD_KMEM_CCTX,
+	ZSTD_KMEM_WRKSPC_4K_FAST,
+	ZSTD_KMEM_WRKSPC_4K_MIN,
+	ZSTD_KMEM_WRKSPC_4K_DEF,
+	ZSTD_KMEM_WRKSPC_4K_MAX,
+	ZSTD_KMEM_WRKSPC_16K_FAST,
+	ZSTD_KMEM_WRKSPC_16K_MIN,
+	ZSTD_KMEM_WRKSPC_16K_DEF,
+	ZSTD_KMEM_WRKSPC_16K_MAX,
+	ZSTD_KMEM_WRKSPC_128K_FAST,
+	ZSTD_KMEM_WRKSPC_128K_MIN,
+	ZSTD_KMEM_WRKSPC_128K_DEF,
+	ZSTD_KMEM_WRKSPC_128K_MAX,
+	/* SPA_MAXBLOCKSIZE */
+	ZSTD_KMEM_WRKSPC_16M_FAST,
+	ZSTD_KMEM_WRKSPC_16M_MIN,
+	ZSTD_KMEM_WRKSPC_16M_DEF,
+	ZSTD_KMEM_WRKSPC_16M_MAX,
+#else
 	/* allocation type using kmem_vmalloc */
 	ZSTD_KMEM_DEFAULT,
 	/* pool based allocation using mempool_alloc */
 	ZSTD_KMEM_POOL,
 	/* reserved fallback memory for decompression only */
+#endif
 	ZSTD_KMEM_DCTX,
 	ZSTD_KMEM_COUNT,
 };
@@ -87,6 +110,56 @@ struct levelmap {
 	int32_t cookie;
 	enum zio_zstd_levels level;
 };
+
+#ifdef __FreeBSD__
+struct zstd_kmem_config {
+	size_t			block_size;
+	int			compress_level;
+	char			*cache_name;
+};
+static kmem_cache_t *zstd_kmem_cache[ZSTD_KMEM_COUNT] = { NULL };
+static struct zstd_kmem zstd_cache_size[ZSTD_KMEM_COUNT] = {
+	{ ZSTD_KMEM_MAGIC, 0, 0 }
+};
+static struct zstd_kmem_config zstd_cache_config[ZSTD_KMEM_COUNT] = {
+	{ 0, 0, "zstd_unknown" },
+	{ 0, 0, "zstd_cctx" },
+	{ 4096, ZIO_ZSTD_FAST_LEVEL_DEFAULT, "zstd_wrkspc_4k_fast" },
+	{ 4096, ZIO_ZSTD_LEVEL_MIN, "zstd_wrkspc_4k_min" },
+	{ 4096, ZIO_ZSTD_LEVEL_DEFAULT, "zstd_wrkspc_4k_def" },
+	{ 4096, ZIO_ZSTD_LEVEL_MAX, "zstd_wrkspc_4k_max" },
+	{ 16384, ZIO_ZSTD_FAST_LEVEL_DEFAULT, "zstd_wrkspc_16k_fast" },
+	{ 16384, ZIO_ZSTD_LEVEL_MIN, "zstd_wrkspc_16k_min" },
+	{ 16384, ZIO_ZSTD_LEVEL_DEFAULT, "zstd_wrkspc_16k_def" },
+	{ 16384, ZIO_ZSTD_LEVEL_MAX, "zstd_wrkspc_16k_max" },
+	{ SPA_OLD_MAXBLOCKSIZE, ZIO_ZSTD_FAST_LEVEL_DEFAULT,
+	    "zstd_wrkspc_128k_fast" },
+	{ SPA_OLD_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_MIN, "zstd_wrkspc_128k_min" },
+	{ SPA_OLD_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_DEFAULT,
+	    "zstd_wrkspc_128k_def" },
+	{ SPA_OLD_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_MAX, "zstd_wrkspc_128k_max" },
+	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_FAST_LEVEL_DEFAULT,
+	    "zstd_wrkspc_mbs_fast" },
+	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_MIN, "zstd_wrkspc_mbs_min" },
+	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_DEFAULT, "zstd_wrkspc_mbs_def" },
+	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_MAX, "zstd_wrkspc_mbs_max" },
+	{ 0, 0, "zstd_dctx" },
+};
+
+static int
+zstd_compare(const void *a, const void *b)
+{
+	struct zstd_kmem *x, *y;
+
+	x = (struct zstd_kmem *)a;
+	y = (struct zstd_kmem *)b;
+
+	ASSERT3U(x->kmem_magic, ==, ZSTD_KMEM_MAGIC);
+	ASSERT3U(y->kmem_magic, ==, ZSTD_KMEM_MAGIC);
+
+	return (TREE_CMP(x->kmem_size, y->kmem_size));
+}
+#endif
 
 static void *zstd_alloc(void *opaque, size_t size);
 static void *zstd_dctx_alloc(void *opaque, size_t size);
@@ -157,9 +230,45 @@ static int pool_count = 16;
 #define	ZSTD_POOL_TIMEOUT	60 * 2
 
 static struct zstd_fallback_mem zstd_dctx_fallback;
-static struct zstd_pool *zstd_mempool_cctx;
-static struct zstd_pool *zstd_mempool_dctx;
+static struct zstd_pool *zstd_mempool_cctx = NULL;
+static struct zstd_pool *zstd_mempool_dctx = NULL;
 
+#ifdef __FreeBSD__
+/*
+ * FreeBSD can use kmem_cache instead of the bespoke allocator required for
+ * Linux. We use this shim to reduce code differences.
+ */
+static void *
+zstd_mempool_alloc(struct zstd_pool *zstd_mempool __maybe_unused, size_t size)
+{
+	struct zstd_kmem *z = NULL;
+	enum zstd_kmem_type type;
+	int i;
+
+	type = ZSTD_KMEM_UNKNOWN;
+	for (i = 0; i < ZSTD_KMEM_COUNT; i++) {
+		if (size <= zstd_cache_size[i].kmem_size) {
+			type = zstd_cache_size[i].kmem_type;
+			z = kmem_cache_alloc(zstd_kmem_cache[type],
+			    KM_NOSLEEP);
+			break;
+		}
+	}
+	/* No matching cache */
+	if (type == ZSTD_KMEM_UNKNOWN) {
+		z = kmem_alloc(size, KM_NOSLEEP);
+	}
+	if (z == NULL) {
+		return (NULL);
+	}
+
+	z->kmem_magic = ZSTD_KMEM_MAGIC;
+	z->kmem_type = type;
+	z->kmem_size = size;
+
+	return (z);
+}
+#else
 /*
  * Try to get a cached allocated buffer from memory pool or allocate a new one
  * if neccessary. If a object is older than 2 minutes and does not fit the
@@ -268,6 +377,7 @@ zstd_mempool_free(struct zstd_kmem *z)
 {
 	mutex_exit(&z->pool->barrier);
 }
+#endif /* __FreeBSD__ */
 
 /* Convert internal stored zfs level enum to zstd level */
 static enum zio_zstd_levels
@@ -497,6 +607,19 @@ zstd_free(void *opaque __maybe_unused, void *ptr)
 
 	type = z->kmem_type;
 	switch (type) {
+#ifdef __FreeBSD__
+	case ZSTD_KMEM_UNKNOWN:
+		kmem_free(z, z->kmem_size);
+		break;
+	case ZSTD_KMEM_DCTX:
+		if (z == zstd_dctx_fallback.mem) {
+			mutex_exit(&zstd_dctx_fallback.barrier);
+			break;
+		}
+		/* FALLTHRU */
+	default:
+		kmem_cache_free(zstd_kmem_cache[z->kmem_type], z);
+#else
 	case ZSTD_KMEM_DEFAULT:
 		kmem_free(z, z->kmem_size);
 		break;
@@ -507,6 +630,7 @@ zstd_free(void *opaque __maybe_unused, void *ptr)
 		mutex_exit(&zstd_dctx_fallback.barrier);
 		break;
 	default:
+#endif
 		break;
 	}
 }
@@ -520,6 +644,53 @@ create_fallback_mem(struct zstd_fallback_mem *mem, size_t size)
 	mutex_init(&mem->barrier, NULL, MUTEX_DEFAULT, NULL);
 }
 
+#ifdef __FreeBSD__
+static void __init
+zstd_mempool_init(void)
+{
+	int i;
+
+	/* There is no estimate function for the CCtx itself */
+	zstd_cache_size[1].kmem_magic = ZSTD_KMEM_MAGIC;
+	zstd_cache_size[1].kmem_type = 1;
+	zstd_cache_size[1].kmem_size = P2ROUNDUP(zstd_cache_config[1].block_size
+	    + sizeof (struct zstd_kmem), PAGESIZE);
+	zstd_kmem_cache[1] = kmem_cache_create(
+	    zstd_cache_config[1].cache_name, zstd_cache_size[1].kmem_size,
+	    0, NULL, NULL, NULL, NULL, NULL, 0);
+
+	/*
+	 * Estimate the size of the ZSTD CCtx workspace required for each record
+	 * size at each compression level.
+	 */
+	for (i = 2; i < ZSTD_KMEM_DCTX; i++) {
+		ASSERT3P(zstd_cache_config[i].cache_name, !=, NULL);
+		zstd_cache_size[i].kmem_magic = ZSTD_KMEM_MAGIC;
+		zstd_cache_size[i].kmem_type = i;
+		zstd_cache_size[i].kmem_size = P2ROUNDUP(
+		    ZSTD_estimateCCtxSize_usingCParams(
+		    ZSTD_getCParams(zstd_cache_config[i].compress_level,
+		    zstd_cache_config[i].block_size, 0)) +
+		    sizeof (struct zstd_kmem), PAGESIZE);
+		zstd_kmem_cache[i] = kmem_cache_create(
+		    zstd_cache_config[i].cache_name,
+		    zstd_cache_size[i].kmem_size,
+		    0, NULL, NULL, NULL, NULL, NULL, 0);
+	}
+	/* Estimate the size of the decompression context */
+	zstd_cache_size[i].kmem_magic = ZSTD_KMEM_MAGIC;
+	zstd_cache_size[i].kmem_type = i;
+	zstd_cache_size[i].kmem_size = P2ROUNDUP(ZSTD_estimateDCtxSize() +
+	    sizeof (struct zstd_kmem), PAGESIZE);
+	zstd_kmem_cache[i] = kmem_cache_create(zstd_cache_config[i].cache_name,
+	    zstd_cache_size[i].kmem_size, 0, NULL, NULL, NULL, NULL, NULL, 0);
+
+	/* Sort the kmem caches for later searching */
+	qsort(zstd_cache_size, ZSTD_KMEM_COUNT, sizeof (struct zstd_kmem),
+	    zstd_compare);
+
+}
+#else
 /* Initialize memory pool barrier mutexes */
 static void __init
 zstd_mempool_init(void)
@@ -538,6 +709,7 @@ zstd_mempool_init(void)
 		    MUTEX_DEFAULT, NULL);
 	}
 }
+#endif
 
 /* Initialize zstd-related memory handling */
 static int __init
@@ -565,6 +737,23 @@ release_pool(struct zstd_pool *pool)
 	pool->size = 0;
 }
 
+#ifdef __FreeBSD__
+static void __exit
+zstd_mempool_deinit(void)
+{
+	int i, type;
+
+	kmem_cache_free(zstd_kmem_cache[ZSTD_KMEM_DCTX], zstd_dctx_emerg.ptr);
+	mutex_destroy(&zstd_dctx_emerg.mtx);
+
+	for (i = 0; i < ZSTD_KMEM_COUNT; i++) {
+		type = zstd_cache_size[i].kmem_type;
+		if (zstd_kmem_cache[type] != NULL) {
+			kmem_cache_destroy(zstd_kmem_cache[type]);
+		}
+	}
+}
+#else
 /* Release memory pool objects */
 static void __exit
 zstd_mempool_deinit(void)
@@ -581,6 +770,7 @@ zstd_mempool_deinit(void)
 	zstd_mempool_dctx = NULL;
 	zstd_mempool_cctx = NULL;
 }
+#endif
 
 extern int __init
 zstd_init(void)
