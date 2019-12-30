@@ -119,7 +119,7 @@ struct zstd_kmem_config {
 };
 static kmem_cache_t *zstd_kmem_cache[ZSTD_KMEM_COUNT] = { NULL };
 static struct zstd_kmem zstd_cache_size[ZSTD_KMEM_COUNT] = {
-	{ ZSTD_KMEM_MAGIC, 0, 0 }
+	{ 0, 0, NULL }
 };
 static struct zstd_kmem_config zstd_cache_config[ZSTD_KMEM_COUNT] = {
 	{ 0, 0, "zstd_unknown" },
@@ -153,9 +153,6 @@ zstd_compare(const void *a, const void *b)
 
 	x = (struct zstd_kmem *)a;
 	y = (struct zstd_kmem *)b;
-
-	ASSERT3U(x->kmem_magic, ==, ZSTD_KMEM_MAGIC);
-	ASSERT3U(y->kmem_magic, ==, ZSTD_KMEM_MAGIC);
 
 	return (TREE_CMP(x->kmem_size, y->kmem_size));
 }
@@ -262,7 +259,6 @@ zstd_mempool_alloc(struct zstd_pool *zstd_mempool __maybe_unused, size_t size)
 		return (NULL);
 	}
 
-	z->kmem_magic = ZSTD_KMEM_MAGIC;
 	z->kmem_type = type;
 	z->kmem_size = size;
 
@@ -651,7 +647,6 @@ zstd_mempool_init(void)
 	int i;
 
 	/* There is no estimate function for the CCtx itself */
-	zstd_cache_size[1].kmem_magic = ZSTD_KMEM_MAGIC;
 	zstd_cache_size[1].kmem_type = 1;
 	zstd_cache_size[1].kmem_size = P2ROUNDUP(zstd_cache_config[1].block_size
 	    + sizeof (struct zstd_kmem), PAGESIZE);
@@ -665,7 +660,6 @@ zstd_mempool_init(void)
 	 */
 	for (i = 2; i < ZSTD_KMEM_DCTX; i++) {
 		ASSERT3P(zstd_cache_config[i].cache_name, !=, NULL);
-		zstd_cache_size[i].kmem_magic = ZSTD_KMEM_MAGIC;
 		zstd_cache_size[i].kmem_type = i;
 		zstd_cache_size[i].kmem_size = P2ROUNDUP(
 		    ZSTD_estimateCCtxSize_usingCParams(
@@ -678,7 +672,6 @@ zstd_mempool_init(void)
 		    0, NULL, NULL, NULL, NULL, NULL, 0);
 	}
 	/* Estimate the size of the decompression context */
-	zstd_cache_size[i].kmem_magic = ZSTD_KMEM_MAGIC;
 	zstd_cache_size[i].kmem_type = i;
 	zstd_cache_size[i].kmem_size = P2ROUNDUP(ZSTD_estimateDCtxSize() +
 	    sizeof (struct zstd_kmem), PAGESIZE);
