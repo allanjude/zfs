@@ -176,6 +176,7 @@ static void
 checksum_changed_cb(void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
+	spa_feature_t f;
 
 	/*
 	 * Inheritance should have been done by now.
@@ -183,12 +184,20 @@ checksum_changed_cb(void *arg, uint64_t newval)
 	ASSERT(newval != ZIO_CHECKSUM_INHERIT);
 
 	os->os_checksum = zio_checksum_select(newval, ZIO_CHECKSUM_ON_VALUE);
+
+	f = zio_checksum_to_feature(os->os_checksum);
+	if (f != SPA_FEATURE_NONE) {
+		ASSERT3S(spa_feature_table[f].fi_type, ==,
+		    ZFEATURE_TYPE_BOOLEAN);
+		dmu_objset_ds(os)->ds_feature_activation[f] = (void *)B_TRUE;
+	}
 }
 
 static void
 compression_changed_cb(void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
+	spa_feature_t f;
 
 	/*
 	 * Inheritance and range checking should have been done by now.
@@ -197,6 +206,13 @@ compression_changed_cb(void *arg, uint64_t newval)
 
 	os->os_compress = zio_compress_select(os->os_spa,
 	    newval & SPA_COMPRESSMASK, ZIO_COMPRESS_ON);
+
+	f = zio_compress_to_feature(os->os_compress);
+	if (f != SPA_FEATURE_NONE) {
+		ASSERT3S(spa_feature_table[f].fi_type, ==,
+		    ZFEATURE_TYPE_BOOLEAN);
+		dmu_objset_ds(os)->ds_feature_activation[f] = (void *)B_TRUE;
+	}
 }
 
 static void
