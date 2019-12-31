@@ -642,11 +642,12 @@ zstd_mempool_init(void)
 	int i;
 
 	/* There is no estimate function for the CCtx itself */
-	zstd_cache_size[1].kmem_type = 1;
-	zstd_cache_size[1].kmem_size = P2ROUNDUP(zstd_cache_config[1].block_size
+	i = ZSTD_KMEM_CCTX;
+	zstd_cache_size[i].kmem_type = i;
+	zstd_cache_size[i].kmem_size = P2ROUNDUP(zstd_cache_config[i].block_size
 	    + sizeof (struct zstd_kmem), PAGESIZE);
-	zstd_kmem_cache[1] = kmem_cache_create(
-	    zstd_cache_config[1].cache_name, zstd_cache_size[1].kmem_size,
+	zstd_kmem_cache[i] = kmem_cache_create(
+	    zstd_cache_config[i].cache_name, zstd_cache_size[i].kmem_size,
 	    0, NULL, NULL, NULL, NULL, NULL, 0);
 
 	/*
