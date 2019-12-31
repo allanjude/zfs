@@ -63,6 +63,7 @@
 #include <sys/spa_impl.h>
 #include <sys/dmu_recv.h>
 #include <sys/zfs_project.h>
+#include <sys/zio_checksum.h>
 #include "zfs_namecheck.h"
 
 /*
