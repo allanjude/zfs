@@ -113,25 +113,25 @@ struct zstd_kmem_config {
 };
 static kmem_cache_t *zstd_kmem_cache[ZSTD_KMEM_COUNT] = { NULL };
 static struct zstd_kmem zstd_cache_size[ZSTD_KMEM_COUNT] = {
-	{ 0, 0, NULL }
+	{ ZSTD_KMEM_DEFAULT, 0, NULL }
 };
 static struct zstd_kmem_config zstd_cache_config[ZSTD_KMEM_COUNT] = {
 	{ 0, 0, "zstd_unknown" },
 	{ 0, 0, "zstd_cctx" },
-	{ 4096, -1, "zstd_wrkspc_4k_fast" },
+	{ 4096, -10, "zstd_wrkspc_4k_fast" },
 	{ 4096, ZIO_ZSTD_LEVEL_MIN, "zstd_wrkspc_4k_min" },
 	{ 4096, ZIO_ZSTD_LEVEL_DEFAULT, "zstd_wrkspc_4k_def" },
 	{ 4096, ZIO_ZSTD_LEVEL_MAX, "zstd_wrkspc_4k_max" },
-	{ 16384, -1, "zstd_wrkspc_16k_fast" },
+	{ 16384, -10, "zstd_wrkspc_16k_fast" },
 	{ 16384, ZIO_ZSTD_LEVEL_MIN, "zstd_wrkspc_16k_min" },
 	{ 16384, ZIO_ZSTD_LEVEL_DEFAULT, "zstd_wrkspc_16k_def" },
 	{ 16384, ZIO_ZSTD_LEVEL_MAX, "zstd_wrkspc_16k_max" },
-	{ SPA_OLD_MAXBLOCKSIZE, -1, "zstd_wrkspc_128k_fast" },
+	{ SPA_OLD_MAXBLOCKSIZE, -10, "zstd_wrkspc_128k_fast" },
 	{ SPA_OLD_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_MIN, "zstd_wrkspc_128k_min" },
 	{ SPA_OLD_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_DEFAULT,
 	    "zstd_wrkspc_128k_def" },
 	{ SPA_OLD_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_MAX, "zstd_wrkspc_128k_max" },
-	{ SPA_MAXBLOCKSIZE, -1, "zstd_wrkspc_mbs_fast" },
+	{ SPA_MAXBLOCKSIZE, -10, "zstd_wrkspc_mbs_fast" },
 	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_MIN, "zstd_wrkspc_mbs_min" },
 	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_DEFAULT, "zstd_wrkspc_mbs_def" },
 	{ SPA_MAXBLOCKSIZE, ZIO_ZSTD_LEVEL_MAX, "zstd_wrkspc_mbs_max" },
@@ -643,7 +643,7 @@ zstd_mempool_init(void)
 	i = ZSTD_KMEM_CCTX;
 	zstd_cache_size[i].kmem_type = i;
 	zstd_cache_size[i].kmem_size = P2ROUNDUP(zstd_cache_config[i].block_size
-	    + sizeof (struct zstd_kmem), PAGESIZE);
+	    + sizeof (struct zstd_kmem), 1024);
 	zstd_kmem_cache[i] = kmem_cache_create(
 	    zstd_cache_config[i].cache_name, zstd_cache_size[i].kmem_size,
 	    0, NULL, NULL, NULL, NULL, NULL, 0);
