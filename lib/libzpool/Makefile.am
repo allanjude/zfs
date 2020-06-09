@@ -198,7 +198,12 @@ libzpool_la_LIBADD = \
 	$(top_builddir)/lib/libicp/libicp.la \
 	$(top_builddir)/lib/libnvpair/libnvpair.la \
 	$(top_builddir)/lib/libunicode/libunicode.la \
-	$(top_builddir)/lib/libzutil/libzutil.la
+	$(top_builddir)/lib/libzutil/libzutil.la \
+	$(top_builddir)/lib/libzstd/libzstd.la
+
+libzpool_la_LIBADD += $(LIBCLOCK_GETTIME) $(ZLIB_LIBS) -ldl
+
+libzpool_la_LDFLAGS = -pthread -Wl,-z,defs
 
 if BUILD_FREEBSD
 libzpool_la_LIBADD += $(ZLIB) -ldl -lgeom
