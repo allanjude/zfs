@@ -2026,7 +2026,10 @@ send_prelim_records(zfs_handle_t *zhp, const char *from, int fd,
 			return (zfs_error(zhp->zfs_hdl, EZFS_BADBACKUP,
 			    errbuf));
 		}
-		/* Do not allow the size of the properties list to exceed the limit */
+		/*
+		 * Do not allow the size of the properties list to exceed
+		 * the limit
+		 */
 		if ((fnvlist_size(fss) + fnvlist_size(hdrnv)) >
 		    (SPA_MAXBLOCKSIZE * 4)) {
 			(void) snprintf(errbuf, sizeof (errbuf),
