@@ -2611,6 +2611,11 @@ recv_read_nvlist(libzfs_handle_t *hdl, int fd, int len, nvlist_t **nvp,
 	if (buf == NULL)
 		return (ENOMEM);
 
+	if (len > (SPA_MAXBLOCKSIZE * 4)) {
+		zfs_error_aux(hdl, dgettext(TEXT_DOMAIN, "nvlist too large"));
+		return (ENOMEM);
+	}
+
 	err = recv_read(hdl, fd, buf, len, byteswap, zc);
 	if (err != 0) {
 		free(buf);
