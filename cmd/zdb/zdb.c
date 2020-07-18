@@ -75,6 +75,7 @@
 #include <sys/dsl_scan.h>
 #include <zfs_comutil.h>
 #include <sys/zstd/zstd.h>
+#include <sys/zstd/zstd_impl.h>
 
 #include <libnvpair.h>
 #include <libzutil.h>
