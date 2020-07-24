@@ -304,7 +304,7 @@ zfs_sync(struct super_block *sb, int wait, cred_t *cr)
 }
 
 static void
-atime_changed_cb(void *arg, uint64_t newval)
+atime_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 	struct super_block *sb = zfsvfs->z_sb;
@@ -324,13 +324,13 @@ atime_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-relatime_changed_cb(void *arg, uint64_t newval)
+relatime_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	((zfsvfs_t *)arg)->z_relatime = newval;
 }
 
 static void
-xattr_changed_cb(void *arg, uint64_t newval)
+xattr_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -347,7 +347,7 @@ xattr_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-acltype_changed_cb(void *arg, uint64_t newval)
+acltype_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -371,7 +371,7 @@ acltype_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-blksz_changed_cb(void *arg, uint64_t newval)
+blksz_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 	ASSERT3U(newval, <=, spa_maxblocksize(dmu_objset_spa(zfsvfs->z_os)));
@@ -382,7 +382,7 @@ blksz_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-readonly_changed_cb(void *arg, uint64_t newval)
+readonly_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 	struct super_block *sb = zfsvfs->z_sb;
@@ -397,22 +397,22 @@ readonly_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-devices_changed_cb(void *arg, uint64_t newval)
+devices_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 }
 
 static void
-setuid_changed_cb(void *arg, uint64_t newval)
+setuid_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 }
 
 static void
-exec_changed_cb(void *arg, uint64_t newval)
+exec_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 }
 
 static void
-nbmand_changed_cb(void *arg, uint64_t newval)
+nbmand_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 	struct super_block *sb = zfsvfs->z_sb;
@@ -427,19 +427,19 @@ nbmand_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-snapdir_changed_cb(void *arg, uint64_t newval)
+snapdir_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	((zfsvfs_t *)arg)->z_show_ctldir = newval;
 }
 
 static void
-vscan_changed_cb(void *arg, uint64_t newval)
+vscan_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	((zfsvfs_t *)arg)->z_vscan = newval;
 }
 
 static void
-acl_mode_changed_cb(void *arg, uint64_t newval)
+acl_mode_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -447,7 +447,7 @@ acl_mode_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-acl_inherit_changed_cb(void *arg, uint64_t newval)
+acl_inherit_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	((zfsvfs_t *)arg)->z_acl_inherit = newval;
 }
@@ -522,21 +522,21 @@ zfs_register_callbacks(vfs_t *vfsp)
 	 * Invoke our callbacks to restore temporary mount options.
 	 */
 	if (vfsp->vfs_do_readonly)
-		readonly_changed_cb(zfsvfs, vfsp->vfs_readonly);
+		readonly_changed_cb(ds, zfsvfs, vfsp->vfs_readonly);
 	if (vfsp->vfs_do_setuid)
-		setuid_changed_cb(zfsvfs, vfsp->vfs_setuid);
+		setuid_changed_cb(ds, zfsvfs, vfsp->vfs_setuid);
 	if (vfsp->vfs_do_exec)
-		exec_changed_cb(zfsvfs, vfsp->vfs_exec);
+		exec_changed_cb(ds, zfsvfs, vfsp->vfs_exec);
 	if (vfsp->vfs_do_devices)
-		devices_changed_cb(zfsvfs, vfsp->vfs_devices);
+		devices_changed_cb(ds, zfsvfs, vfsp->vfs_devices);
 	if (vfsp->vfs_do_xattr)
-		xattr_changed_cb(zfsvfs, vfsp->vfs_xattr);
+		xattr_changed_cb(ds, zfsvfs, vfsp->vfs_xattr);
 	if (vfsp->vfs_do_atime)
-		atime_changed_cb(zfsvfs, vfsp->vfs_atime);
+		atime_changed_cb(ds, zfsvfs, vfsp->vfs_atime);
 	if (vfsp->vfs_do_relatime)
-		relatime_changed_cb(zfsvfs, vfsp->vfs_relatime);
+		relatime_changed_cb(ds, zfsvfs, vfsp->vfs_relatime);
 	if (vfsp->vfs_do_nbmand)
-		nbmand_changed_cb(zfsvfs, vfsp->vfs_nbmand);
+		nbmand_changed_cb(ds, zfsvfs, vfsp->vfs_nbmand);
 
 	return (0);
 
@@ -850,6 +850,7 @@ zfsvfs_setup(zfsvfs_t *zfsvfs, boolean_t mounting)
 {
 	int error;
 	boolean_t readonly = zfs_is_readonly(zfsvfs);
+	dsl_dataset_t *ds = dmu_objset_ds(zfsvfs->z_os);
 
 	error = zfs_register_callbacks(zfsvfs->z_vfs);
 	if (error)
@@ -871,7 +872,7 @@ zfsvfs_setup(zfsvfs_t *zfsvfs, boolean_t mounting)
 		 * allow replays to succeed.
 		 */
 		if (readonly != 0) {
-			readonly_changed_cb(zfsvfs, B_FALSE);
+			readonly_changed_cb(ds, zfsvfs, B_FALSE);
 		} else {
 			zap_stats_t zs;
 			if (zap_get_stats(zfsvfs->z_os, zfsvfs->z_unlinkedobj,
@@ -927,7 +928,7 @@ zfsvfs_setup(zfsvfs_t *zfsvfs, boolean_t mounting)
 
 		/* restore readonly bit */
 		if (readonly != 0)
-			readonly_changed_cb(zfsvfs, B_TRUE);
+			readonly_changed_cb(ds, zfsvfs, B_TRUE);
 	}
 
 	/*
@@ -1502,17 +1503,19 @@ zfs_domount(struct super_block *sb, zfs_mnt_t *zm, int silent)
 
 	if (dmu_objset_is_snapshot(zfsvfs->z_os)) {
 		uint64_t pval;
+		dsl_dataset_t *ds;
 
-		atime_changed_cb(zfsvfs, B_FALSE);
-		readonly_changed_cb(zfsvfs, B_TRUE);
+		ds = dmu_objset_ds(zfsvfs->z_os);
+		atime_changed_cb(ds, zfsvfs, B_FALSE);
+		readonly_changed_cb(ds, zfsvfs, B_TRUE);
 		if ((error = dsl_prop_get_integer(osname,
 		    "xattr", &pval, NULL)))
 			goto out;
-		xattr_changed_cb(zfsvfs, pval);
+		xattr_changed_cb(ds, zfsvfs, pval);
 		if ((error = dsl_prop_get_integer(osname,
 		    "acltype", &pval, NULL)))
 			goto out;
-		acltype_changed_cb(zfsvfs, pval);
+		acltype_changed_cb(ds, zfsvfs, pval);
 		zfsvfs->z_issnap = B_TRUE;
 		zfsvfs->z_os->os_sync = ZFS_SYNC_DISABLED;
 		zfsvfs->z_snap_defer_time = jiffies;

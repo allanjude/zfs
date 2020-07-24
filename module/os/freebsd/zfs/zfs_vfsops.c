@@ -443,7 +443,7 @@ zfs_sync(vfs_t *vfsp, int waitfor)
 }
 
 static void
-atime_changed_cb(void *arg, uint64_t newval)
+atime_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -461,7 +461,7 @@ atime_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-xattr_changed_cb(void *arg, uint64_t newval)
+xattr_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -478,7 +478,7 @@ xattr_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-blksz_changed_cb(void *arg, uint64_t newval)
+blksz_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 	ASSERT3U(newval, <=, spa_maxblocksize(dmu_objset_spa(zfsvfs->z_os)));
@@ -490,7 +490,7 @@ blksz_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-readonly_changed_cb(void *arg, uint64_t newval)
+readonly_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -508,7 +508,7 @@ readonly_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-setuid_changed_cb(void *arg, uint64_t newval)
+setuid_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -524,7 +524,7 @@ setuid_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-exec_changed_cb(void *arg, uint64_t newval)
+exec_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -548,7 +548,7 @@ exec_changed_cb(void *arg, uint64_t newval)
  * will be called when a file system is first mounted
  */
 static void
-nbmand_changed_cb(void *arg, uint64_t newval)
+nbmand_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 	if (newval == FALSE) {
@@ -561,7 +561,7 @@ nbmand_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-snapdir_changed_cb(void *arg, uint64_t newval)
+snapdir_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -569,7 +569,7 @@ snapdir_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-vscan_changed_cb(void *arg, uint64_t newval)
+vscan_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -577,7 +577,7 @@ vscan_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-acl_mode_changed_cb(void *arg, uint64_t newval)
+acl_mode_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -585,7 +585,7 @@ acl_mode_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-acl_inherit_changed_cb(void *arg, uint64_t newval)
+acl_inherit_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	zfsvfs_t *zfsvfs = arg;
 
@@ -737,17 +737,17 @@ zfs_register_callbacks(vfs_t *vfsp)
 	 * Invoke our callbacks to restore temporary mount options.
 	 */
 	if (do_readonly)
-		readonly_changed_cb(zfsvfs, readonly);
+		readonly_changed_cb(ds, zfsvfs, readonly);
 	if (do_setuid)
-		setuid_changed_cb(zfsvfs, setuid);
+		setuid_changed_cb(ds, zfsvfs, setuid);
 	if (do_exec)
-		exec_changed_cb(zfsvfs, exec);
+		exec_changed_cb(ds, zfsvfs, exec);
 	if (do_xattr)
-		xattr_changed_cb(zfsvfs, xattr);
+		xattr_changed_cb(ds, zfsvfs, xattr);
 	if (do_atime)
-		atime_changed_cb(zfsvfs, atime);
+		atime_changed_cb(ds, zfsvfs, atime);
 
-	nbmand_changed_cb(zfsvfs, nbmand);
+	nbmand_changed_cb(ds, zfsvfs, nbmand);
 
 	return (0);
 
@@ -1222,13 +1222,15 @@ zfs_domount(vfs_t *vfsp, char *osname)
 
 	if (dmu_objset_is_snapshot(zfsvfs->z_os)) {
 		uint64_t pval;
+		dsl_dataset_t *ds;
 
-		atime_changed_cb(zfsvfs, B_FALSE);
-		readonly_changed_cb(zfsvfs, B_TRUE);
+		ds = dmu_objset_ds(zfsvfs->z_os);
+		atime_changed_cb(ds, zfsvfs, B_FALSE);
+		readonly_changed_cb(ds, zfsvfs, B_TRUE);
 		if ((error = dsl_prop_get_integer(osname,
 		    "xattr", &pval, NULL)))
 			goto out;
-		xattr_changed_cb(zfsvfs, pval);
+		xattr_changed_cb(ds, zfsvfs, pval);
 		zfsvfs->z_issnap = B_TRUE;
 		zfsvfs->z_os->os_sync = ZFS_SYNC_DISABLED;
 

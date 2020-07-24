@@ -59,6 +59,8 @@
 #include <sys/dsl_destroy.h>
 #include <sys/vdev.h>
 #include <sys/zfeature.h>
+#include <sys/zio_checksum.h>
+#include <sys/zio_compress.h>
 #include <sys/policy.h>
 #include <sys/spa_impl.h>
 #include <sys/dmu_recv.h>
@@ -173,36 +175,60 @@ dmu_objset_logbias(objset_t *os)
 }
 
 static void
-checksum_changed_cb(void *arg, uint64_t newval)
+checksum_changed_cb(void *dsp, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
+	dsl_dataset_t *ds = dsp;
+	enum zio_checksum checksum;
+	spa_feature_t f;
 
 	/*
 	 * Inheritance should have been done by now.
 	 */
 	ASSERT(newval != ZIO_CHECKSUM_INHERIT);
 
-	os->os_checksum = zio_checksum_select(newval, ZIO_CHECKSUM_ON_VALUE);
+	checksum = zio_checksum_select(newval, ZIO_CHECKSUM_ON_VALUE);
+
+	f = zio_checksum_to_feature(checksum);
+	if (f != SPA_FEATURE_NONE) {
+		ASSERT3S(spa_feature_table[f].fi_type, ==,
+		    ZFEATURE_TYPE_BOOLEAN);
+		ds->ds_feature_activation[f] = (void *)B_TRUE;
+	}
+
+	os->os_checksum = checksum;
 }
 
 static void
-compression_changed_cb(void *arg, uint64_t newval)
+compression_changed_cb(void *dsp, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
+	dsl_dataset_t *ds = dsp;
+	enum zio_compress compress;
+	spa_feature_t f;
 
 	/*
 	 * Inheritance and range checking should have been done by now.
 	 */
 	ASSERT(newval != ZIO_COMPRESS_INHERIT);
 
-	os->os_compress = zio_compress_select(os->os_spa,
-	    ZIO_COMPRESS_ALGO(newval), ZIO_COMPRESS_ON);
+	compress = zio_compress_select(os->os_spa, ZIO_COMPRESS_ALGO(newval),
+	    ZIO_COMPRESS_ON);
+
+	f = zio_compress_to_feature(compress);
+	if (f != SPA_FEATURE_NONE) {
+		ASSERT3S(spa_feature_table[f].fi_type, ==,
+		    ZFEATURE_TYPE_BOOLEAN);
+		ds->ds_feature_activation[f] = (void *)B_TRUE;
+	}
+
+	os->os_compress = compress;
 	os->os_complevel = zio_complevel_select(os->os_spa, os->os_compress,
 	    ZIO_COMPRESS_LEVEL(newval), ZIO_COMPLEVEL_DEFAULT);
 }
 
 static void
-copies_changed_cb(void *arg, uint64_t newval)
+copies_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 
@@ -216,7 +242,7 @@ copies_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-dedup_changed_cb(void *arg, uint64_t newval)
+dedup_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 	spa_t *spa = os->os_spa;
@@ -234,7 +260,7 @@ dedup_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-primary_cache_changed_cb(void *arg, uint64_t newval)
+primary_cache_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 
@@ -248,7 +274,7 @@ primary_cache_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-secondary_cache_changed_cb(void *arg, uint64_t newval)
+secondary_cache_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 
@@ -262,7 +288,7 @@ secondary_cache_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-sync_changed_cb(void *arg, uint64_t newval)
+sync_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 
@@ -278,7 +304,7 @@ sync_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-redundant_metadata_changed_cb(void *arg, uint64_t newval)
+redundant_metadata_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 
@@ -292,7 +318,7 @@ redundant_metadata_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-dnodesize_changed_cb(void *arg, uint64_t newval)
+dnodesize_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 
@@ -320,7 +346,7 @@ dnodesize_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-smallblk_changed_cb(void *arg, uint64_t newval)
+smallblk_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 
@@ -334,7 +360,7 @@ smallblk_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-logbias_changed_cb(void *arg, uint64_t newval)
+logbias_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 
@@ -346,7 +372,7 @@ logbias_changed_cb(void *arg, uint64_t newval)
 }
 
 static void
-recordsize_changed_cb(void *arg, uint64_t newval)
+recordsize_changed_cb(void *dsp __unused, void *arg, uint64_t newval)
 {
 	objset_t *os = arg;
 

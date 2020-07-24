@@ -40,7 +40,7 @@ struct dsl_dataset;
 struct dsl_dir;
 
 /* The callback func may not call into the DMU or DSL! */
-typedef void (dsl_prop_changed_cb_t)(void *arg, uint64_t newval);
+typedef void (dsl_prop_changed_cb_t)(void *ds, void *arg, uint64_t newval);
 
 typedef struct dsl_prop_record {
 	list_node_t pr_node; /* link on dd_props */

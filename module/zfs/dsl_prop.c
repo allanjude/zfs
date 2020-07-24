@@ -309,7 +309,7 @@ dsl_prop_register(dsl_dataset_t *ds, const char *propname,
 	list_insert_head(&ds->ds_prop_cbs, cbr);
 	mutex_exit(&dd->dd_lock);
 
-	cbr->cbr_func(cbr->cbr_arg, value);
+	cbr->cbr_func(cbr->cbr_ds, cbr->cbr_arg, value);
 	return (0);
 }
 
@@ -548,7 +548,7 @@ dsl_prop_notify_all_cb(dsl_pool_t *dp, dsl_dataset_t *ds, void *arg)
 			if (dsl_prop_get_ds(cbr->cbr_ds,
 			    cbr->cbr_pr->pr_propname, sizeof (value), 1,
 			    &value, NULL) == 0)
-				cbr->cbr_func(cbr->cbr_arg, value);
+				cbr->cbr_func(cbr->cbr_ds, cbr->cbr_arg, value);
 
 			if (ds != cbr->cbr_ds)
 				dsl_dataset_rele(cbr->cbr_ds, FTAG);
@@ -627,7 +627,7 @@ dsl_prop_changed_notify(dsl_pool_t *dp, uint64_t ddobj,
 			 */
 			if (propobj == 0 ||
 			    zap_contains(mos, propobj, propname) != 0)
-				cbr->cbr_func(cbr->cbr_arg, value);
+				cbr->cbr_func(cbr->cbr_ds, cbr->cbr_arg, value);
 
 			dsl_dataset_rele(cbr->cbr_ds, FTAG);
 		}
@@ -791,7 +791,8 @@ dsl_prop_set_sync_impl(dsl_dataset_t *ds, const char *propname,
 			    cbr = list_next(&ds->ds_prop_cbs, cbr)) {
 				if (strcmp(cbr->cbr_pr->pr_propname,
 				    propname) == 0)
-					cbr->cbr_func(cbr->cbr_arg, intval);
+					cbr->cbr_func(cbr->cbr_ds, cbr->cbr_arg,
+					    intval);
 			}
 			mutex_exit(&ds->ds_dir->dd_lock);
 		} else {
