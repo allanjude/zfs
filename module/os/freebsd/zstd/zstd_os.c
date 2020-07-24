@@ -98,7 +98,11 @@ zstd_alloc(void *opaque __maybe_unused, size_t size)
 	enum zstd_kmem_type type = ZSTD_KMEM_UNKNOWN;
 
 	if (nbytes <= SPA_MAXBLOCKSIZE) {
-		z = zio_data_buf_alloc(nbytes);
+		/* zio_data_buf_alloc() may sleep, we don't want that */
+		size_t c = (nbytes - 1) >> SPA_MINBLOCKSHIFT;
+
+		VERIFY3U(c, <, SPA_MAXBLOCKSIZE >> SPA_MINBLOCKSHIFT);
+		z = kmem_cache_alloc(zio_data_buf_cache[c], KM_NOSLEEP));
 		type = ZSTD_KMEM_ZIO;
 	} else if (nbytes <= zstd_cctx_size_32) {
 		z = kmem_cache_alloc(zstd_cctx_cache_32, KM_NOSLEEP);
