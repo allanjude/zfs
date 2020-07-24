@@ -47,6 +47,7 @@
 
 #define	ZSTD_STATIC_LINKING_ONLY
 #include "zstdlib.h"
+#include "zstd_errors.h"
 
 kstat_t *zstd_ksp = NULL;
 
@@ -191,10 +192,8 @@ zstd_compress(void *s_start, void *d_start, size_t s_len, size_t d_len,
 		 * If we are aborting the compression because the saves are
 		 * too small, that is not a failure. Everything else is a
 		 * failure, so increment the compression failure counter.
-		 *
-		 * ZSTD_error_dstSize_tooSmall = -70
 		 */
-		if (c_len != -70) {
+		if (c_len != ZSTD_error_dstSize_tooSmall) {
 			ZSTDSTAT_BUMP(zstd_stat_com_fail);
 		}
 		return (s_len);
