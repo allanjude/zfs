@@ -28,6 +28,10 @@
  * Copyright (c) 2020, George Amanakis. All rights reserved.
  * Copyright (c) 2019, Klara Inc.
  * Copyright (c) 2019, Allan Jude
+ * Copyright (c) 2020, The FreeBSD Foundation [1]
+ *
+ * [1] Portions of this software were developed by Allan Jude
+ *     under sponsorship from the FreeBSD Foundation.
  */
 
 /*
@@ -6150,6 +6154,17 @@ top:
 				cb->l2rcb_zb = *zb;
 				cb->l2rcb_flags = zio_flags;
 
+				/*
+				 * When Compressed ARC is disabled, but the
+				 * L2ARC block is compressed, arc_hdr_size()
+				 * will have returned LSIZE rather than PSIZE.
+				 */
+				if (HDR_GET_COMPRESS(hdr) != ZIO_COMPRESS_OFF &&
+				    !HDR_COMPRESSION_ENABLED(hdr) &&
+				    HDR_GET_PSIZE(hdr) != 0) {
+					size = HDR_GET_PSIZE(hdr);
+				}
+
 				asize = vdev_psize_to_asize(vd, size);
 				if (asize != size) {
 					abd = abd_alloc_for_io(asize,
@@ -8932,7 +8947,7 @@ l2arc_write_buffers(spa_t *spa, l2arc_dev_t *dev, uint64_t target_sz)
 			/*
 			 * If this header has b_rabd, we can use this since it
 			 * must always match the data exactly as it exists on
-			 * disk. Otherwise, the L2ARC can  normally use the
+			 * disk. Otherwise, the L2ARC can normally use the
 			 * hdr's data, but if we're sharing data between the
 			 * hdr and one of its bufs, L2ARC needs its own copy of
 			 * the data so that the ZIO below can't race with the
