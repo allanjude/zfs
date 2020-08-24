@@ -612,12 +612,13 @@ send_iterate_fs(zfs_handle_t *zhp, void *arg)
 
 	/* Do not allow the size of the properties list to exceed the limit */
 	if ((fnvlist_size(nvfs) + fnvlist_size(sd->fss)) >
-	    (SPA_MAXBLOCKSIZE * 4)) {
+	    zhp->zfs_hdl->libzfs_max_nvlist) {
 		(void) fprintf(stderr, dgettext(TEXT_DOMAIN,
 		    "warning: cannot send %s@%s: the size of the list of "
 		    "snapshots and properties is too large to be received "
-		    "successfully. Select a smaller number of snapshots to "
-		    "send.\n"), zhp->zfs_name, sd->tosnap);
+		    "successfully.\n"
+		    "Select a smaller number of snapshots to send.\n"),
+		    zhp->zfs_name, sd->tosnap);
 		rv = EZFS_NOSPC;
 		goto out;
 	}
@@ -2031,12 +2032,12 @@ send_prelim_records(zfs_handle_t *zhp, const char *from, int fd,
 		 * the limit
 		 */
 		if ((fnvlist_size(fss) + fnvlist_size(hdrnv)) >
-		    (SPA_MAXBLOCKSIZE * 4)) {
+		    zhp->zfs_hdl->libzfs_max_nvlist) {
 			(void) snprintf(errbuf, sizeof (errbuf),
 			    dgettext(TEXT_DOMAIN, "warning: cannot send '%s': "
 			    "the size of the list of snapshots and properties "
-			    "is too large to be received successfully. Select "
-			    "a smaller number of snapshots to send.\n"),
+			    "is too large to be received successfully.\n"
+			    "Select a smaller number of snapshots to send.\n"),
 			    zhp->zfs_name);
 			return (zfs_error(zhp->zfs_hdl, EZFS_NOSPC,
 			    errbuf));
@@ -2637,7 +2638,7 @@ recv_read_nvlist(libzfs_handle_t *hdl, int fd, int len, nvlist_t **nvp,
 	if (buf == NULL)
 		return (ENOMEM);
 
-	if (len > (SPA_MAXBLOCKSIZE * 4)) {
+	if (len > hdl->libzfs_max_nvlist) {
 		zfs_error_aux(hdl, dgettext(TEXT_DOMAIN, "nvlist too large"));
 		return (ENOMEM);
 	}
