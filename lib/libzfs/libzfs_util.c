@@ -1056,7 +1056,7 @@ libzfs_init(void)
 	if (getenv("ZFS_PROP_DEBUG") != NULL) {
 		hdl->libzfs_prop_debug = B_TRUE;
 	}
-	if ((env = getenv("ZFS_RECV_NVLIST_MAX")) != NULL) {
+	if ((env = getenv("ZFS_SENDRECV_MAX_NVLIST")) != NULL) {
 		if ((error = zfs_nicestrtonum(hdl, env,
 		    &hdl->libzfs_max_nvlist))) {
 			errno = error;
