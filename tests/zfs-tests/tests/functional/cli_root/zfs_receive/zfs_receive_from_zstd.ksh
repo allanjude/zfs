@@ -68,11 +68,14 @@ log_must zfs snapshot $snap
 listing=$(ls -i /$TESTPOOL/$TESTFS1/$TESTFILE0)
 set -A array $listing
 obj=${array[0]}
+[[ -n "$obj" ]] || log_fail "Failed to determine object number of fs1/$TESTFILE0"
 log_note "file /$TESTPOOL/$TESTFS1/$TESTFILE0 has object number $obj"
 
-output=$(zdb -Zddddddbbbbbb $TESTPOOL/$TESTFS1 $obj 2> /dev/null \
-    |grep -m 1 "L0 DVA" |head -n1)
+zdb -Zddddddbbbbbb $TESTPOOL/$TESTFS1 $obj > $TESTDIR/testfs1.zdb || \
+	log_fail "ZDB failed to find DVA of file of fs1/$TESTFILE0"
+output=$(grep -m 1 "L0 DVA" $TESTDIR/testfs1.zdb |head -n1)
 dva=$(sed -Ene 's/^.+DVA\[0\]=<([^>]+)>.*$/\1/p' <<< "$output")
+[[ -n "$dva" ]] || log_fail "Failed to determine DVA of fs1/$TESTFILE0"
 log_note "block 0 of /$TESTPOOL/$TESTFS1/$TESTFILE0 has a DVA of $dva"
 
 zstd_str=$(sed -Ene 's/^.+ ZSTD:size=([^:]+):version=([^:]+):level=([^:]+):.*$/\1:\2:\3/p' <<< "$output")
@@ -92,11 +95,14 @@ typeset cksum1=$(md5digest /$TESTPOOL/$TESTFS2/$TESTFILE0)
 listing=$(ls -i /$TESTPOOL/$TESTFS2/$TESTFILE0)
 set -A array $listing
 obj=${array[0]}
+[[ -n "$obj" ]] || log_fail "Failed to determine object number of fs2/$TESTFILE0"
 log_note "file /$TESTPOOL/$TESTFS2/$TESTFILE0 has object number $obj"
 
-output=$(zdb -Zddddddbbbbbb $TESTPOOL/$TESTFS2 $obj 2> /dev/null \
-    |grep -m 1 "L0 DVA" |head -n1)
+zdb -Zddddddbbbbbb $TESTPOOL/$TESTFS2 $obj > $TESTDIR/testfs2.zdb || \
+	log_fail "ZDB failed to find DVA of file of fs2/$TESTFILE0"
+output=$(grep -m 1 "L0 DVA" $TESTDIR/testfs1.zdb |head -n1)
 dva=$(sed -Ene 's/^.+DVA\[0\]=<([^>]+)>.*$/\1/p' <<< "$output")
+[[ -n "$dva" ]] || log_fail "Failed to determine DVA of fs2/$TESTFILE0"
 log_note "block 0 of /$TESTPOOL/$TESTFS2/$TESTFILE0 has a DVA of $dva"
 
 zstd_str=$(sed -Ene 's/^.+ ZSTD:size=([^:]+):version=([^:]+):level=([^:]+):.*$/\1:\2:\3/p' <<< "$output")
