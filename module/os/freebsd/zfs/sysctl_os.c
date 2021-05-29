@@ -148,6 +148,7 @@ int
 param_set_arc_max(SYSCTL_HANDLER_ARGS)
 {
 	uint64_t val;
+	boolean_t need_reap = B_FALSE;
 	int err;
 
 	val = zfs_arc_max;
@@ -158,19 +159,22 @@ param_set_arc_max(SYSCTL_HANDLER_ARGS)
 	if (val < 64 << 20 || val <= arc_c_min || val >= arc_all_memory())
 		return (SET_ERROR(EINVAL));
 
-	if (val < arc_c_max) {
-		/*
-		 * If the user has requested we shrink the ARC, reap the
-		 * UMA caches so memory is actually returned to the system.
-		 */
-		arc_kmem_reap_soon();
-	}
+	if (val < arc_c_max)
+		need_reap = B_TRUE;
 
 	zfs_arc_max = val;
 	arc_tuning_update(B_TRUE);
 
 	/* Update the sysctl to the tuned value */
 	zfs_arc_max = arc_c_max;
+
+	if (need_reap == B_TRUE) {
+		/*
+		 * If the user has requested we shrink the ARC, reap the
+		 * UMA caches so memory is actually returned to the system.
+		 */
+		arc_kmem_reap_soon();
+	}
 
 	return (0);
 }
