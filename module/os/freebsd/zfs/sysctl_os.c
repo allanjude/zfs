@@ -158,6 +158,14 @@ param_set_arc_max(SYSCTL_HANDLER_ARGS)
 	if (val < 64 << 20 || val <= arc_c_min || val >= arc_all_memory())
 		return (SET_ERROR(EINVAL));
 
+	if (val < arc_c_max) {
+		/*
+		 * If the user has requested we shrink the ARC, reap the
+		 * UMA caches so memory is actually returned to the system.
+		 */
+		arc_kmem_reap_soon();
+	}
+
 	zfs_arc_max = val;
 	arc_tuning_update(B_TRUE);
 
