@@ -4606,7 +4606,7 @@ arc_evict_type(arc_state_t *state)
 /*
  * Evict buffers from the cache, such that arc_size is capped by arc_c.
  */
-static uint64_t
+uint64_t
 arc_evict(void)
 {
 	uint64_t total_evicted = 0;

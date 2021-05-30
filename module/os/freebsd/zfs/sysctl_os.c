@@ -173,6 +173,7 @@ param_set_arc_max(SYSCTL_HANDLER_ARGS)
 		 * If the user has requested we shrink the ARC, reap the
 		 * UMA caches so memory is actually returned to the system.
 		 */
+		arc_evict();
 		arc_kmem_reap_soon();
 	}
 
