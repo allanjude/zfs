@@ -621,6 +621,8 @@ zfs_prop_init(void)
 	    "redact_snaps", NULL, PROP_READONLY,
 	    ZFS_TYPE_DATASET | ZFS_TYPE_BOOKMARK, "<snapshot>[,...]",
 	    "RSNAPS", sfeatures);
+	zprop_register_string(ZFS_PROP_MPREFIX, "mountprefix", NULL,
+	    PROP_INHERIT, ZFS_TYPE_FILESYSTEM, "<path>", "MPREFIX", sfeatures);
 
 	/* readonly number properties */
 	zprop_register_number(ZFS_PROP_USED, "used", 0, PROP_READONLY,

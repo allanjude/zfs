@@ -1140,6 +1140,38 @@ badlabel:
 #endif /* HAVE_MLSLABEL */
 		}
 
+		case ZFS_PROP_MPREFIX:
+		{
+			namecheck_err_t why;
+
+			if (mountpoint_namecheck(strval, &why)) {
+				switch (why) {
+				case NAME_ERR_LEADING_SLASH:
+					zfs_error_aux(hdl,
+					    dgettext(TEXT_DOMAIN,
+					    "'%s' must be an absolute path"),
+					    propname);
+					break;
+				case NAME_ERR_TOOLONG:
+					zfs_error_aux(hdl,
+					    dgettext(TEXT_DOMAIN,
+					    "component of '%s' is too long"),
+					    propname);
+					break;
+
+				default:
+					zfs_error_aux(hdl,
+					    dgettext(TEXT_DOMAIN,
+					    "(%d) not defined"),
+					    why);
+					break;
+				}
+				(void) zfs_error(hdl, EZFS_BADPROP, errbuf);
+				goto error;
+			}
+			fallthrough;
+		}
+
 		case ZFS_PROP_MOUNTPOINT:
 		{
 			namecheck_err_t why;
@@ -1664,7 +1696,7 @@ zfs_prop_set_list_flags(zfs_handle_t *zhp, nvlist_t *props, int flags)
 				goto error;
 		}
 
-		if (prop == ZFS_PROP_MOUNTPOINT &&
+		if ((prop == ZFS_PROP_MOUNTPOINT || prop == ZFS_PROP_MPREFIX) &&
 		    changelist_haszonedchild(cls[cl_idx])) {
 			zfs_error_aux(hdl,
 			    "child dataset with inherited mountpoint is used "
@@ -1884,7 +1916,8 @@ zfs_prop_inherit(zfs_handle_t *zhp, const char *propname, boolean_t received)
 	(void) strlcpy(zc.zc_name, zhp->zfs_name, sizeof (zc.zc_name));
 	(void) strlcpy(zc.zc_value, propname, sizeof (zc.zc_value));
 
-	if (prop == ZFS_PROP_MOUNTPOINT && getzoneid() == GLOBAL_ZONEID &&
+	if ((prop == ZFS_PROP_MOUNTPOINT || prop == ZFS_PROP_MPREFIX) &&
+	    getzoneid() == GLOBAL_ZONEID &&
 	    zfs_prop_get_int(zhp, ZFS_PROP_ZONED)) {
 		zfs_error_aux(hdl,
 		    "dataset is used in a non-global zone");
@@ -1897,7 +1930,8 @@ zfs_prop_inherit(zfs_handle_t *zhp, const char *propname, boolean_t received)
 	if ((cl = changelist_gather(zhp, prop, 0, 0)) == NULL)
 		return (-1);
 
-	if (prop == ZFS_PROP_MOUNTPOINT && changelist_haszonedchild(cl)) {
+	if ((prop == ZFS_PROP_MOUNTPOINT || prop == ZFS_PROP_MPREFIX) &&
+	    changelist_haszonedchild(cl)) {
 		zfs_error_aux(hdl,
 		    "child dataset with inherited mountpoint is used "
 		    "in a non-global zone");
@@ -2591,6 +2625,7 @@ zfs_prop_get(zfs_handle_t *zhp, zfs_prop_t prop, char *propbuf, size_t proplen,
 		if (str[0] == '/') {
 			char buf[MAXPATHLEN];
 			char *root = buf;
+			size_t rootlen;
 			const char *relpath;
 
 			/*
@@ -2612,6 +2647,13 @@ zfs_prop_get(zfs_handle_t *zhp, zfs_prop_t prop, char *propbuf, size_t proplen,
 			    ZPOOL_PROP_ALTROOT, buf, MAXPATHLEN, NULL,
 			    B_FALSE)) || (strcmp(root, "-") == 0))
 				root[0] = '\0';
+
+			rootlen = strlen(root);
+			if ((zfs_get_prop(zhp, ZFS_PROP_MPREFIX, root + rootlen,
+			    MAXPATHLEN - rootlen, NULL, NULL, 0, B_FALSE))
+			    || (strcmp(root + rootlen, "-") == 0))
+				root[rootlen] = '\0';
+
 			/*
 			 * Special case an alternate root of '/'. This will
 			 * avoid having multiple leading slashes in the
