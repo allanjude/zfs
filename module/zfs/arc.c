@@ -2012,6 +2012,18 @@ arc_buf_fill(arc_buf_t *buf, spa_t *spa, const zbookmark_phys_t *zb,
 	 * further transforms on it.
 	 */
 	if (encrypted) {
+		if (hdr->b_crypt_hdr.b_rabd == NULL) {
+			cmn_err(CE_WARN, "KLARA: arc_buf_fill() hdr "
+			    "rabd is NULL! compress=%d encrypted=%d "
+			    "psize=%d lsize=%d objset=%ld object=%ld "
+			    "hdr->b_flags=%d L2=%d L2_READ=%d\n",
+			    arc_hdr_get_compress(hdr), encrypted,
+			    HDR_GET_PSIZE(hdr), HDR_GET_LSIZE(hdr),
+			    zb->zb_objset, zb->zb_object, hdr->b_flags,
+			    HDR_L2CACHE(hdr), HDR_L2_READING(hdr));
+			arc_hdr_alloc_abd(hdr,
+			    ARC_HDR_DO_ADAPT | ARC_HDR_ALLOC_RDATA);
+		}
 		ASSERT(HDR_HAS_RABD(hdr));
 		abd_copy_to_buf(buf->b_data, hdr->b_crypt_hdr.b_rabd,
 		    HDR_GET_PSIZE(hdr));
@@ -2073,6 +2085,14 @@ arc_buf_fill(arc_buf_t *buf, spa_t *spa, const zbookmark_phys_t *zb,
 
 	if (hdr_compressed == compressed) {
 		if (!arc_buf_is_shared(buf)) {
+			if (hdr->b_l1hdr.b_pabd == NULL) {
+				cmn_err(CE_WARN, "KLARA: arc_buf_fill() hdr "
+				    "pabd is NULL! compress=%d encrypted=%d "
+				    "psize=%d lsize=%d objset=%ld object=%ld\n",
+				    arc_hdr_get_compress(hdr), encrypted,
+				    HDR_GET_PSIZE(hdr), HDR_GET_LSIZE(hdr),
+				    zb->zb_objset, zb->zb_object);
+			}
 			abd_copy_to_buf(buf->b_data, hdr->b_l1hdr.b_pabd,
 			    arc_buf_size(buf));
 		}
@@ -3195,6 +3215,11 @@ arc_hdr_alloc_abd(arc_buf_hdr_t *hdr, int alloc_flags)
 	IMPLY(alloc_rdata, HDR_PROTECTED(hdr));
 
 	if (alloc_rdata) {
+		if (HDR_PROTECTED(hdr) == B_FALSE) {
+			cmn_err(CE_WARN, "KLARA: arc_hdr_alloc_abd() "
+			    "asked to alloc rabd on a not-encrypted HDR\n");
+		}
+		ASSERT(HDR_PROTECTED(hdr));
 		size = HDR_GET_PSIZE(hdr);
 		ASSERT3P(hdr->b_crypt_hdr.b_rabd, ==, NULL);
 		hdr->b_crypt_hdr.b_rabd = arc_get_data_abd(hdr, size, hdr,
@@ -3297,8 +3322,13 @@ arc_hdr_alloc(uint64_t spa, int32_t psize, int32_t lsize,
 	arc_hdr_set_flags(hdr, arc_bufc_to_flags(type) | ARC_FLAG_HAS_L1HDR);
 	arc_hdr_set_compress(hdr, compression_type);
 	hdr->b_complevel = complevel;
-	if (protected)
+	if (protected) {
 		arc_hdr_set_flags(hdr, ARC_FLAG_PROTECTED);
+		if (hdr->b_crypt_hdr.b_rabd != NULL) {
+			cmn_err(CE_WARN, "KLARA: arc_hdr_alloc() but rabd is"
+			    "not NULL\n");
+		}
+	}
 
 	hdr->b_l1hdr.b_state = arc_anon;
 	hdr->b_l1hdr.b_arc_access = 0;

@@ -108,6 +108,7 @@ int zfs_abd_scatter_enabled = B_TRUE;
 void
 abd_verify(abd_t *abd)
 {
+	VERIFY3P(abd, !=, NULL);
 #ifdef ZFS_DEBUG
 	ASSERT3U(abd->abd_size, >, 0);
 	ASSERT3U(abd->abd_size, <=, SPA_MAXBLOCKSIZE);
@@ -249,6 +250,7 @@ abd_free_linear(abd_t *abd)
 static void
 abd_free_gang(abd_t *abd)
 {
+	abd_verify(abd);
 	ASSERT(abd_is_gang(abd));
 	abd_t *cabd;
 
@@ -357,6 +359,8 @@ abd_alloc_gang(void)
 static void
 abd_gang_add_gang(abd_t *pabd, abd_t *cabd, boolean_t free_on_free)
 {
+	abd_verify(pabd);
+	abd_verify(cabd);
 	ASSERT(abd_is_gang(pabd));
 	ASSERT(abd_is_gang(cabd));
 
@@ -397,6 +401,7 @@ abd_gang_add_gang(abd_t *pabd, abd_t *cabd, boolean_t free_on_free)
 void
 abd_gang_add(abd_t *pabd, abd_t *cabd, boolean_t free_on_free)
 {
+	abd_verify(pabd);
 	ASSERT(abd_is_gang(pabd));
 	abd_t *child_abd = NULL;
 
@@ -472,6 +477,7 @@ abd_gang_get_offset(abd_t *abd, size_t *off)
 {
 	abd_t *cabd;
 
+	abd_verify(abd);
 	ASSERT(abd_is_gang(abd));
 	ASSERT3U(*off, <, abd->abd_size);
 	for (cabd = list_head(&ABD_GANG(abd).abd_gang_chain); cabd != NULL;
@@ -742,6 +748,7 @@ abd_init_abd_iter(abd_t *abd, struct abd_iter *aiter, size_t off)
 {
 	abd_t *cabd = NULL;
 
+	abd_verify(abd);
 	if (abd_is_gang(abd)) {
 		cabd = abd_gang_get_offset(abd, &off);
 		if (cabd) {
@@ -764,6 +771,7 @@ static inline abd_t *
 abd_advance_abd_iter(abd_t *abd, abd_t *cabd, struct abd_iter *aiter,
     size_t len)
 {
+	abd_verify(abd);
 	abd_iter_advance(aiter, len);
 	if (abd_is_gang(abd) && abd_iter_at_end(aiter)) {
 		ASSERT3P(cabd, !=, NULL);
@@ -839,6 +847,7 @@ abd_copy_to_buf_off(void *buf, abd_t *abd, size_t off, size_t size)
 {
 	struct buf_arg ba_ptr = { buf };
 
+	abd_verify(abd);
 	(void) abd_iterate_func(abd, off, size, abd_copy_to_buf_off_cb,
 	    &ba_ptr);
 }

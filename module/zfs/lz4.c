@@ -82,6 +82,8 @@ lz4_decompress_zfs(void *s_start, void *d_start, size_t s_len,
 	const char *src = s_start;
 	uint32_t bufsiz = BE_IN32(src);
 
+	VERIFY3P(src, !=, NULL);
+
 	/* invalid compressed buffer size encoded at start */
 	if (bufsiz + sizeof (bufsiz) > s_len)
 		return (1);

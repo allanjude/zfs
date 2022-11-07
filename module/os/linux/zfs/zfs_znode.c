@@ -336,7 +336,7 @@ zfs_znode_sa_init(zfsvfs_t *zfsvfs, znode_t *zp,
 	ASSERT(zp->z_sa_hdl == NULL);
 	ASSERT(zp->z_acl_cached == NULL);
 	if (sa_hdl == NULL) {
-		VERIFY(0 == sa_handle_get_from_db(zfsvfs->z_os, db, zp,
+		VERIFY0(sa_handle_get_from_db(zfsvfs->z_os, db, zp,
 		    SA_HDL_SHARED, &zp->z_sa_hdl));
 	} else {
 		zp->z_sa_hdl = sa_hdl;
@@ -817,7 +817,7 @@ zfs_mknode(znode_t *dzp, vattr_t *vap, dmu_tx_t *tx, cred_t *cr,
 	}
 
 	/* Now add in all of the "SA" attributes */
-	VERIFY(0 == sa_handle_get_from_db(zfsvfs->z_os, db, NULL, SA_HDL_SHARED,
+	VERIFY0(sa_handle_get_from_db(zfsvfs->z_os, db, NULL, SA_HDL_SHARED,
 	    &sa_hdl));
 
 	/*
@@ -1316,9 +1316,9 @@ zfs_znode_delete(znode_t *zp, dmu_tx_t *tx)
 	zh = zfs_znode_hold_enter(zfsvfs, obj);
 	if (acl_obj) {
 		VERIFY(!zp->z_is_sa);
-		VERIFY(0 == dmu_object_free(os, acl_obj, tx));
+		VERIFY0(dmu_object_free(os, acl_obj, tx));
 	}
-	VERIFY(0 == dmu_object_free(os, obj, tx));
+	VERIFY0(dmu_object_free(os, obj, tx));
 	zfs_znode_dmu_fini(zp);
 	zfs_znode_hold_exit(zfsvfs, zh);
 }
@@ -1539,7 +1539,7 @@ zfs_extend(znode_t *zp, uint64_t end)
 
 	zp->z_size = end;
 
-	VERIFY(0 == sa_update(zp->z_sa_hdl, SA_ZPL_SIZE(ZTOZSB(zp)),
+	VERIFY0(sa_update(zp->z_sa_hdl, SA_ZPL_SIZE(ZTOZSB(zp)),
 	    &zp->z_size, sizeof (zp->z_size), tx));
 
 	zfs_rangelock_exit(lr);
@@ -1948,7 +1948,7 @@ zfs_create_fs(objset_t *os, cred_t *cr, nvlist_t *zplprops, dmu_tx_t *tx)
 		mutex_init(&zfsvfs->z_hold_locks[i], NULL, MUTEX_DEFAULT, NULL);
 	}
 
-	VERIFY(0 == zfs_acl_ids_create(rootzp, IS_ROOT_NODE, &vattr,
+	VERIFY0(zfs_acl_ids_create(rootzp, IS_ROOT_NODE, &vattr,
 	    cr, NULL, &acl_ids));
 	zfs_mknode(rootzp, &vattr, tx, cr, IS_ROOT_NODE, &zp, &acl_ids);
 	ASSERT3P(zp, ==, rootzp);

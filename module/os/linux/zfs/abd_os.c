@@ -882,8 +882,8 @@ abd_get_offset_scatter(abd_t *abd, abd_t *sabd, size_t off,
 void
 abd_iter_init(struct abd_iter *aiter, abd_t *abd)
 {
-	ASSERT(!abd_is_gang(abd));
 	abd_verify(abd);
+	ASSERT(!abd_is_gang(abd));
 	aiter->iter_abd = abd;
 	aiter->iter_mapaddr = NULL;
 	aiter->iter_mapsize = 0;
@@ -1007,6 +1007,7 @@ abd_nr_pages_off(abd_t *abd, unsigned int size, size_t off)
 {
 	unsigned long pos;
 
+	abd_verify(abd);
 	if (abd_is_gang(abd)) {
 		unsigned long count = 0;
 
@@ -1077,6 +1078,7 @@ static unsigned int
 abd_gang_bio_map_off(struct bio *bio, abd_t *abd,
     unsigned int io_size, size_t off)
 {
+	abd_verify(abd);
 	ASSERT(abd_is_gang(abd));
 
 	for (abd_t *cabd = abd_gang_get_offset(abd, &off);
@@ -1105,6 +1107,7 @@ abd_bio_map_off(struct bio *bio, abd_t *abd,
 {
 	struct abd_iter aiter;
 
+	abd_verify(abd);
 	ASSERT3U(io_size, <=, abd->abd_size - off);
 	if (abd_is_linear(abd))
 		return (bio_map(bio, ((char *)abd_to_buf(abd)) + off, io_size));
