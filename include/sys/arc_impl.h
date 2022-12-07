@@ -440,6 +440,10 @@ typedef struct arc_buf_hdr_crypt {
 	 * match the data in the main storage pool.
 	 */
 	uint8_t			b_mac[ZIO_DATA_MAC_LEN];
+
+	char			*b_rabd_alloc;
+	char			*b_rabd_touch;
+	char			*b_rabd_free;
 } arc_buf_hdr_crypt_t;
 
 typedef struct l2arc_buf_hdr {

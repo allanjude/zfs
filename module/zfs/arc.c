@@ -1854,9 +1854,11 @@ arc_hdr_decrypt(arc_buf_hdr_t *hdr, spa_t *spa, const zbookmark_phys_t *zb)
 	if (ret != 0)
 		goto error;
 
+	hdr->b_crypt_hdr.b_rabd_touch = "arc_hdr_decrypt";
 	if (no_crypt) {
 		abd_copy(hdr->b_l1hdr.b_pabd, hdr->b_crypt_hdr.b_rabd,
 		    HDR_GET_PSIZE(hdr));
+		hdr->b_crypt_hdr.b_rabd_touch = "arc_hdr_decrypt:no_crypt";
 	}
 
 	/*
@@ -2013,16 +2015,18 @@ arc_buf_fill(arc_buf_t *buf, spa_t *spa, const zbookmark_phys_t *zb,
 	 */
 	if (encrypted) {
 		if (hdr->b_crypt_hdr.b_rabd == NULL) {
-			cmn_err(CE_WARN, "KLARA: arc_buf_fill() hdr "
+			cmn_err(CE_PANIC, "KLARA: arc_buf_fill() hdr "
 			    "rabd is NULL! compress=%d encrypted=%d "
 			    "psize=%d lsize=%d objset=%ld object=%ld "
-			    "hdr->b_flags=%d L2=%d L2_READ=%d\n",
+			    "hdr->b_flags=%d L2=%d L2_READ=%d "
+			    "r_abd_alloc=%s r_abd_touch=%s r_abd_free=%s\n",
 			    arc_hdr_get_compress(hdr), encrypted,
 			    HDR_GET_PSIZE(hdr), HDR_GET_LSIZE(hdr),
 			    zb->zb_objset, zb->zb_object, hdr->b_flags,
-			    HDR_L2CACHE(hdr), HDR_L2_READING(hdr));
-			arc_hdr_alloc_abd(hdr,
-			    ARC_HDR_DO_ADAPT | ARC_HDR_ALLOC_RDATA);
+			    HDR_L2CACHE(hdr), HDR_L2_READING(hdr),
+			    hdr->b_crypt_hdr.b_rabd_alloc,
+			    hdr->b_crypt_hdr.b_rabd_touch,
+			    hdr->b_crypt_hdr.b_rabd_free);
 		}
 		ASSERT(HDR_HAS_RABD(hdr));
 		abd_copy_to_buf(buf->b_data, hdr->b_crypt_hdr.b_rabd,
@@ -3140,6 +3144,7 @@ arc_buf_destroy_impl(arc_buf_t *buf)
 			    HDR_HAS_RABD(hdr) && hdr->b_l1hdr.b_pabd != NULL &&
 			    !HDR_IO_IN_PROGRESS(hdr)) {
 				arc_hdr_free_abd(hdr, B_TRUE);
+				hdr->b_crypt_hdr.b_rabd_free = "arc_buf_destroy_impl";
 			}
 		}
 	}
@@ -3224,6 +3229,7 @@ arc_hdr_alloc_abd(arc_buf_hdr_t *hdr, int alloc_flags)
 		ASSERT3P(hdr->b_crypt_hdr.b_rabd, ==, NULL);
 		hdr->b_crypt_hdr.b_rabd = arc_get_data_abd(hdr, size, hdr,
 		    alloc_flags);
+		hdr->b_crypt_hdr.b_rabd_alloc = "arc_hdr_alloc_abd";
 		ASSERT3P(hdr->b_crypt_hdr.b_rabd, !=, NULL);
 		ARCSTAT_INCR(arcstat_raw_size, size);
 	} else {
@@ -3264,6 +3270,7 @@ arc_hdr_free_abd(arc_buf_hdr_t *hdr, boolean_t free_rdata)
 
 	if (free_rdata) {
 		hdr->b_crypt_hdr.b_rabd = NULL;
+		hdr->b_crypt_hdr.b_rabd_free = "arc_hdr_free_abd";
 		ARCSTAT_INCR(arcstat_raw_size, -size);
 	} else {
 		hdr->b_l1hdr.b_pabd = NULL;
@@ -3328,6 +3335,9 @@ arc_hdr_alloc(uint64_t spa, int32_t psize, int32_t lsize,
 			cmn_err(CE_WARN, "KLARA: arc_hdr_alloc() but rabd is"
 			    "not NULL\n");
 		}
+		hdr->b_crypt_hdr.b_rabd_alloc = "arc_hdr_alloc";
+		hdr->b_crypt_hdr.b_rabd_touch = ".";
+		hdr->b_crypt_hdr.b_rabd_free = ".";
 	}
 
 	hdr->b_l1hdr.b_state = arc_anon;
@@ -3535,6 +3545,8 @@ arc_hdr_realloc_crypt(arc_buf_hdr_t *hdr, boolean_t need_crypt)
 
 	if (need_crypt) {
 		arc_hdr_set_flags(nhdr, ARC_FLAG_PROTECTED);
+		nhdr->b_crypt_hdr.b_rabd = NULL;
+		nhdr->b_crypt_hdr.b_rabd_alloc = "arc_hdr_realloc_crypt";
 	} else {
 		arc_hdr_clear_flags(nhdr, ARC_FLAG_PROTECTED);
 	}
@@ -3847,8 +3859,10 @@ arc_hdr_destroy(arc_buf_hdr_t *hdr)
 		if (hdr->b_l1hdr.b_pabd != NULL)
 			arc_hdr_free_abd(hdr, B_FALSE);
 
-		if (HDR_HAS_RABD(hdr))
+		if (HDR_HAS_RABD(hdr)) {
 			arc_hdr_free_abd(hdr, B_TRUE);
+			hdr->b_crypt_hdr.b_rabd_free = "arc_hdr_destroy";
+		}
 	}
 
 	ASSERT3P(hdr->b_hash_next, ==, NULL);
@@ -4040,8 +4054,10 @@ arc_evict_hdr(arc_buf_hdr_t *hdr, kmutex_t *hash_lock, uint64_t *real_evicted)
 		if (hdr->b_l1hdr.b_pabd != NULL)
 			arc_hdr_free_abd(hdr, B_FALSE);
 
-		if (HDR_HAS_RABD(hdr))
+		if (HDR_HAS_RABD(hdr)) {
 			arc_hdr_free_abd(hdr, B_TRUE);
+			hdr->b_crypt_hdr.b_rabd_free = "arc_evict_hdr";
+		}
 
 		arc_change_state(evicted_state, hdr, hash_lock);
 		ASSERT(HDR_IN_HASH_TABLE(hdr));
@@ -6255,6 +6271,7 @@ top:
 
 		arc_hdr_alloc_abd(hdr, alloc_flags);
 		if (encrypted_read) {
+			hdr->b_crypt_hdr.b_rabd_alloc = "arc_read";
 			ASSERT(HDR_HAS_RABD(hdr));
 			size = HDR_GET_PSIZE(hdr);
 			hdr_abd = hdr->b_crypt_hdr.b_rabd;
@@ -6865,8 +6882,10 @@ arc_write_ready(zio_t *zio)
 			}
 		}
 
-		if (HDR_HAS_RABD(hdr))
+		if (HDR_HAS_RABD(hdr)) {
 			arc_hdr_free_abd(hdr, B_TRUE);
+			hdr->b_crypt_hdr.b_rabd_free = "arc_write_ready";
+		}
 	}
 	ASSERT3P(hdr->b_l1hdr.b_pabd, ==, NULL);
 	ASSERT(!HDR_HAS_RABD(hdr));
@@ -6956,7 +6975,9 @@ arc_write_ready(zio_t *zio)
 		ASSERT(ARC_BUF_COMPRESSED(buf));
 		arc_hdr_alloc_abd(hdr, ARC_HDR_DO_ADAPT | ARC_HDR_ALLOC_RDATA |
 		    ARC_HDR_USE_RESERVE);
+		hdr->b_crypt_hdr.b_rabd_alloc = "arc_write_ready:buf";
 		abd_copy(hdr->b_crypt_hdr.b_rabd, zio->io_abd, psize);
+		hdr->b_crypt_hdr.b_rabd_touch = "arc_write_ready:buf";
 	} else if (!abd_size_alloc_linear(arc_buf_size(buf)) ||
 	    !arc_can_share(hdr, buf)) {
 		/*
@@ -6968,7 +6989,9 @@ arc_write_ready(zio_t *zio)
 			ASSERT3U(psize, >, 0);
 			arc_hdr_alloc_abd(hdr, ARC_HDR_DO_ADAPT |
 			    ARC_HDR_ALLOC_RDATA | ARC_HDR_USE_RESERVE);
+			hdr->b_crypt_hdr.b_rabd_alloc = "arc_write_ready:bp";
 			abd_copy(hdr->b_crypt_hdr.b_rabd, zio->io_abd, psize);
+			hdr->b_crypt_hdr.b_rabd_touch = "arc_write_ready:bp";
 		} else if (arc_hdr_get_compress(hdr) != ZIO_COMPRESS_OFF &&
 		    !ARC_BUF_COMPRESSED(buf)) {
 			ASSERT3U(psize, >, 0);
@@ -7175,8 +7198,10 @@ arc_write(zio_t *pio, spa_t *spa, uint64_t txg,
 		VERIFY3P(buf->b_data, !=, NULL);
 	}
 
-	if (HDR_HAS_RABD(hdr))
+	if (HDR_HAS_RABD(hdr)) {
 		arc_hdr_free_abd(hdr, B_TRUE);
+		hdr->b_crypt_hdr.b_rabd_free = "arc_write";
+	}
 
 	if (!(zio_flags & ZIO_FLAG_RAW))
 		arc_hdr_set_compress(hdr, ZIO_COMPRESS_OFF);
@@ -8904,6 +8929,7 @@ l2arc_read_done(zio_t *zio)
 			if (using_rdata) {
 				abd_copy(hdr->b_crypt_hdr.b_rabd,
 				    cb->l2rcb_abd, arc_hdr_size(hdr));
+				hdr->b_crypt_hdr.b_rabd_touch = "l2arc_read_done";
 			} else {
 				abd_copy(hdr->b_l1hdr.b_pabd,
 				    cb->l2rcb_abd, arc_hdr_size(hdr));
