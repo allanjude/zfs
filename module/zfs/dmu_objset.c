@@ -2389,7 +2389,9 @@ dmu_objset_userspace_upgrade_cb(objset_t *os)
 void
 dmu_objset_userspace_upgrade(objset_t *os)
 {
+#if 0
 	dmu_objset_upgrade(os, dmu_objset_userspace_upgrade_cb);
+#endif
 }
 
 static int
@@ -2425,7 +2427,9 @@ dmu_objset_id_quota_upgrade_cb(objset_t *os)
 void
 dmu_objset_id_quota_upgrade(objset_t *os)
 {
+#if 0
 	dmu_objset_upgrade(os, dmu_objset_id_quota_upgrade_cb);
+#endif
 }
 
 boolean_t
