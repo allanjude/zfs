@@ -2488,6 +2488,37 @@ dsl_dir_cancel_waiters(dsl_dir_t *dd)
 	mutex_exit(&dd->dd_activity_lock);
 }
 
+int
+dsl_dir_list_next(dsl_dir_t *dd, int namelen, char *name,
+    uint64_t *idp, uint64_t *offp)
+{
+	zap_cursor_t cursor;
+	zap_attribute_t attr;
+
+	zap_cursor_init_serialized(&cursor,
+	    dd->dd_pool->dp_meta_objset,
+	    dsl_dir_phys(dd)->dd_child_dir_zapobj, *offp);
+
+	if (zap_cursor_retrieve(&cursor, &attr) != 0) {
+		zap_cursor_fini(&cursor);
+		return (SET_ERROR(ENOENT));
+	}
+
+	if (strlen(attr.za_name) + 1 > namelen) {
+		zap_cursor_fini(&cursor);
+		return (SET_ERROR(ENAMETOOLONG));
+	}
+
+	(void) strlcpy(name, attr.za_name, namelen);
+	if (idp)
+		*idp = attr.za_first_integer;
+	zap_cursor_advance(&cursor);
+	*offp = zap_cursor_serialize(&cursor);
+	zap_cursor_fini(&cursor);
+
+	return (0);
+}
+
 #if defined(_KERNEL)
 EXPORT_SYMBOL(dsl_dir_set_quota);
 EXPORT_SYMBOL(dsl_dir_set_reservation);

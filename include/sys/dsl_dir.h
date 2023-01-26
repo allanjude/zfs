@@ -204,6 +204,9 @@ void dsl_dir_remove_livelist(dsl_dir_t *dd, dmu_tx_t *tx, boolean_t total);
 int dsl_dir_wait(dsl_dir_t *dd, dsl_dataset_t *ds, zfs_wait_activity_t activity,
     boolean_t *waited);
 void dsl_dir_cancel_waiters(dsl_dir_t *dd);
+int dsl_dir_list_next(dsl_dir_t *dd, int namelen, char *name,
+    uint64_t *idp, uint64_t *offp);
+
 
 /* internal reserved dir name */
 #define	MOS_DIR_NAME "$MOS"

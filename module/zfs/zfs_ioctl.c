@@ -2203,15 +2203,28 @@ zfs_ioc_objset_zplprops(zfs_cmd_t *zc)
 static int
 zfs_ioc_dataset_list_next(zfs_cmd_t *zc)
 {
-	objset_t *os;
+	spa_t *spa;
+	dsl_pool_t *dp;
+	dsl_dir_t *dd;
 	int error;
 	char *p;
 	size_t orig_len = strlen(zc->zc_name);
 
+	mutex_enter(&spa_namespace_lock);
+	spa = spa_lookup(zc->zc_name);
+	if (spa == NULL) {
+		mutex_exit(&spa_namespace_lock);
+		return (SET_ERROR(EIO));
+	}
+	dp = spa_get_dsl(spa);
+	mutex_exit(&spa_namespace_lock);
+
 top:
-	if ((error = dmu_objset_hold(zc->zc_name, FTAG, &os))) {
+	dsl_pool_config_enter(dp, FTAG);
+	if ((error = dsl_dir_hold(dp, zc->zc_name, FTAG, &dd, NULL))) {
 		if (error == ENOENT)
 			error = SET_ERROR(ESRCH);
+		dsl_pool_config_exit(dp, FTAG);
 		return (error);
 	}
 
@@ -2221,13 +2234,14 @@ top:
 	p = zc->zc_name + strlen(zc->zc_name);
 
 	do {
-		error = dmu_dir_list_next(os,
+		error = dsl_dir_list_next(dd,
 		    sizeof (zc->zc_name) - (p - zc->zc_name), p,
 		    NULL, &zc->zc_cookie);
 		if (error == ENOENT)
 			error = SET_ERROR(ESRCH);
 	} while (error == 0 && zfs_dataset_name_hidden(zc->zc_name));
-	dmu_objset_rele(os, FTAG);
+	dsl_dir_rele(dd, FTAG);
+	dsl_pool_config_exit(dp, FTAG);
 
 	/*
 	 * If it's an internal dataset (ie. with a '$' in its name),
