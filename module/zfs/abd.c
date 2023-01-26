@@ -359,12 +359,10 @@ abd_alloc_gang(void)
 static void
 abd_gang_add_gang(abd_t *pabd, abd_t *cabd, boolean_t free_on_free)
 {
-#if 0
 	abd_verify(pabd);
 	abd_verify(cabd);
 	ASSERT(abd_is_gang(pabd));
 	ASSERT(abd_is_gang(cabd));
-#endif
 
 	if (free_on_free) {
 		/*
@@ -403,10 +401,8 @@ abd_gang_add_gang(abd_t *pabd, abd_t *cabd, boolean_t free_on_free)
 void
 abd_gang_add(abd_t *pabd, abd_t *cabd, boolean_t free_on_free)
 {
-#if 0
 	abd_verify(pabd);
 	ASSERT(abd_is_gang(pabd));
-#endif
 	abd_t *child_abd = NULL;
 
 	/*
