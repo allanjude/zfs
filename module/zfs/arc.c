@@ -2015,18 +2015,22 @@ arc_buf_fill(arc_buf_t *buf, spa_t *spa, const zbookmark_phys_t *zb,
 	 */
 	if (encrypted) {
 		if (hdr->b_crypt_hdr.b_rabd == NULL) {
-			cmn_err(CE_PANIC, "KLARA: arc_buf_fill() hdr "
+			cmn_err(CE_WARN, "KLARA: arc_buf_fill() hdr "
 			    "rabd is NULL! compress=%d encrypted=%d "
 			    "psize=%d lsize=%d objset=%ld object=%ld "
-			    "hdr->b_flags=%d L2=%d L2_READ=%d "
+			    "iopro=%d hdrempty=%d hdrlock=%d refcount=%ld "
 			    "r_abd_alloc=%s r_abd_touch=%s r_abd_free=%s\n",
 			    arc_hdr_get_compress(hdr), encrypted,
 			    HDR_GET_PSIZE(hdr), HDR_GET_LSIZE(hdr),
 			    zb->zb_objset, zb->zb_object, hdr->b_flags,
-			    HDR_L2CACHE(hdr), HDR_L2_READING(hdr),
+			    HDR_IO_IN_PROGRESS(hdr),
+			    HDR_EMPTY(hdr),
+			    MUTEX_HELD(HDR_LOCK(hdr)),
+			    zfs_refcount_count(&hdr->b_l1hdr.b_refcnt),
 			    hdr->b_crypt_hdr.b_rabd_alloc,
 			    hdr->b_crypt_hdr.b_rabd_touch,
 			    hdr->b_crypt_hdr.b_rabd_free);
+			return (ECKSUM);
 		}
 		ASSERT(HDR_HAS_RABD(hdr));
 		abd_copy_to_buf(buf->b_data, hdr->b_crypt_hdr.b_rabd,
@@ -5888,6 +5892,7 @@ arc_read_done(zio_t *zio)
 
 	hdr->b_l1hdr.b_acb = NULL;
 	arc_hdr_clear_flags(hdr, ARC_FLAG_IO_IN_PROGRESS);
+	hdr->b_crypt_hdr.b_rabd_touch = "arc_read_done:iodone";
 	if (callback_cnt == 0)
 		ASSERT(hdr->b_l1hdr.b_pabd != NULL || HDR_HAS_RABD(hdr));
 
@@ -7122,12 +7127,14 @@ arc_write_done(zio_t *zio)
 			}
 		}
 		arc_hdr_clear_flags(hdr, ARC_FLAG_IO_IN_PROGRESS);
+		hdr->b_crypt_hdr.b_rabd_touch = "arc_write_done:iodone";
 		/* if it's not anon, we are doing a scrub */
 		if (exists == NULL && hdr->b_l1hdr.b_state == arc_anon)
 			arc_access(hdr, hash_lock);
 		mutex_exit(hash_lock);
 	} else {
 		arc_hdr_clear_flags(hdr, ARC_FLAG_IO_IN_PROGRESS);
+		hdr->b_crypt_hdr.b_rabd_touch = "arc_write_done:empty";
 	}
 
 	ASSERT(!zfs_refcount_is_zero(&hdr->b_l1hdr.b_refcnt));
@@ -7213,8 +7220,18 @@ arc_write(zio_t *pio, spa_t *spa, uint64_t txg,
 	}
 
 	if (HDR_HAS_RABD(hdr)) {
-		arc_hdr_free_abd(hdr, B_TRUE);
-		hdr->b_crypt_hdr.b_rabd_free = "arc_write";
+		if (HDR_IO_IN_PROGRESS(hdr)) {
+			cmn_err(CE_WARN, "KLARA: arc_write() tried to free an "
+			    "rABD while IO was in progress refcount=%ld",
+			    zfs_refcount_count(&hdr->b_l1hdr.b_refcnt));
+			hdr->b_crypt_hdr.b_rabd_free = "arc_write:skipped:io";
+		} else if (zfs_refcount_count(&hdr->b_l1hdr.b_refcnt) != 0) {
+			arc_hdr_free_abd(hdr, B_TRUE);
+			hdr->b_crypt_hdr.b_rabd_free = "arc_write:refs";
+		} else {
+			arc_hdr_free_abd(hdr, B_TRUE);
+			hdr->b_crypt_hdr.b_rabd_free = "arc_write:0ref";
+		}
 	}
 
 	if (!(zio_flags & ZIO_FLAG_RAW))
