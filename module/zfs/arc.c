@@ -6019,6 +6019,7 @@ top:
 	if (!zfs_blkptr_verify(spa, bp, zio_flags & ZIO_FLAG_CONFIG_WRITER,
 	    BLK_VERIFY_LOG)) {
 		rc = SET_ERROR(ECKSUM);
+		cmn_err(CE_WARN, "KLARA: arc_read ECKSUM");
 		goto done;
 	}
 
@@ -6048,6 +6049,7 @@ top:
 				mutex_exit(hash_lock);
 				ARCSTAT_BUMP(arcstat_cached_only_in_progress);
 				rc = SET_ERROR(ENOENT);
+				cmn_err(CE_WARN, "KLARA: arc_read cached_only_in_progress");
 				goto done;
 			}
 
@@ -6140,6 +6142,7 @@ top:
 				 * before leaving the ARC.
 				 */
 				rc = SET_ERROR(EIO);
+				cmn_err(CE_WARN, "KLARA: arc_read decryption error");
 				if ((zio_flags & ZIO_FLAG_SPECULATIVE) == 0) {
 					spa_log_error(spa, zb);
 					(void) zfs_ereport_post(
@@ -6148,6 +6151,7 @@ top:
 				}
 			}
 			if (rc != 0) {
+				cmn_err(CE_WARN, "KLARA: arc_read remove ref, destroy buf");
 				(void) remove_reference(hdr, hash_lock,
 				    private);
 				arc_buf_destroy_impl(buf);
@@ -6527,6 +6531,7 @@ done:
 	if (pio && rc != 0) {
 		zio_t *zio = zio_null(pio, spa, NULL, NULL, NULL, zio_flags);
 		zio->io_error = rc;
+		cmn_err(CE_WARN, "KLARA: arc_read done with error");
 		zio_nowait(zio);
 	}
 	goto out;
