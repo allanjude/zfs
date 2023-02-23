@@ -2793,6 +2793,11 @@ arc_buf_alloc_impl(arc_buf_hdr_t *hdr, spa_t *spa, const zbookmark_phys_t *zb,
 	 * hold the hash_lock or be undiscoverable.
 	 */
 	ASSERT(HDR_EMPTY_OR_LOCKED(hdr));
+	if (!HDR_EMPTY_OR_LOCKED(hdr)) {
+		cmn_err(CE_WARN, "KLARA: arc_buf_alloc_impl() without "
+		    "HDR_EMPTY_OR_LOCKED. empty=%d locked=%d",
+		    HDR_EMPTY(hdr), MUTEX_HELD(HDR_LOCK(hdr)));
+	}
 
 	/*
 	 * Only honor requests for compressed bufs if the hdr is actually
