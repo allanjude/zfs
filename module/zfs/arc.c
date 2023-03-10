@@ -2078,6 +2078,17 @@ arc_buf_fill(arc_buf_t *buf, spa_t *spa, const zbookmark_phys_t *zb,
 		if (HDR_ENCRYPTED(hdr) && ARC_BUF_ENCRYPTED(buf)) {
 			ASSERT3U(hdr->b_crypt_hdr.b_ot, ==, DMU_OT_DNODE);
 
+			if (hdr->b_l1hdr.b_pabd == NULL) {
+				cmn_err(CE_WARN, "KLARA: arc_buf_fill() "
+				    "in-place dnode but pabd is NULL! "
+				    "compress=%d encrypted=%d "
+				    "psize=%d lsize=%d objset=%ld object=%ld\n",
+				    arc_hdr_get_compress(hdr), encrypted,
+				    HDR_GET_PSIZE(hdr), HDR_GET_LSIZE(hdr),
+				    zb->zb_objset, zb->zb_object);
+				return (EACCES);
+			}
+
 			if (hash_lock != NULL)
 				mutex_enter(hash_lock);
 			arc_buf_untransform_in_place(buf);
