@@ -175,6 +175,7 @@ typedef struct l1arc_buf_hdr {
 
 	arc_callback_t		*b_acb;
 	abd_t			*b_pabd;
+	boolean_t		b_warn;
 } l1arc_buf_hdr_t;
 
 typedef enum l2arc_dev_hdr_flags_t {

@@ -3910,11 +3910,20 @@ arc_buf_destroy(arc_buf_t *buf, void* tag)
 		ASSERT3U(hdr->b_l1hdr.b_bufcnt, ==, 1);
 		ASSERT(!HDR_IO_IN_PROGRESS(hdr));
 		if ((ref = remove_reference(hdr, NULL, tag)) == 0) {
+			if (hdr->b_l1hdr.b_warn == B_TRUE) {
+				cmn_err(CE_WARN, "KLARA: "
+				    "arc_buf_destroy(hdr=%p) removing final "
+				    "reference and destroying hdr that was "
+				    "previously preserved. bufs=%d",
+				    hdr->b_l1hdr.b_bufcnt);
+			}
 			arc_hdr_destroy(hdr);
 		} else {
-			cmn_err(CE_WARN, "KLARA: arc_buf_destroy() with "
-			    "%d remaining references, not destroying header",
+			cmn_err(CE_WARN, "KLARA: arc_buf_destroy(hdr=%p) with "
+			    "%d buffers and %d remaining references, not "
+			    "destroying header", hdr, hdr->b_l1hdr.b_bufcnt,
 			    ref);
+			hdr->b_l1hdr.b_warn = B_TRUE;
 			arc_buf_destroy_impl(buf);
 		}
 		return;
