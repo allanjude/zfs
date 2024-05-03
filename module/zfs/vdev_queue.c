@@ -274,11 +274,11 @@ vdev_queue_class_add(vdev_queue_t *vq, zio_t *zio)
 	zio_priority_t p = zio->io_priority;
 	vq->vq_cqueued |= 1U << p;
 	if (vdev_queue_class_fifo(p)) {
-		list_insert_tail(&vq->vq_class[p].vqc_list, zio);
-		vq->vq_class[p].vqc_list_numnodes++;
+		list_insert_tail(&vq->vq_class[p][CPU_SEQID_UNSTABLE].vqc_list, zio);
+		vq->vq_class[p][CPU_SEQID_UNSTABLE].vqc_list_numnodes++;
 	}
 	else
-		avl_add(&vq->vq_class[p].vqc_tree, zio);
+		avl_add(&vq->vq_class[p][CPU_SEQID_UNSTABLE].vqc_tree, zio);
 }
 
 static void
@@ -287,12 +287,12 @@ vdev_queue_class_remove(vdev_queue_t *vq, zio_t *zio)
 	zio_priority_t p = zio->io_priority;
 	uint32_t empty;
 	if (vdev_queue_class_fifo(p)) {
-		list_t *list = &vq->vq_class[p].vqc_list;
+		list_t *list = &vq->vq_class[p][CPU_SEQID_UNSTABLE].vqc_list;
 		list_remove(list, zio);
 		empty = list_is_empty(list);
-		vq->vq_class[p].vqc_list_numnodes--;
+		vq->vq_class[p][CPU_SEQID_UNSTABLE].vqc_list_numnodes--;
 	} else {
-		avl_tree_t *tree = &vq->vq_class[p].vqc_tree;
+		avl_tree_t *tree = &vq->vq_class[p][CPU_SEQID_UNSTABLE].vqc_tree;
 		avl_remove(tree, zio);
 		empty = avl_is_empty(tree);
 	}
@@ -476,19 +476,28 @@ void
 vdev_queue_init(vdev_t *vd)
 {
 	vdev_queue_t *vq = &vd->vdev_queue;
-	zio_priority_t p;
 
 	vq->vq_vdev = vd;
 
-	for (p = 0; p < ZIO_PRIORITY_NUM_QUEUEABLE; p++) {
-		if (vdev_queue_class_fifo(p)) {
-			list_create(&vq->vq_class[p].vqc_list,
-			    sizeof (zio_t),
-			    offsetof(struct zio, io_queue_node.l));
-		} else {
-			avl_create(&vq->vq_class[p].vqc_tree,
-			    vdev_queue_to_compare, sizeof (zio_t),
-			    offsetof(struct zio, io_queue_node.a));
+	for (zio_priority_t p = 0; p < ZIO_PRIORITY_NUM_QUEUEABLE; p++) {
+		vq->vq_class[p] = vmem_zalloc(max_ncpus
+		    * sizeof (vdev_queue_class_t), KM_SLEEP);
+
+		for (int c = 0; c < max_ncpus; c++) {
+#if 0
+			mutex_init(&vq->vq_class[p][c].vqc_lock, NULL,
+			    MUTEX_DEFAULT, NULL);
+#endif
+
+			if (vdev_queue_class_fifo(p)) {
+				list_create(&vq->vq_class[p][c].vqc_list,
+				    sizeof (zio_t),
+				    offsetof(struct zio, io_queue_node.l));
+			} else {
+				avl_create(&vq->vq_class[p][c].vqc_tree,
+				    vdev_queue_to_compare, sizeof (zio_t),
+				    offsetof(struct zio, io_queue_node.a));
+			}
 		}
 	}
 	avl_create(&vq->vq_read_offset_tree,
@@ -510,11 +519,19 @@ vdev_queue_fini(vdev_t *vd)
 	vdev_queue_t *vq = &vd->vdev_queue;
 
 	for (zio_priority_t p = 0; p < ZIO_PRIORITY_NUM_QUEUEABLE; p++) {
-		if (vdev_queue_class_fifo(p))
-			list_destroy(&vq->vq_class[p].vqc_list);
-		else
-			avl_destroy(&vq->vq_class[p].vqc_tree);
+		for (int c = 0; c < max_ncpus; c++) {
+			if (vdev_queue_class_fifo(p)) {
+				list_destroy(&vq->vq_class[p][c].vqc_list);
+			} else {
+				avl_destroy(&vq->vq_class[p][c].vqc_tree);
+			}
+#if 0
+			mutex_destroy(&vq->vq_class[p][c].vqc_lock);
+#endif
+		}
+		vmem_free(vq->vq_class[p], max_ncpus * sizeof (vdev_queue_class_t));
 	}
+
 	avl_destroy(&vq->vq_read_offset_tree);
 	avl_destroy(&vq->vq_write_offset_tree);
 
@@ -851,7 +868,7 @@ again:
 	}
 
 	if (vdev_queue_class_fifo(p)) {
-		zio = list_head(&vq->vq_class[p].vqc_list);
+		zio = list_head(&vq->vq_class[p][CPU_SEQID_UNSTABLE].vqc_list);
 	} else {
 		/*
 		 * For LBA-ordered queues (async / scrub / initializing),
@@ -859,7 +876,7 @@ again:
 		 * in LBA (offset) order, but to avoid starvation only within
 		 * the same 0.5 second interval as the first I/O.
 		 */
-		tree = &vq->vq_class[p].vqc_tree;
+		tree = &vq->vq_class[p][CPU_SEQID_UNSTABLE].vqc_tree;
 		zio = aio = avl_first(tree);
 		if (zio->io_offset < vq->vq_last_offset) {
 			vq->vq_io_search.io_timestamp = zio->io_timestamp;
@@ -1071,10 +1088,18 @@ uint64_t
 vdev_queue_class_length(vdev_t *vd, zio_priority_t p)
 {
 	vdev_queue_t *vq = &vd->vdev_queue;
-	if (vdev_queue_class_fifo(p))
-		return (vq->vq_class[p].vqc_list_numnodes);
-	else
-		return (avl_numnodes(&vq->vq_class[p].vqc_tree));
+	uint64_t total;
+
+	if (vdev_queue_class_fifo(p)) {
+		for (int c = 0; c < max_ncpus; c++) {
+			total += vq->vq_class[p][c].vqc_list_numnodes;
+		}
+	} else {
+		for (int c = 0; c < max_ncpus; c++) {
+			total += avl_numnodes(&vq->vq_class[p][c].vqc_tree);
+		}
+	}
+	return (total);
 }
 
 ZFS_MODULE_PARAM(zfs_vdev, zfs_vdev_, aggregation_limit, UINT, ZMOD_RW,
